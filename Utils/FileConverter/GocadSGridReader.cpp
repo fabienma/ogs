@@ -122,6 +122,7 @@ void GocadSGridReader::readNodesBinary()
 
 	char inbuff[12], reword[4];
 	double coords[3];
+
 	for (std::size_t k(0); k < _index_calculator._n_nodes; k++) {
 		in.read((char*) inbuff, 12 * sizeof(char));
 		for (std::size_t i = 0; i < 12; i += 4) {
