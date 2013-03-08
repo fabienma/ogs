@@ -90,3 +90,15 @@ TARGET_LINK_LIBRARIES (VTK2OGS
 	FileIO
 	zlib
 )
+
+## Gocad SGrid to VTK file converter ##
+IF(Boost_FOUND)
+	ADD_EXECUTABLE (GocadSGridReader GocadSGridReaderMain.cpp GocadSGridReader.cpp GocadSGridReader.h)
+	SET_TARGET_PROPERTIES(GocadSGridReader PROPERTIES FOLDER Utilities)
+	TARGET_LINK_LIBRARIES(GocadSGridReader 
+		GeoLib
+		MeshLib
+		FileIO
+		${Boost_LIBRARIES}
+	)
+ENDIF() # Boost_FOUND
