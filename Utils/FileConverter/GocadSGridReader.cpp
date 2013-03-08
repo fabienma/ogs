@@ -21,6 +21,9 @@
 // boost
 #include <boost/tokenizer.hpp>
 
+// GeoLib
+#include "GEOObjects.h"
+
 namespace FileIO
 {
 
@@ -57,6 +60,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	}
 
 	readNodesBinary();
+	makeNodesUnique();
 	readPropertiesBinary();
 }
 
@@ -80,7 +84,7 @@ void GocadSGridReader::parseDims(std::string const& line)
 	std::stringstream ssz(*it, std::stringstream::in | std::stringstream::out);
 	ssz >> z_dim;
 	_index_calculator = IndexCalculator(x_dim, y_dim, z_dim);
-	_nodes.resize(_index_calculator._n_nodes * 3);
+	_nodes.resize(_index_calculator._n_nodes);
 	_properties.resize(_index_calculator._n_cells);
 }
 
@@ -117,15 +121,16 @@ void GocadSGridReader::readNodesBinary()
 	}
 
 	char inbuff[12], reword[4];
-
+	double coords[3];
 	for (std::size_t k(0); k < _index_calculator._n_nodes; k++) {
 		in.read((char*) inbuff, 12 * sizeof(char));
 		for (std::size_t i = 0; i < 12; i += 4) {
 			for (std::size_t j = 0; j < 4; j++) {
 				reword[j] = inbuff[i + 3 - j];
 			}
-			_nodes[3 * k + i / 4] = static_cast<double>(*reinterpret_cast<float*>(&reword[0]));
+			coords[i/4] = static_cast<double>(*reinterpret_cast<float*>(&reword[0]));
 		}
+		_nodes[k] = new MeshLib::Node(coords, k);
 	}
 	in.close();
 }
@@ -204,5 +209,28 @@ void GocadSGridReader::readPropertiesBinary()
 //		}
 //	}
 //}
+
+void GocadSGridReader::makeNodesUnique()
+{
+	// to make nodes unique GeoLib::PointVec will be employed
+	std::string pname("test");
+	std::vector<GeoLib::Point*>* tmp_nodes(new std::vector<GeoLib::Point*>(_nodes.size()));
+	std::copy(_nodes.begin(), _nodes.end(), tmp_nodes->begin());
+	_nodes.clear();
+
+	GeoLib::GEOObjects geo;
+	geo.addPointVec(tmp_nodes, pname);
+
+	// save node <-> id mapping needed for creating the mesh elements later on
+	std::vector<std::size_t> const& node_id_map(geo.getPointVecObj(pname)->getIDMap());
+	std::copy(node_id_map.begin(), node_id_map.end(), _node_id_map.begin());
+
+	// copy unique nodes
+	tmp_nodes = const_cast<std::vector<GeoLib::Point*>*>(geo.getPointVecObj(pname)->getVector());
+	_nodes.resize(tmp_nodes->size());
+	for (std::size_t k(0); k < tmp_nodes->size(); k++) {
+		_nodes[k] = new MeshLib::Node((*tmp_nodes)[k]->getCoords());
+	}
+}
 
 } // end namespace FileIO
