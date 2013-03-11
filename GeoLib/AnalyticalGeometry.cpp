@@ -31,6 +31,7 @@
 // MathLib
 #include "LinAlg/Solvers/GaussAlgorithm.h"
 #include "MathTools.h"
+#include "Vector3.h"
 
 namespace GeoLib
 {
