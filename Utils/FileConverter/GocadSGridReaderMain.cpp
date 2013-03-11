@@ -22,17 +22,32 @@
 #include <sstream>
 #include <string>
 
+// ThirdParty/logog
+#include "logog/include/logog.hpp"
+
 // BaseLib
 #include "tclap/CmdLine.h"
+#include "FileTools.h"
+#include "LogogSimpleFormatter.h"
+
+// FileIO
+#include "RapidXmlIO/BoostVtuInterface.h"
 
 // MeshLib
+#include "Mesh.h"
 #include "Node.h"
+#include "Elements/Element.h"
 
 // Utils/FileConverter
 #include "GocadSGridReader.h"
 
 int main(int argc, char* argv[])
 {
+	LOGOG_INITIALIZE();
+	BaseLib::LogogSimpleFormatter *custom_format (new BaseLib::LogogSimpleFormatter);
+	logog::Cout *logog(new logog::Cout);
+	logog->SetFormatter(*custom_format);
+
 	TCLAP::CmdLine cmd("Reads parts of a Gocad structured mesh", ' ', "0.1");
 
 	// Define a value argument and add it to the command line.
@@ -48,15 +63,21 @@ int main(int argc, char* argv[])
 
 	// read the Gocad SGrid
 	FileIO::GocadSGridReader reader(sg_file_arg.getValue());
-	std::vector<MeshLib::Node*> const& pnts(reader.getNodes());
-	std::vector<double> const& properties(reader.getCellProperties());
+	std::vector<MeshLib::Node*> const& nodes(reader.getNodes());
+	std::vector<MeshLib::Element*> const& elements(reader.getElements());
 
-	std::cout << "nodes \t flags \t region flags \t properties" << std::endl;
-	const std::size_t n(properties.size());
-	for (std::size_t k(n - 50); k < n; k++) {
-		std::cout << k << " " << *pnts[k] << "\t" << properties[k] << " ";
-		std::cout << std::endl;
-	}
+	MeshLib::Mesh mesh("GocadSGrid", nodes, elements);
+
+	FileIO::BoostVtuInterface vtu;
+	vtu.setMesh(&mesh);
+	// output file name
+	std::string mesh_out_fname(BaseLib::extractPath(sg_file_arg.getValue()) +
+				BaseLib::extractBaseNameWithoutExtension(sg_file_arg.getValue()) + ".vtu");
+	vtu.writeToFile(mesh_out_fname);
+
+	delete logog;
+	delete custom_format;
+	LOGOG_SHUTDOWN();
 
 	return 0;
 }
