@@ -22,6 +22,7 @@
 
 // MeshLib
 #include "Node.h"
+#include "Elements/Element.h"
 
 namespace FileIO
 {
@@ -37,6 +38,7 @@ public:
 	~GocadSGridReader();
 
 	std::vector<MeshLib::Node*> const& getNodes() const { return _nodes; }
+	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
 	std::vector<double> const& getCellProperties() const { return _properties; }
 
 private:
@@ -46,7 +48,6 @@ private:
 	void parseFlagsFileName(std::string const& line);
 	void parseRegionFlagsFileName(std::string const& line);
 
-	void makeNodesUnique();
 	/**
 	 * Class for calculating the index to given 3d position within the structured grid.
 	 */
@@ -81,8 +82,8 @@ private:
 			const std::size_t idx(k * _x_dim * _y_dim + j * _x_dim + i);
 			if (idx >= _n_nodes) {
 				return std::numeric_limits < std::size_t > ::max();
-				return idx;
 			}
+			return idx;
 		}
 
 		std::size_t _x_dim;
@@ -93,7 +94,9 @@ private:
 	};
 
 	void readNodesBinary();
-	void readPropertiesBinary();
+	void makeNodesUnique();
+	void readElementPropertiesBinary();
+	void createElements();
 
 	std::string const& _fname;
 	std::string const _path;
@@ -108,6 +111,7 @@ private:
 	std::vector<double> _properties;
 	// calculated data
 	std::vector<std::size_t> _node_id_map;
+	std::vector<MeshLib::Element*> _elements;
 }; // end class GocadSGridReader
 
 } // end namespace FileIO

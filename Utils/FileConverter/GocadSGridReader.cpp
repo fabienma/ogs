@@ -24,6 +24,9 @@
 // GeoLib
 #include "GEOObjects.h"
 
+// MeshLib
+#include "Elements/Hex.h"
+
 namespace FileIO
 {
 
@@ -61,7 +64,8 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 
 	readNodesBinary();
 	makeNodesUnique();
-	readPropertiesBinary();
+	readElementPropertiesBinary();
+	createElements();
 }
 
 GocadSGridReader::~GocadSGridReader()
@@ -85,7 +89,9 @@ void GocadSGridReader::parseDims(std::string const& line)
 	ssz >> z_dim;
 	_index_calculator = IndexCalculator(x_dim, y_dim, z_dim);
 	_nodes.resize(_index_calculator._n_nodes);
+	_node_id_map.resize(_index_calculator._n_nodes);
 	_properties.resize(_index_calculator._n_cells);
+	_elements.resize(_index_calculator._n_cells);
 }
 
 void GocadSGridReader::parsePointsFileName(std::string const& line)
@@ -136,7 +142,7 @@ void GocadSGridReader::readNodesBinary()
 	in.close();
 }
 
-void GocadSGridReader::readPropertiesBinary()
+void GocadSGridReader::readElementPropertiesBinary()
 {
 	std::ifstream in(_properties_fname.c_str());
 	if (!in) {
@@ -232,6 +238,33 @@ void GocadSGridReader::makeNodesUnique()
 	for (std::size_t k(0); k < tmp_nodes->size(); k++) {
 		_nodes[k] = new MeshLib::Node((*tmp_nodes)[k]->getCoords());
 	}
+}
+
+void GocadSGridReader::createElements()
+{
+	std::array<MeshLib::Node*, 8> element_nodes;
+	std::size_t cnt(0);
+	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
+		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
+			for (std::size_t i(0); i < _index_calculator._x_dim-1; i++) {
+				element_nodes[0] = _nodes[_node_id_map[_index_calculator(i,j,k)]];
+				element_nodes[1] = _nodes[_node_id_map[_index_calculator(i+1,j,k)]];
+				element_nodes[2] = _nodes[_node_id_map[_index_calculator(i+1,j+1,k)]];
+				element_nodes[3] = _nodes[_node_id_map[_index_calculator(i,j+1,k)]];
+				element_nodes[4] = _nodes[_node_id_map[_index_calculator(i,j,k+1)]];
+				element_nodes[5] = _nodes[_node_id_map[_index_calculator(i+1,j,k+1)]];
+				element_nodes[6] = _nodes[_node_id_map[_index_calculator(i+1,j+1,k+1)]];
+				element_nodes[7] = _nodes[_node_id_map[_index_calculator(i,j+1,k+1)]];
+				_elements[cnt] = new MeshLib::Hex(element_nodes, static_cast<unsigned>(_properties[_index_calculator(i,j,k)]));
+				if (_elements[cnt]->computeVolume() < std::numeric_limits<double>::epsilon()) {
+					delete _elements[cnt];
+				} else {
+					cnt++;
+				}
+			}
+		}
+	}
+	_elements.resize(cnt);
 }
 
 } // end namespace FileIO
