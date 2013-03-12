@@ -122,7 +122,7 @@ void GocadSGridReader::readNodesBinary()
 {
 	std::ifstream in(_pnts_fname.c_str(), std::ios::in | std::ios::binary);
 	if (!in) {
-		std::cout << "could not open file " << _pnts_fname << std::endl;
+		ERR("Could not open points file \"%s\".", _pnts_fname.c_str());
 		return;
 	}
 
@@ -146,7 +146,7 @@ void GocadSGridReader::readElementPropertiesBinary()
 {
 	std::ifstream in(_properties_fname.c_str());
 	if (!in) {
-		std::cout << "Could not open " << _properties_fname << "." << std::endl;
+		ERR("Could not open element property file \"%s\".", _properties_fname.c_str());
 		in.close();
 		return;
 	}
