@@ -21,6 +21,9 @@
 // boost
 #include <boost/tokenizer.hpp>
 
+// ThirdParty/logog
+#include "logog/include/logog.hpp"
+
 // GeoLib
 #include "GEOObjects.h"
 
@@ -36,7 +39,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	// check if file exists
 	std::ifstream in(_fname.c_str());
 	if (!in) {
-		std::cout << "Could not open " << _fname << "." << std::endl;
+		ERR("Could not open \"%s\".", _fname.c_str());
 		in.close();
 		return;
 	}
@@ -61,6 +64,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 //			parseRegionFlagsFileName(line);
 //		}
 	}
+	in.close();
 
 	readNodesBinary();
 	makeNodesUnique();
