@@ -86,6 +86,15 @@ private:
 			return idx;
 		}
 
+		std::size_t getCellIdx(std::size_t i, std::size_t j, std::size_t k)
+		{
+			const std::size_t idx(k * (_x_dim-1) * (_y_dim-1) + j * (_x_dim-1) + i);
+			if (idx >= _n_cells) {
+				return std::numeric_limits < std::size_t > ::max();
+			}
+			return idx;
+		}
+
 		std::size_t _x_dim;
 		std::size_t _y_dim;
 		std::size_t _z_dim;
@@ -97,6 +106,10 @@ private:
 	void makeNodesUnique();
 	void readElementPropertiesBinary();
 	void createElements();
+	void readSplitNodesAndModifyElements();
+	void modifyElement(std::size_t u, std::size_t v, std::size_t w, MeshLib::Node const* node2sub,
+			MeshLib::Node * substitute_node);
+	void removeNullVolumeElements();
 
 	std::string const& _fname;
 	std::string const _path;
