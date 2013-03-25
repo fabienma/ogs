@@ -70,6 +70,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	in.close();
 
 	readNodesBinary();
+
 	makeNodesUnique();
 	readElementPropertiesBinary();
 	createElements();
@@ -230,6 +231,7 @@ void GocadSGridReader::makeNodesUnique()
 	std::string pname("test");
 	std::vector<GeoLib::Point*>* tmp_nodes(new std::vector<GeoLib::Point*>(_nodes.size()));
 	std::copy(_nodes.begin(), _nodes.end(), tmp_nodes->begin());
+
 	_nodes.clear();
 
 	GeoLib::GEOObjects geo;
@@ -253,6 +255,10 @@ void GocadSGridReader::createElements()
 	_elements.resize(_index_calculator._n_cells);
 	std::array<MeshLib::Node*, 8> element_nodes;
 	std::size_t cnt(0);
+	if (_properties.empty()) {
+		_properties.resize(_index_calculator._n_cells);
+		std::fill(_properties.begin(), _properties.end(), 0);
+	}
 	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
 		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
 			for (std::size_t i(0); i < _index_calculator._x_dim-1; i++) {
