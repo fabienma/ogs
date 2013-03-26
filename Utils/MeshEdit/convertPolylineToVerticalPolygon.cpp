@@ -20,6 +20,9 @@
 #include "logog/include/logog.hpp"
 
 // BaseLib
+#include "tclap/CmdLine.h"
+
+// BaseLib
 #include "LogogSimpleFormatter.h"
 
 // FileIO
@@ -43,43 +46,42 @@ int main(int argc, char* argv[])
 	BaseLib::LogogSimpleFormatter *custom_format (new BaseLib::LogogSimpleFormatter);
 	logog_cout->SetFormatter(*custom_format);
 
-	if (argc < 5) {
-		std::cout << "Program " << argv[0]
-						<< " calculates out of a polyline embedded in a mesh a polygon (that is vertical located)"
-						<< std::endl;
-		std::cout << "For this reason the polyline is projected to the bottom surface and top surface "
-						"of the mesh. The resulting two polylines are linked to a closed polyline, i.e., a polygon." << std::endl;
-		std::cout << "Usage: " << argv[0]
-						<< " --mesh ogs_meshfile --geometry ogs_geometry_as_gli_file [--polyline-id-lower ply_id_lower --polyline-id-upper ply_id_upper]" << std::endl;
-		return -1;
-	}
+	TCLAP::CmdLine cmd(
+			"Programme calculates out of a polyline embedded in a mesh a polygon (that is vertical located). \
+			For this reason the polyline is projected to the bottom surface and top surface \
+			of the mesh. The resulting two polylines are linked to a closed polyline, i.e., a polygon.",
+			' ', "0.1");
+
+	TCLAP::ValueArg<std::string> mesh_arg("m", "mesh",
+			"*layered* mesh", true, "", "filename for layered mesh");
+	cmd.add(mesh_arg);
+
+	TCLAP::ValueArg<std::string> geo_arg("", "geometry-file", "",
+			true, "", "file name");
+	cmd.add(geo_arg);
+
+	TCLAP::ValueArg<std::size_t> ply_id_upper_arg("", "upper", "upper boundary of polyline range",
+			true, 0, "");
+	cmd.add(ply_id_upper_arg);
+
+	TCLAP::ValueArg < std::size_t > ply_id_lower_arg("", "lower", "lower boundary of polyline range", true, 0, "");
+	cmd.add(ply_id_lower_arg);
+
+	cmd.parse(argc, argv);
 
 	// *** read mesh
-	std::string tmp(argv[1]);
-	if (tmp.find("--mesh") == std::string::npos) {
-		std::cout << "could not extract mesh file name" << std::endl;
-		return -1;
-	}
+	std::string tmp(mesh_arg.getValue());
 
-	tmp = argv[2];
-	std::string file_base_name(tmp);
-	if (tmp.find(".msh") != std::string::npos)
-		file_base_name = tmp.substr(0, tmp.size() - 4);
-
-	MeshLib::Mesh* mesh (FileIO::readMeshFromFile(tmp));
+	std::string file_base_name;
+	if (mesh_arg.getValue().find(".msh") != std::string::npos)
+		file_base_name = mesh_arg.getValue().substr(0, mesh_arg.getValue().size() - 4);
+	MeshLib::Mesh* mesh(FileIO::readMeshFromFile(mesh_arg.getValue()));
 
 	// *** read geometry
-	tmp = argv[3];
-	if (tmp.find("--geometry") == std::string::npos) {
-		std::cout << "could not extract geometry file name" << std::endl;
-		return -1;
-	}
-
 	GeoLib::GEOObjects* geo(new GeoLib::GEOObjects);
-	tmp = argv[4];
 	std::string unique_name;
 	std::vector<std::string> error_strings;
-	FileIO::readGLIFileV4(tmp, geo, unique_name, error_strings);
+	FileIO::readGLIFileV4(geo_arg.getValue(), geo, unique_name, error_strings);
 
 	// *** get Polygon
 	const std::vector<GeoLib::Polyline*>* plys(geo->getPolylineVec(unique_name));
@@ -94,12 +96,8 @@ int main(int argc, char* argv[])
 	MeshLib::ExtractMeshNodes extract_mesh_nodes(mesh);
 
 	// *** generate a polygon from polyline
-	size_t ply_id_upper(plys->size());
-	size_t ply_id_lower(0);
-	if (argc == 9) {
-		ply_id_lower = BaseLib::str2number<size_t>(argv[6]);
-		ply_id_upper = std::min(BaseLib::str2number<size_t>(argv[8]), ply_id_upper);
-	}
+	std::size_t ply_id_upper(std::min(plys->size(), ply_id_upper_arg.getValue()));
+	std::size_t ply_id_lower(ply_id_lower_arg.getValue());
 
 	for (size_t k(ply_id_lower); k < ply_id_upper; k++) {
 		bool closed((*plys)[k]->isClosed());
@@ -115,7 +113,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	std::string path(BaseLib::extractPath(argv[4]));
+	std::string path(BaseLib::extractPath(mesh_arg.getValue()));
 	std::string const fname_of_new_file(path + "New.gli");
 	FileIO::writeGLIFileV4(fname_of_new_file, unique_name, *geo);
 
