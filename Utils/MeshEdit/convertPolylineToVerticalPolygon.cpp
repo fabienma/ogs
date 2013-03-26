@@ -85,9 +85,9 @@ int main(int argc, char* argv[])
 
 	// *** get Polygon
 	const std::vector<GeoLib::Polyline*>* plys(geo->getPolylineVec(unique_name));
-	std::cout << "fetched polylines: " << std::flush << plys->size() << std::endl;
+	INFO("Fetched %d polylines.", plys->size());
 	if (!plys) {
-		std::cout << "could not get vector of polylines" << std::endl;
+		ERR("Could not get vector of polylines.");
 		delete mesh;
 		delete geo;
 		return -1;
@@ -102,8 +102,7 @@ int main(int argc, char* argv[])
 	for (size_t k(ply_id_lower); k < ply_id_upper; k++) {
 		bool closed((*plys)[k]->isClosed());
 		if (!closed) {
-			std::cout << "converting polyline " << k << " to polygon (closed polyline) "
-							<< std::endl;
+			INFO("Converting polyline %d to polygon (closed polyline).", k);
 			GeoLib::Polygon* polygon(NULL);
 			extract_mesh_nodes.getPolygonFromPolyline(*((*plys)[k]), geo, unique_name, polygon);
 			std::string *polygon_name(new std::string);
@@ -114,7 +113,8 @@ int main(int argc, char* argv[])
 	}
 
 	std::string path(BaseLib::extractPath(mesh_arg.getValue()));
-	std::string const fname_of_new_file(path + "New.gli");
+	std::string geo_fname(BaseLib::extractBaseNameWithoutExtension(geo_arg.getValue()));
+	std::string const fname_of_new_file(path + geo_fname + "_Polygons.gli");
 	FileIO::writeGLIFileV4(fname_of_new_file, unique_name, *geo);
 
 	delete mesh;
