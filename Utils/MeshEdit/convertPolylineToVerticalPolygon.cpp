@@ -11,14 +11,21 @@
  *
  */
 
-// stl
+// STL
 #include <iostream>
 #include <vector>
 #include <string>
 
+// ThirdParty/logog
+#include "logog/include/logog.hpp"
+
+// BaseLib
+#include "LogogSimpleFormatter.h"
+
 // FileIO
-#include "OGSIOVer4.h"
-#include "OGSMeshIO.h"
+#include "FileTools.h"
+#include "readMeshFromFile.h"
+#include "Legacy/OGSIOVer4.h"
 
 // GeoLib
 #include "GEOObjects.h"
@@ -26,8 +33,16 @@
 // MeshLib
 #include "Mesh.h"
 
+// Utils/MeshEdit/
+#include "ExtractMeshNodes.h"
+
 int main(int argc, char* argv[])
 {
+	LOGOG_INITIALIZE();
+	logog::Cout* logog_cout (new logog::Cout);
+	BaseLib::LogogSimpleFormatter *custom_format (new BaseLib::LogogSimpleFormatter);
+	logog_cout->SetFormatter(*custom_format);
+
 	if (argc < 5) {
 		std::cout << "Program " << argv[0]
 						<< " calculates out of a polyline embedded in a mesh a polygon (that is vertical located)"
@@ -51,10 +66,7 @@ int main(int argc, char* argv[])
 	if (tmp.find(".msh") != std::string::npos)
 		file_base_name = tmp.substr(0, tmp.size() - 4);
 
-	std::vector<MeshLib::CFEMesh*> mesh_vec;
 	MeshLib::Mesh* mesh (FileIO::readMeshFromFile(tmp));
-	MeshLib::Mesh * mesh(mesh_vec[mesh_vec.size() - 1]);
-	mesh->ConstructGrid();
 
 	// *** read geometry
 	tmp = argv[3];
@@ -63,14 +75,14 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	GEOLIB::GEOObjects* geo(new GEOLIB::GEOObjects);
+	GeoLib::GEOObjects* geo(new GeoLib::GEOObjects);
 	tmp = argv[4];
 	std::string unique_name;
 	std::vector<std::string> error_strings;
 	FileIO::readGLIFileV4(tmp, geo, unique_name, error_strings);
 
 	// *** get Polygon
-	const std::vector<GEOLIB::Polyline*>* plys(geo->getPolylineVec(unique_name));
+	const std::vector<GeoLib::Polyline*>* plys(geo->getPolylineVec(unique_name));
 	std::cout << "fetched polylines: " << std::flush << plys->size() << std::endl;
 	if (!plys) {
 		std::cout << "could not get vector of polylines" << std::endl;
@@ -79,7 +91,6 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	//*** extract surface out of mesh
 	MeshLib::ExtractMeshNodes extract_mesh_nodes(mesh);
 
 	// *** generate a polygon from polyline
@@ -95,7 +106,7 @@ int main(int argc, char* argv[])
 		if (!closed) {
 			std::cout << "converting polyline " << k << " to polygon (closed polyline) "
 							<< std::endl;
-			GEOLIB::Polygon* polygon(NULL);
+			GeoLib::Polygon* polygon(NULL);
 			extract_mesh_nodes.getPolygonFromPolyline(*((*plys)[k]), geo, unique_name, polygon);
 			std::string *polygon_name(new std::string);
 			geo->getPolylineVecObj(unique_name)->getNameOfElementByID(k, *polygon_name);
@@ -104,13 +115,16 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	std::string path;
-	BaseLib::extractPath(argv[4], path);
+	std::string path(BaseLib::extractPath(argv[4]));
 	std::string const fname_of_new_file(path + "New.gli");
 	FileIO::writeGLIFileV4(fname_of_new_file, unique_name, *geo);
 
 	delete mesh;
 	delete geo;
+
+	delete custom_format;
+	delete logog_cout;
+	LOGOG_SHUTDOWN();
 
 	return 0;
 }
