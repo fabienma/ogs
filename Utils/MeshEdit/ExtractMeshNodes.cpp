@@ -41,7 +41,7 @@ void ExtractMeshNodes::getOrthogonalProjectedMeshNodesAlongPolyline (
 	if (polyline.isClosed())
 		number_of_ply_pnts--;
 
-	const double eps(10); // _mesh->getSearchLength()); ToDo
+	const double eps(50); // _mesh->getSearchLength()); ToDo
 
 	for (std::size_t k(0); k < number_of_ply_pnts; k++) {
 		GeoLib::Point proj_ply_pnt((*(polyline.getPoint(k)))[0], (*(polyline.getPoint(k)))[1], 0.0);
@@ -123,7 +123,7 @@ void ExtractMeshNodes::getPolygonFromPolyline (const GeoLib::Polyline& polyline,
 
 	// *** add ids of new points to polygon
 	// for top polyline sort points along polyline
-	const double eps(10); // _mesh->getSearchLength()); ToDo
+	const double eps(50); // _mesh->getSearchLength()); ToDo
 	std::size_t s (top_ids->size());
 	for (std::size_t j(0); j < polyline.getNumberOfPoints(); j++)
 		for (std::size_t k(0); k < s; k++)
