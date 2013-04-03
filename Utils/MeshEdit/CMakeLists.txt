@@ -7,6 +7,7 @@ INCLUDE_DIRECTORIES(
 	${CMAKE_SOURCE_DIR}/FileIO/GmshIO
 	${CMAKE_SOURCE_DIR}/MathLib
 	${CMAKE_SOURCE_DIR}/MeshLib
+	${CMAKE_SOURCE_DIR}/FemLib
 )
 
 # Create executables
@@ -32,20 +33,23 @@ IF(QT4_FOUND)
 	SET_TARGET_PROPERTIES(moveMeshNodes removeMeshNodes
 		PROPERTIES FOLDER Utilities)
 
-ENDIF() # QT4_FOUND
 
-ADD_EXECUTABLE( convertPolylineToVerticalPolygon 
-	convertPolylineToVerticalPolygon.cpp 
-	ExtractMeshNodes.cpp
-	ExtractMeshNodes.h
+	ADD_EXECUTABLE( convertPolylineToVerticalPolygon 
+		convertPolylineToVerticalPolygon.cpp 
+		ExtractMeshNodes.cpp
+		ExtractMeshNodes.h
 	)
 	
-TARGET_LINK_LIBRARIES( convertPolylineToVerticalPolygon
-	FileIO
-	GeoLib
-	MeshLib
-	BaseLib
-)
+	TARGET_LINK_LIBRARIES( convertPolylineToVerticalPolygon
+		FileIO
+		GeoLib
+		MeshLib
+		BaseLib
+		OgsLib
+		${QT_LIBRARIES}
+	)
+
+ENDIF() # QT4_FOUND
 
 ADD_EXECUTABLE( DataExplorer5NodeReordering DataExplorer5NodeReordering.cpp )
 TARGET_LINK_LIBRARIES( DataExplorer5NodeReordering
