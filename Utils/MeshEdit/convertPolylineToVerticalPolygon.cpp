@@ -24,20 +24,65 @@
 
 // BaseLib
 #include "LogogSimpleFormatter.h"
+#include "FileFinder.h"
 
 // FileIO
 #include "FileTools.h"
 #include "readMeshFromFile.h"
 #include "Legacy/OGSIOVer4.h"
+#include "XmlIO/XmlGmlInterface.h"
 
 // GeoLib
 #include "GEOObjects.h"
 
+// OGS
+#include "OGS/ProjectData.h"
+
 // MeshLib
 #include "Mesh.h"
 
+#include "FemLib/FEMCondition.h"
+
 // Utils/MeshEdit/
 #include "ExtractMeshNodes.h"
+
+void createSurfaceFromVerticalPolygon(GeoLib::GEOObjects & geo_objs, std::string const& unique_name,
+		GeoLib::Polygon const* polygon, std::string & sfc_name)
+{
+	// create copy of polygon points
+	std::vector<GeoLib::Point*> *sfc_pnts(new std::vector<GeoLib::Point*>);
+	const size_t n_polygon_pnts(polygon->getNumberOfPoints()-1);
+	for (size_t k(0); k<n_polygon_pnts; k++) {
+		sfc_pnts->push_back(new GeoLib::Point(*(polygon->getPoint(k))));
+	}
+
+	// add points to GEOObject object
+	geo_objs.addPointVec(sfc_pnts, sfc_name);
+
+	// create the surface
+	GeoLib::Surface *sfc(new GeoLib::Surface(*sfc_pnts));
+	// deploying the special structure of the polygon to create the surface
+	size_t id0(0);
+	size_t id1(1);
+	size_t id2(2);
+	sfc->addTriangle(id0, id1, id2);
+	id1 = id2;
+	id2 = n_polygon_pnts-1;
+	sfc->addTriangle(id0, id1, id2);
+	for (size_t k(2); k<n_polygon_pnts/2; k++) {
+		// triangulate quadrilateral (n_polygon_pnts-k+1, k, k+1, n_polygon_pnts-k)
+		id0 = id2;
+		id1 = k;
+		id2 = k+1;
+		sfc->addTriangle(id0, id1, id2);
+		id1 = k+1;
+		id2 = n_polygon_pnts-k;
+		sfc->addTriangle(id0, id1, id2);
+	}
+	std::vector<GeoLib::Surface*> *sfcs(new std::vector<GeoLib::Surface*>);
+	sfcs->push_back(sfc);
+	geo_objs.addSurfaceVec(sfcs, sfc_name);
+}
 
 int main(int argc, char* argv[])
 {
@@ -47,7 +92,7 @@ int main(int argc, char* argv[])
 	logog_cout->SetFormatter(*custom_format);
 
 	TCLAP::CmdLine cmd(
-			"Programme calculates out of a polyline embedded in a mesh a polygon (that is vertical located). \
+			"Programme calculates a polygon (that is vertical located) out of a polyline embedded in a mesh. \
 			For this reason the polyline is projected to the bottom surface and top surface \
 			of the mesh. The resulting two polylines are linked to a closed polyline, i.e., a polygon.",
 			' ', "0.1");
@@ -67,6 +112,10 @@ int main(int argc, char* argv[])
 	TCLAP::ValueArg < std::size_t > ply_id_lower_arg("", "lower", "lower boundary of polyline range", true, 0, "");
 	cmd.add(ply_id_lower_arg);
 
+	TCLAP::ValueArg < std::string > sfc_out_arg("s", "surface-file", "", false, "", "gml file name");
+	cmd.add(sfc_out_arg);
+
+
 	cmd.parse(argc, argv);
 
 	// *** read mesh
@@ -79,6 +128,8 @@ int main(int argc, char* argv[])
 
 	// *** read geometry
 	GeoLib::GEOObjects* geo(new GeoLib::GEOObjects);
+	ProjectData project;
+	project.setGEOObjects(geo);
 	std::string unique_name;
 	std::vector<std::string> error_strings;
 	FileIO::readGLIFileV4(geo_arg.getValue(), geo, unique_name, error_strings);
@@ -99,26 +150,42 @@ int main(int argc, char* argv[])
 	std::size_t ply_id_upper(std::min(plys->size(), ply_id_upper_arg.getValue()));
 	std::size_t ply_id_lower(ply_id_lower_arg.getValue());
 
+	BaseLib::FileFinder file_finder;
+	file_finder.addDirectory(".");
+	file_finder.addDirectory("/home/fischeth/workspace/OGS-6/sources/FileIO");
+
+
+	std::vector<std::string> sfc_names;
 	for (size_t k(ply_id_lower); k < ply_id_upper; k++) {
 		bool closed((*plys)[k]->isClosed());
 		if (!closed) {
-			INFO("Converting polyline %d to polygon (closed polyline).", k);
-			GeoLib::Polygon* polygon(NULL);
+			std::string sfc_name;
+			geo->getPolylineVecObj(unique_name)->getNameOfElement((*plys)[k], sfc_name);
+			INFO("Converting polyline %d (%s) to polygon (closed polyline).", k, sfc_name.c_str());
+
+			GeoLib::Polygon* polygon(nullptr);
 			extract_mesh_nodes.getPolygonFromPolyline(*((*plys)[k]), geo, unique_name, polygon);
-			std::string *polygon_name(new std::string);
-			geo->getPolylineVecObj(unique_name)->getNameOfElementByID(k, *polygon_name);
-			(*polygon_name) += "-Polygon";
-			geo->getPolylineVecObj(unique_name)->push_back(polygon, polygon_name);
+
+			createSurfaceFromVerticalPolygon(*geo, unique_name, polygon, sfc_name);
+
+			delete polygon;
+
+			INFO("Adding surface %s.", sfc_name.c_str());
+			sfc_names.push_back(sfc_name);
 		}
 	}
 
-	std::string path(BaseLib::extractPath(mesh_arg.getValue()));
-	std::string geo_fname(BaseLib::extractBaseNameWithoutExtension(geo_arg.getValue()));
-	std::string const fname_of_new_file(path + geo_fname + "_Polygons.gli");
-	FileIO::writeGLIFileV4(fname_of_new_file, unique_name, *geo);
+	if (! sfc_names.empty()) {
+		std::string sfc_project_name("Surfaces");
+		geo->mergeGeometries(sfc_names, sfc_project_name);
+
+		std::string schema_name(file_finder.getPath("OpenGeoSysGLI.xsd"));
+		FileIO::XmlGmlInterface xml(&project, schema_name);
+		xml.setNameForExport(sfc_project_name);
+		xml.writeToFile(sfc_out_arg.getValue());
+	}
 
 	delete mesh;
-	delete geo;
 
 	delete custom_format;
 	delete logog_cout;
