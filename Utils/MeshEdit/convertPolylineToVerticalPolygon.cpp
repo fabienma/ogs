@@ -46,7 +46,7 @@
 // Utils/MeshEdit/
 #include "ExtractMeshNodes.h"
 
-void createSurfaceFromVerticalPolygon(GeoLib::GEOObjects & geo_objs, std::string const& unique_name,
+void createSurfaceFromVerticalPolygon(GeoLib::GEOObjects & geo_objs,
 		GeoLib::Polygon const* polygon, std::string & sfc_name)
 {
 	// create copy of polygon points
@@ -166,12 +166,16 @@ int main(int argc, char* argv[])
 			GeoLib::Polygon* polygon(nullptr);
 			extract_mesh_nodes.getPolygonFromPolyline(*((*plys)[k]), geo, unique_name, polygon);
 
-			createSurfaceFromVerticalPolygon(*geo, unique_name, polygon, sfc_name);
+			if (polygon) {
+				createSurfaceFromVerticalPolygon(*geo, polygon, sfc_name);
 
-			delete polygon;
+				delete polygon;
 
-			INFO("Adding surface %s.", sfc_name.c_str());
-			sfc_names.push_back(sfc_name);
+				INFO("Adding surface %s.", sfc_name.c_str());
+				sfc_names.push_back(sfc_name);
+			} else {
+				INFO("Surface %s could not be created.", sfc_name.c_str());
+			}
 		}
 	}
 
