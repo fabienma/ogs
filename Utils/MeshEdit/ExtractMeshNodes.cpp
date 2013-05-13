@@ -66,8 +66,11 @@ void ExtractMeshNodes::getTopMeshNodesAlongPolylineAsPoints(
 	std::vector<GeoLib::PointWithID> nodes_as_points;
 	this->getOrthogonalProjectedMeshNodesAlongPolyline (polyline, nodes_as_points);
 
+	if (nodes_as_points.empty())
+		return;
+
 	double eps (std::numeric_limits<double>::epsilon());
-	// collect data (lowest points with same x and y coodinates)
+	// collect data (lowest points with same x and y coordinates)
 	std::size_t upper_bound (nodes_as_points.size() - 1);
 	for (std::size_t k(0); k < upper_bound; k++)
 	{
@@ -86,8 +89,11 @@ void ExtractMeshNodes::getBottomMeshNodesAlongPolylineAsPoints(
 	std::vector<GeoLib::PointWithID> nodes_as_points;
 	this->getOrthogonalProjectedMeshNodesAlongPolyline (polyline, nodes_as_points);
 
+	if (nodes_as_points.empty())
+		return;
+
 	double eps (std::numeric_limits<double>::epsilon());
-	// collect data (lowest points with same x and y coodinates)
+	// collect data (lowest points with same x and y coordinates)
 	bottom_points.push_back (new GeoLib::Point (nodes_as_points[0].getCoords()));
 	std::size_t upper_bound (nodes_as_points.size() - 1);
 	for (std::size_t k(0); k < upper_bound; k++)
@@ -110,11 +116,23 @@ void ExtractMeshNodes::getPolygonFromPolyline (const GeoLib::Polyline& polyline,
 	std::vector<GeoLib::Point*> bottom_polygon_pnts;
 	this->getBottomMeshNodesAlongPolylineAsPoints (polyline, bottom_polygon_pnts);
 
+	if (top_polygon_pnts.size() != bottom_polygon_pnts.size() || top_polygon_pnts.empty()) {
+		return;
+	}
+
+	// number of points before inserting new points
+	const std::size_t n_pnts_before(geo_obj->getPointVec(name)->size());
 	// append new points to the end of the points vector
 	std::vector<std::size_t>* top_ids (new std::vector<std::size_t>);
 	geo_obj->appendPointVec (top_polygon_pnts, name, top_ids);
 	std::vector<std::size_t>* bottom_ids (new std::vector<std::size_t>);
 	geo_obj->appendPointVec (bottom_polygon_pnts, name, bottom_ids);
+	// number of points after inserting new points
+	const std::size_t n_pnts_after(geo_obj->getPointVec(name)->size());
+
+	if (n_pnts_after < n_pnts_before + top_polygon_pnts.size() + bottom_polygon_pnts.size()) {
+		return;
+	}
 
 	// create (an empty) polygon
 	polygon = new GeoLib::Polygon (*(geo_obj->getPointVec (name)));
