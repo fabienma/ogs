@@ -81,7 +81,11 @@ void createSurfaceFromVerticalPolygon(GeoLib::GEOObjects & geo_objs,
 	}
 	std::vector<GeoLib::Surface*> *sfcs(new std::vector<GeoLib::Surface*>);
 	sfcs->push_back(sfc);
-	geo_objs.addSurfaceVec(sfcs, sfc_name);
+
+	std::map<std::string, std::size_t>* sfc_name_map(new std::map<std::string, std::size_t>);
+	sfc_name_map->insert(std::pair<std::string, std::size_t>(sfc_name, 0));
+
+	geo_objs.addSurfaceVec(sfcs, sfc_name, sfc_name_map);
 }
 
 int main(int argc, char* argv[])
