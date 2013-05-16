@@ -59,6 +59,11 @@ void createSurfaceFromVerticalPolygon(GeoLib::GEOObjects & geo_objs,
 	// add points to GEOObject object
 	geo_objs.addPointVec(sfc_pnts, sfc_name);
 
+	if (sfc_pnts->size() != n_polygon_pnts) {
+		geo_objs.removePointVec(sfc_name);
+		return;
+	}
+
 	// create the surface
 	GeoLib::Surface *sfc(new GeoLib::Surface(*sfc_pnts));
 	// deploying the special structure of the polygon to create the surface
@@ -177,8 +182,10 @@ int main(int argc, char* argv[])
 
 				delete polygon;
 
-				INFO("Adding surface %s.", sfc_name.c_str());
-				sfc_names.push_back(sfc_name);
+				if (geo->getPointVec(sfc_name)) {
+					INFO("Adding surface %s.", sfc_name.c_str());
+					sfc_names.push_back(sfc_name);
+				}
 			} else {
 				INFO("Surface %s could not be created.", sfc_name.c_str());
 			}
