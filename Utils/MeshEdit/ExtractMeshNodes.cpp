@@ -116,66 +116,55 @@ void ExtractMeshNodes::getPolygonFromPolyline (const GeoLib::Polyline& polyline,
 	std::vector<GeoLib::Point*> bottom_polygon_pnts;
 	this->getBottomMeshNodesAlongPolylineAsPoints (polyline, bottom_polygon_pnts);
 
-	if (top_polygon_pnts.size() != bottom_polygon_pnts.size() || top_polygon_pnts.empty()) {
+	if (top_polygon_pnts.size() != bottom_polygon_pnts.size() || top_polygon_pnts.size() <= 1) {
 		return;
 	}
 
-	// number of points before inserting new points
-	const std::size_t n_pnts_before(geo_obj->getPointVec(name)->size());
 	// append new points to the end of the points vector
-	std::vector<std::size_t>* top_ids (new std::vector<std::size_t>);
-	geo_obj->appendPointVec (top_polygon_pnts, name, top_ids);
-	std::vector<std::size_t>* bottom_ids (new std::vector<std::size_t>);
-	geo_obj->appendPointVec (bottom_polygon_pnts, name, bottom_ids);
-	// number of points after inserting new points
-	const std::size_t n_pnts_after(geo_obj->getPointVec(name)->size());
-
-	if (n_pnts_after < n_pnts_before + top_polygon_pnts.size() + bottom_polygon_pnts.size()) {
-		return;
-	}
+	std::vector<std::size_t> top_ids;
+	geo_obj->appendPointVec (top_polygon_pnts, name, &top_ids);
+	std::vector<std::size_t> bottom_ids;
+	geo_obj->appendPointVec (bottom_polygon_pnts, name, &bottom_ids);
 
 	// create (an empty) polygon
 	polygon = new GeoLib::Polygon (*(geo_obj->getPointVec (name)));
 
 	std::vector<GeoLib::Point*> const* orig_pnts (geo_obj->getPointVec(name));
 
-	// *** add ids of new points to polygon
+	// *** add ids of points to polygon
 	// for top polyline sort points along polyline
 	const double eps(50); // _mesh->getSearchLength()); ToDo
-	std::size_t s (top_ids->size());
+	std::size_t s (top_ids.size());
 	for (std::size_t j(0); j < polyline.getNumberOfPoints(); j++)
 		for (std::size_t k(0); k < s; k++)
 		{
-			GeoLib::Point* test_pnt (new GeoLib::Point (*(*orig_pnts)[(*top_ids)[k]]));
+			GeoLib::Point* test_pnt (new GeoLib::Point (*(*orig_pnts)[top_ids[k]]));
 			(*test_pnt)[2] = (*polyline.getPoint(j))[2];
 			if (MathLib::sqrDist(polyline.getPoint(j),test_pnt) < eps) {
-				polygon->addPoint ((*top_ids)[k]);
+				polygon->addPoint (top_ids[k]);
 				k = s;
 			}
 			delete test_pnt;
 		}
 
 	// for bottom polyline sort points along polyline in reverse order
-	s = bottom_ids->size();
+	s = bottom_ids.size();
 	GeoLib::Point test_pnt(0.0, 0.0, 0.0);
 	for (int j(polyline.getNumberOfPoints() - 1); j > -1; j--) {
 		for (std::size_t k(0); k < s; k++) {
-			test_pnt[0] = (*(*orig_pnts)[(*bottom_ids)[k]])[0];
-			test_pnt[1] = (*(*orig_pnts)[(*bottom_ids)[k]])[1];
+			test_pnt[0] = (*(*orig_pnts)[bottom_ids[k]])[0];
+			test_pnt[1] = (*(*orig_pnts)[bottom_ids[k]])[1];
 			test_pnt[2] = (*polyline.getPoint(j))[2];
 			if (MathLib::sqrDist(polyline.getPoint(j), &test_pnt) < eps) {
-				polygon->addPoint((*bottom_ids)[k]);
+				polygon->addPoint(bottom_ids[k]);
 				k = s;
 			}
 		}
 	}
 
 	// close polygon
-	polygon->addPoint (polygon->getPointID(0));
+	polygon->addPoint(polygon->getPointID(0));
 	polygon->initialise();
-
-	delete top_ids;
-	delete bottom_ids;
 }
 
 } // end namespace MeshLib
