@@ -160,6 +160,7 @@ int main(int argc, char* argv[])
 
 
 	std::vector<std::string> sfc_names;
+	std::string prefix_name (BaseLib::extractBaseNameWithoutExtension(mesh_arg.getValue()));
 	for (size_t k(ply_id_lower); k < ply_id_upper; k++) {
 		bool closed((*plys)[k]->isClosed());
 		if (!closed) {
@@ -171,6 +172,7 @@ int main(int argc, char* argv[])
 			extract_mesh_nodes.getPolygonFromPolyline(*((*plys)[k]), geo, unique_name, polygon);
 
 			if (polygon) {
+				sfc_name = prefix_name + "-" + sfc_name;
 				createSurfaceFromVerticalPolygon(*geo, polygon, sfc_name);
 
 				delete polygon;
@@ -184,8 +186,11 @@ int main(int argc, char* argv[])
 	}
 
 	if (! sfc_names.empty()) {
-		std::string sfc_project_name("Surfaces");
-		geo->mergeGeometries(sfc_names, sfc_project_name);
+		std::string sfc_project_name(prefix_name + "-Surfaces");
+		if (sfc_names.size() > 1)
+			geo->mergeGeometries(sfc_names, sfc_project_name);
+		else
+			sfc_project_name = sfc_names[0];
 
 		std::string schema_name(file_finder.getPath("OpenGeoSysGLI.xsd"));
 		FileIO::XmlGmlInterface xml(&project, schema_name);
