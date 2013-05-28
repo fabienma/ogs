@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 	logog::Cout *logog(new logog::Cout);
 	logog->SetFormatter(*custom_format);
 
-	TCLAP::CmdLine cmd("Programme reads parts of a Gocad structured mesh", ' ', "0.1");
+	TCLAP::CmdLine cmd("Programm reads parts of a Gocad structured mesh", ' ', "0.1");
 
 	// Define a value argument and add it to the command line.
 	// A value arg defines a flag and a type of value that it expects
