@@ -129,7 +129,7 @@ void GocadSGridReader::readNodesBinary()
 	std::ifstream in(_pnts_fname.c_str(), std::ios::in | std::ios::binary);
 	if (!in) {
 		ERR("Could not open points file \"%s\".", _pnts_fname.c_str());
-		return;
+		throw std::runtime_error("Could not open points file.");
 	}
 
 	_nodes.resize(_index_calculator._n_nodes);
