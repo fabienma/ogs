@@ -509,6 +509,7 @@ void BoostVtuInterface::buildPropertyTree()
 	// point coordinates
 	ptree &points_node = piece_node.add("Points", "");
 	oss << std::endl;
+	oss << std::setprecision(std::numeric_limits<long double>::digits10);
 	for (unsigned i = 0; i < nNodes; i++)
 		oss << data_array_indent << (*nodes[i])[0] << " " << (*nodes[i])[1] << " " <<
 		(*nodes[i])[2] << std::endl;
