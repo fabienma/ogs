@@ -184,21 +184,18 @@ void GocadSGridReader::readElementPropertiesBinary()
 		return;
 	}
 
-	_properties.resize(_index_calculator._n_cells);
-	char inbuff[4], reword[4];
+	std::size_t const n = _index_calculator._n_cells;
+	_properties.resize(n);
 
-	const std::size_t n_properties(_properties.size());
-	for (std::size_t k(0); k < n_properties; k++) {
-		in.read((char*) inbuff, 4 * sizeof(char));
-		if (in) {
-			for (std::size_t j = 0; j < 4; j++) {
-				reword[j] = inbuff[3 - j];
-			}
-			_properties[k] = static_cast<double>(*reinterpret_cast<float*>(&reword[0]));
-		} else {
-			k = n_properties;
-		}
+	std::size_t k = 0;
+	while (in && k < n)
+	{
+		_properties[k++] = readFloat(in);
 	}
+	if (k != n && !in.eof())
+		ERR("Read different number of properties. Expected %d, got %d.\n", n, k);
+
+	in.close();
 }
 
 //void GocadSGridReader::readFlagsBinary(std::size_t n_flags,
