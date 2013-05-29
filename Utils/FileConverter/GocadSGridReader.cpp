@@ -140,12 +140,27 @@ T swapEndianness(T const& v)
 	return b.v;
 }
 
-float readFloat(std::ifstream& in)
+template <typename T>
+T readValue(std::ifstream& in)
 {
-	float f;
-	in.read(reinterpret_cast<char*>(&f), 4);
-	return swapEndianness(f);
+	T v;
+	in.read(reinterpret_cast<char*>(&v), sizeof(T));
+	return swapEndianness(v);
 }
+
+// Reads given number of bytes into a std::size_t. Used for reading region
+// information which can be represented by some number of bytes.
+std::size_t readBytes(std::ifstream& in, const std::size_t n)
+{
+	if (n > sizeof(std::size_t))
+	{
+		ERR("Cannot read %d bytes into a std::size_t of size %d.\n", n, sizeof(std::size_t));
+		throw std::runtime_error("GocadSGridReader readBytes() fails.");
+	}
+
+	std::size_t v;
+	in.read(reinterpret_cast<char*>(&v), n);
+	return v;
 }
 
 void GocadSGridReader::readNodesBinary()
@@ -164,7 +179,7 @@ void GocadSGridReader::readNodesBinary()
 	std::size_t k = 0;
 	while (in && k < n * 3)
 	{
-		coords[k % 3] = readFloat(in);
+		coords[k % 3] = readValue<float>(in);
 		if ((k + 1) % 3 == 0)
 			_nodes[k/3] = new MeshLib::Node(coords, k/3);
 		k++;
@@ -194,7 +209,7 @@ void GocadSGridReader::readElementPropertiesBinary()
 	std::size_t k = 0;
 	while (in && k < n)
 	{
-		_properties[k++] = readFloat(in);
+		_properties[k++] = readValue<float>(in);
 	}
 	if (k != n && !in.eof())
 		ERR("Read different number of properties. Expected %d, got %d.\n", n, k);
