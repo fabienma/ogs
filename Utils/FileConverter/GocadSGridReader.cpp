@@ -124,28 +124,28 @@ void GocadSGridReader::parseRegionFlagsFileName(std::string const& line)
 	_region_flags_fname = _path + line.substr(beg_pos, line.length() - beg_pos);
 }
 
-float swapFloat(float f)
+template <typename T>
+T swapEndianness(T const& v)
 {
 	union
 	{
-		float f;
+		T v;
 		char c[4];
 	} a, b;
 
-	a.f = f;
-	b.c[0] = a.c[3];
-	b.c[1] = a.c[2];
-	b.c[2] = a.c[1];
-	b.c[3] = a.c[0];
+	a.v = v;
+	for (unsigned short i = 0; i < sizeof(T); i++)
+		b.c[i] = a.c[sizeof(T) - i - 1];
 
-	return b.f;
+	return b.v;
 }
 
 float readFloat(std::ifstream& in)
 {
 	float f;
 	in.read(reinterpret_cast<char*>(&f), 4);
-	return swapFloat(f);
+	return swapEndianness(f);
+}
 }
 
 void GocadSGridReader::readNodesBinary()
