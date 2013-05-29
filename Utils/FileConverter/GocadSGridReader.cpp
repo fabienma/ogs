@@ -124,29 +124,54 @@ void GocadSGridReader::parseRegionFlagsFileName(std::string const& line)
 	_region_flags_fname = _path + line.substr(beg_pos, line.length() - beg_pos);
 }
 
+float swapFloat(float f)
+{
+	union
+	{
+		float f;
+		char c[4];
+	} a, b;
+
+	a.f = f;
+	b.c[0] = a.c[3];
+	b.c[1] = a.c[2];
+	b.c[2] = a.c[1];
+	b.c[3] = a.c[0];
+
+	return b.f;
+}
+
+float readFloat(std::ifstream& in)
+{
+	float f;
+	in.read(reinterpret_cast<char*>(&f), 4);
+	return swapFloat(f);
+}
+
 void GocadSGridReader::readNodesBinary()
 {
-	std::ifstream in(_pnts_fname.c_str(), std::ios::in | std::ios::binary);
+	std::ifstream in(_pnts_fname.c_str(), std::ios::binary);
 	if (!in) {
 		ERR("Could not open points file \"%s\".", _pnts_fname.c_str());
 		throw std::runtime_error("Could not open points file.");
 	}
 
-	_nodes.resize(_index_calculator._n_nodes);
+	std::size_t const n = _index_calculator._n_nodes;
+	_nodes.resize(n);
 
-	char inbuff[12], reword[4];
 	double coords[3];
 
-	for (std::size_t k(0); k < _index_calculator._n_nodes; k++) {
-		in.read((char*) inbuff, 12 * sizeof(char));
-		for (std::size_t i = 0; i < 12; i += 4) {
-			for (std::size_t j = 0; j < 4; j++) {
-				reword[j] = inbuff[i + 3 - j];
-			}
-			coords[i/4] = static_cast<double>(*reinterpret_cast<float*>(&reword[0]));
-		}
-		_nodes[k] = new MeshLib::Node(coords, k);
+	std::size_t k = 0;
+	while (in && k < n * 3)
+	{
+		coords[k % 3] = readFloat(in);
+		if ((k + 1) % 3 == 0)
+			_nodes[k/3] = new MeshLib::Node(coords, k/3);
+		k++;
 	}
+	if (k != n * 3 && !in.eof())
+		ERR("Read different number of points. Expected %d floats, got %d.\n", n * 3, k);
+
 	in.close();
 }
 
