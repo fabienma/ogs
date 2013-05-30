@@ -348,23 +348,9 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
 
 void GocadSGridReader::readElementPropertiesBinary()
 {
-	std::ifstream in(_properties_fname.c_str());
-	if (!in) {
-		ERR("Could not open element property file \"%s\".", _properties_fname.c_str());
-		in.close();
-		return;
-	}
-
-	std::size_t const n = _index_calculator._n_cells;
-	_properties.resize(n);
-
-	std::size_t k = 0;
-	while (in && k < n)
-	{
-		_properties[k++] = readValue<float>(in);
-	}
-	if (k != n && !in.eof())
-		ERR("Read different number of properties. Expected %d, got %d.\n", n, k);
+	_properties = readBinaryArray<float>(_properties_fname, _index_calculator._n_cells);
+	if (_properties.empty())
+		ERR("Reading of element properties file \"%s\" failed.", _properties_fname.c_str());
 }
 
 std::vector<int> GocadSGridReader::readFlagsBinary() const
