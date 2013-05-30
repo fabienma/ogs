@@ -133,6 +133,7 @@ private:
 	std::vector<Bitset> readRegionFlagsBinary() const;
 	void makeNodesUnique();
 	void readElementPropertiesBinary();
+	void mapRegionFlagsToCellProperties(std::vector<Bitset> const& rf);
 	void createElements();
 	void readSplitNodesAndModifyElements();
 	void modifyElement(std::size_t u, std::size_t v, std::size_t w, MeshLib::Node const* node2sub,
