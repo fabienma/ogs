@@ -24,11 +24,15 @@
 #include "Node.h"
 #include "Elements/Element.h"
 
+#include <boost/dynamic_bitset.hpp>
+
 namespace FileIO
 {
 
 class GocadSGridReader
 {
+private:
+	typedef boost::dynamic_bitset<> Bitset;
 public:
 	/**
 	 * Constructor takes as argument the Gocad .sg text file.
@@ -126,6 +130,7 @@ public:
 private:
 	void readNodesBinary();
 	std::vector<int> readFlagsBinary() const;
+	std::vector<Bitset> readRegionFlagsBinary() const;
 	void makeNodesUnique();
 	void readElementPropertiesBinary();
 	void createElements();

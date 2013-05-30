@@ -36,6 +36,8 @@
 namespace FileIO
 {
 
+typedef boost::dynamic_bitset<> Bitset;
+
 typedef GocadSGridReader::Region Region;
 typedef GocadSGridReader::Layer Layer;
 
@@ -123,10 +125,10 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 		else if (line.compare(0, 11, "FLAGS_FILE ") == 0) {
 			parseFlagsFileName(line);
 		}
-//		else if (line.compare(0, 18, "REGION_FLAGS_FILE ") == 0)
-//		{
-//			parseRegionFlagsFileName(line);
-//		}
+		else if (line.compare(0, 18, "REGION_FLAGS_FILE ") == 0)
+		{
+			parseRegionFlagsFileName(line);
+		}
 		else if (line.compare(0, 7, "REGION ") == 0 || line.compare(0, 13, "MODEL_REGION ") == 0)
 		{
 			regions.push_back(parseRegion(line));
@@ -153,6 +155,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 
 	makeNodesUnique();
 	readElementPropertiesBinary();
+	std::vector<Bitset> region_flags = readRegionFlagsBinary();
 	createElements();
 	readSplitNodesAndModifyElements();
 	removeNullVolumeElements();
@@ -230,19 +233,21 @@ T readValue(std::ifstream& in)
 	return swapEndianness(v);
 }
 
-// Reads given number of bytes into a std::size_t. Used for reading region
-// information which can be represented by some number of bytes.
-std::size_t readBytes(std::ifstream& in, const std::size_t n)
+// Reads given number of bits (rounded up to next byte) into a bitset.
+// Used for reading region information which can be represented by some
+// number of bits.
+// Currently the number of bits is limited to sizeof(std::size_t)*8.
+Bitset readBits(std::ifstream& in, const std::size_t bits)
 {
-	if (n > sizeof(std::size_t))
+	if (bits > sizeof(std::size_t) * 8)
 	{
-		ERR("Cannot read %d bytes into a std::size_t of size %d.\n", n, sizeof(std::size_t));
-		throw std::runtime_error("GocadSGridReader readBytes() fails.");
+		ERR("Cannot read %d bits into a std::size_t of size %d bits.\n", bits, sizeof(std::size_t) * 8);
+		throw std::runtime_error("GocadSGridReader readBits() fails.");
 	}
 
 	std::size_t v;
-	in.read(reinterpret_cast<char*>(&v), n);
-	return v;
+	in.read(reinterpret_cast<char*>(&v), static_cast<std::size_t>(std::ceil(bits/8.)));
+	return Bitset(bits, v);
 }
 
 void GocadSGridReader::readNodesBinary()
@@ -321,29 +326,30 @@ std::vector<int> GocadSGridReader::readFlagsBinary() const
 	return result;
 }
 
-//void readBinarySGridRegionFlags(std::string const& fname, std::size_t n_region_flags,
-//		std::vector<double> &region_flags)
-//{
-//	std::ifstream in(fname.c_str());
-//	if (!in) {
-//		std::cout << "Could not open " << fname << "." << std::endl;
-//		in.close();
-//		return;
-//	}
-//
-//	char inbuff[16], reword[4];
-//
-//	for (std::size_t k(0); k < n_region_flags; k++) {
-//		in.read((char*) inbuff, 16 * sizeof(char));
-//		for (std::size_t i = 0; i < 16; i += 4) {
-//			for (std::size_t j = 0; j < 4; j++) {
-//				reword[j] = inbuff[i + 3 - j];
-//			}
-//			region_flags[4 * k + i / 4] =
-//					static_cast<double>(*reinterpret_cast<float*>(&reword[0]));
-//		}
-//	}
-//}
+std::vector<Bitset> GocadSGridReader::readRegionFlagsBinary() const
+{
+	std::vector<Bitset> result;
+
+	std::ifstream in(_region_flags_fname.c_str());
+	if (!in) {
+		ERR("readRegionFlagsBinary(): Could not open file \"%s\" for input.\n", _region_flags_fname.c_str());
+		in.close();
+		return result;
+	}
+
+	std::size_t const n = _index_calculator._n_nodes;
+	result.resize(n);
+
+	std::size_t k = 0;
+	while (in && k < n)
+	{
+		result[k++] = readBits(in, regions.size());
+	}
+	if (k != n && !in.eof())
+		ERR("Read different number of values. Expected %d, got %d.\n", n, k);
+
+	return result;
+}
 
 void GocadSGridReader::makeNodesUnique()
 {
