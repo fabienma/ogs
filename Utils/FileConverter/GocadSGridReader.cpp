@@ -288,7 +288,6 @@ void GocadSGridReader::mapRegionFlagsToCellProperties(std::vector<Bitset> const&
 	std::fill(_properties.begin(), _properties.end(), -1);
 	// region flags are stored in each node ijk and give the material index for the
 	// ijk-th cell.
-	std::size_t cell = 0;
 	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
 		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
 			for (std::size_t i(0); i < _index_calculator._x_dim-1; i++) {
@@ -305,14 +304,10 @@ void GocadSGridReader::mapRegionFlagsToCellProperties(std::vector<Bitset> const&
 								layers_set.insert(l_id);
 					}
 				}
-				std::cout << "\n";
 				if (layers_set.size() != 1)
 					ERR("A cell %d %d %d belongs to multiple (%d) layers.", i, j, k, layers_set.size());
 
-				_properties[cell] = *layers_set.begin();
-
-				std::cout << cell << " @ " << _index_calculator.getCellIdx(i,j,k) << ": " << i << " " << j << " " << k << "  " << _properties[cell] << "\n";
-				cell++;
+				_properties[_index_calculator.getCellIdx(i,j,k)] = *layers_set.begin();
 			}
 		}
 	}
