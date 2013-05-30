@@ -36,6 +36,64 @@
 namespace FileIO
 {
 
+typedef GocadSGridReader::Region Region;
+typedef GocadSGridReader::Layer Layer;
+
+std::ostream& operator<<(std::ostream& os, Region const& r)
+{
+	return os << "(" << r.name << "|" << r.bit << ")";
+}
+
+std::ostream& operator<<(std::ostream& os, Layer const& l)
+{
+	std::copy(l.regions.begin(), l.regions.end(),
+		std::ostream_iterator<Region>(os, " "));
+	return os;
+}
+Region parseRegion(std::string const& line)
+{
+	std::istringstream iss(line);
+	std::istream_iterator<std::string> it(iss);
+	// Check first word is REGION or MODEL_REGION.
+	if (*it != std::string("REGION") && *it != std::string("MODEL_REGION"))
+	{
+		ERR("Expected REGION or MODEL_REGION keyword but \"%s\" found.\n", it->c_str());
+		throw std::runtime_error("In parseRegion() expected REGION or MODEL_REGION keyword not found.\n");
+	}
+	++it;
+
+	Region r;
+	r.name = *it;
+	++it;
+	r.bit = atoi(it->c_str());
+
+	return r;
+}
+
+Layer parseLayer(std::string const& line, std::vector<Region> const& regions)
+{
+	std::istringstream iss(line);
+	std::istream_iterator<std::string> it(iss);
+	// Check first word is MODEL_LAYER.
+	if (*it != std::string("MODEL_LAYER"))
+	{
+		ERR("Expected MODEL_LAYER keyword but \"%s\" found.\n", it->c_str());
+		throw std::runtime_error("In parseRegion() expected MODEL_LAYER keyword not found.\n");
+	}
+	++it;
+
+	Layer l;
+	while (it != std::istream_iterator<std::string>() && *it != "END")
+	{
+		l.regions.push_back(
+			*std::find_if(regions.begin(), regions.end(),
+				[&](Region const& r) { return r.name == *it; }));
+		++it;
+	}
+
+	return l;
+}
+
 GocadSGridReader::GocadSGridReader(std::string const& fname) :
 		_fname(fname), _path(_fname.substr(0, _fname.find_last_of("/\\") + 1))
 {

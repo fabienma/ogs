@@ -102,6 +102,28 @@ private:
 		std::size_t _n_cells;
 	};
 
+public:
+	struct Region
+	{
+		std::string name;
+		unsigned bit;
+
+		bool operator==(Region const& r) const { return bit == r.bit; }
+	};
+
+	// Each model layer own several regions.
+	struct Layer
+	{
+		std::vector<Region> regions;
+
+		bool hasRegion(Region const& r) const
+		{
+			return (std::find(regions.begin(), regions.end(), r) != regions.end());
+		}
+
+	};
+
+private:
 	void readNodesBinary();
 	void makeNodesUnique();
 	void readElementPropertiesBinary();
