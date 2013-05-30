@@ -108,20 +108,23 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	// read information in the stratigraphic grid file
 	std::string line;
 	while (std::getline(in, line)) {
-		if (line.find("AXIS_N ") != std::string::npos) {
+		if (line.compare(0, 7, "AXIS_N ") == 0)
+		{
 			parseDims(line);
 		}
-		if (line.find("POINTS_FILE ") != std::string::npos) {
+		else if (line.compare(0, 12, "POINTS_FILE ") == 0)
+		{
 			parsePointsFileName(line);
 		}
-		if (line.find("PROP_FILE ") != std::string::npos) {
+		else if (line.compare(0, 10, "PROP_FILE ") == 0)
+		{
 			parsePropertiesFileName(line);
 		}
-//		if (line.find("FLAGS_FILE ") != std::string::npos
-//				&& line.find("REGION_FLAGS_FILE ") == std::string::npos) {
+//		else if (line.compare(0, 11, "FLAGS_FILE ") == 0) {
 //			parseFlagsFileName(line);
 //		}
-//		if (line.find("REGION_FLAGS_FILE ") != std::string::npos) {
+//		else if (line.compare(0, 18, "REGION_FLAGS_FILE ") == 0)
+//		{
 //			parseRegionFlagsFileName(line);
 //		}
 	}
