@@ -120,9 +120,9 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 		{
 			parsePropertiesFileName(line);
 		}
-//		else if (line.compare(0, 11, "FLAGS_FILE ") == 0) {
-//			parseFlagsFileName(line);
-//		}
+		else if (line.compare(0, 11, "FLAGS_FILE ") == 0) {
+			parseFlagsFileName(line);
+		}
 //		else if (line.compare(0, 18, "REGION_FLAGS_FILE ") == 0)
 //		{
 //			parseRegionFlagsFileName(line);
@@ -293,34 +293,34 @@ void GocadSGridReader::readElementPropertiesBinary()
 	}
 	if (k != n && !in.eof())
 		ERR("Read different number of properties. Expected %d, got %d.\n", n, k);
-
 }
 
-//void GocadSGridReader::readFlagsBinary(std::size_t n_flags,
-//		std::vector<double> &flags)
-//{
-//	std::ifstream in(_flags_fname.c_str());
-//	if (!in) {
-//		std::cout << "Could not open " << _flags_fname << "." << std::endl;
-//		in.close();
-//		return;
-//	}
-//
-//	char inbuff[4], reword[4];
-//
-//	for (std::size_t k(0); k < n_flags; k++) {
-//		in.read((char*) inbuff, 4 * sizeof(char));
-//		for (std::size_t i = 0; i < 4; i += 4) {
-//			for (std::size_t j = 0; j < 4; j++) {
-//				reword[j] = inbuff[i + 3 - j];
-//			}
-//			if (k > n_flags - 20)
-//				std::cout << (*reinterpret_cast<int*>(&reword[0])) << std::endl;
-//			flags[4 * k + i / 4] = static_cast<double>(*reinterpret_cast<float*>(&reword[0]));
-//		}
-//	}
-//}
-//
+std::vector<int> GocadSGridReader::readFlagsBinary() const
+{
+	std::vector<int> result;
+
+	std::ifstream in(_flags_fname.c_str());
+	if (!in) {
+		std::cout << "Could not open " << _flags_fname << "." << std::endl;
+		in.close();
+		return result;
+	}
+
+	std::size_t const n = _index_calculator._n_nodes;
+	result.resize(n);
+
+	std::size_t k = 0;
+	while (in && k < n)
+	{
+		result[k++] = readValue<int32_t>(in);
+	}
+	if (k != n && !in.eof())
+		ERR("Read different number of values. Expected %d, got %d.\n", n, k);
+
+	//std::copy(result.begin(), result.end(), std::ostream_iterator<int>(std::cout, "\n"));
+	return result;
+}
+
 //void readBinarySGridRegionFlags(std::string const& fname, std::size_t n_region_flags,
 //		std::vector<double> &region_flags)
 //{

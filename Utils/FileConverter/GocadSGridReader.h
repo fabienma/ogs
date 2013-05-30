@@ -125,6 +125,7 @@ public:
 
 private:
 	void readNodesBinary();
+	std::vector<int> readFlagsBinary() const;
 	void makeNodesUnique();
 	void readElementPropertiesBinary();
 	void createElements();
