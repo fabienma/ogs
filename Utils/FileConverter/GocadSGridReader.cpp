@@ -355,27 +355,13 @@ void GocadSGridReader::readElementPropertiesBinary()
 
 std::vector<int> GocadSGridReader::readFlagsBinary() const
 {
-	std::vector<int> result;
+	std::vector<int> result = readBinaryArray<int32_t>(
+		_flags_fname,
+		_index_calculator._n_nodes);
 
-	std::ifstream in(_flags_fname.c_str());
-	if (!in) {
-		std::cout << "Could not open " << _flags_fname << "." << std::endl;
-		in.close();
-		return result;
-	}
+	if (result.empty())
+		ERR("Reading of flags file \"%s\" failed.", _flags_fname.c_str());
 
-	std::size_t const n = _index_calculator._n_nodes;
-	result.resize(n);
-
-	std::size_t k = 0;
-	while (in && k < n)
-	{
-		result[k++] = readValue<int32_t>(in);
-	}
-	if (k != n && !in.eof())
-		ERR("Read different number of values. Expected %d, got %d.\n", n, k);
-
-	//std::copy(result.begin(), result.end(), std::ostream_iterator<int>(std::cout, "\n"));
 	return result;
 }
 
