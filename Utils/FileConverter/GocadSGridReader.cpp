@@ -313,6 +313,39 @@ void GocadSGridReader::mapRegionFlagsToCellProperties(std::vector<Bitset> const&
 	}
 }
 
+template <typename T>
+std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
+{
+	std::ifstream in(filename.c_str());
+	if (!in) {
+		ERR("readBinaryArray(): Error while reading from file \"%s\".\n", filename.c_str());
+		ERR("Could not open file \"%s\" for input.\n", filename.c_str());
+		in.close();
+		return std::vector<T>();
+	}
+
+	std::vector<T> result;
+	result.reserve(n);
+
+	while (in)
+		result.push_back(readValue<T>(in));
+
+	if (!in.eof())
+	{
+		ERR("readBinaryArray(): Error while reading from file \"%s\".\n", filename.c_str());
+		ERR("Input stream invalid.\n");
+		return std::vector<T>();
+	}
+
+	if (result.size() - 1 != n)
+	{
+		ERR("readBinaryArray(): Error while reading from file \"%s\".\n", filename.c_str());
+		ERR("Read different number of values. Expected %d, got %d.\n", n, result.size());
+	}
+
+	return result;
+}
+
 void GocadSGridReader::readElementPropertiesBinary()
 {
 	std::ifstream in(_properties_fname.c_str());
