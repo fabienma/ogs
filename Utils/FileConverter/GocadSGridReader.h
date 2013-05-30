@@ -141,6 +141,10 @@ private:
 	std::string _properties_fname;
 	std::string _flags_fname;
 	std::string _region_flags_fname;
+
+	std::vector<Region> regions;
+	std::vector<Layer> layers;
+
 	// data read from binary points file
 	std::vector<MeshLib::Node*> _nodes;
 	std::vector<double> _properties;

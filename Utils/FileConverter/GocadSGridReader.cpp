@@ -127,6 +127,26 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 //		{
 //			parseRegionFlagsFileName(line);
 //		}
+		else if (line.compare(0, 7, "REGION ") == 0 || line.compare(0, 13, "MODEL_REGION ") == 0)
+		{
+			regions.push_back(parseRegion(line));
+		}
+		else if (line.compare(0, 12, "MODEL_LAYER ") == 0)
+		{
+			layers.push_back(parseLayer(line, regions));
+		}
+		else if (line.compare(0, 24, "REGION_FLAGS_BIT_LENGTH ") == 0)
+		{
+			std::istringstream iss(line);
+			std::istream_iterator<std::string> it(iss);
+			it++;
+			std::size_t bit_length = atoi(it->c_str());
+			if (regions.size() != bit_length)
+			{
+				ERR("%d regions read but %d expected.\n", regions.size(), bit_length);
+				throw std::runtime_error("Number of read regions differs from expected.\n");
+			}
+		}
 	}
 
 	readNodesBinary();
