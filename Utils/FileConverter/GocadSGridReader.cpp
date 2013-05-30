@@ -311,7 +311,7 @@ void GocadSGridReader::createElements()
 				element_nodes[5] = _nodes[_node_id_map[_index_calculator(i+1,j,k+1)]];
 				element_nodes[6] = _nodes[_node_id_map[_index_calculator(i+1,j+1,k+1)]];
 				element_nodes[7] = _nodes[_node_id_map[_index_calculator(i,j+1,k+1)]];
-				_elements[cnt] = new MeshLib::Hex(element_nodes, static_cast<unsigned>(_properties[_index_calculator(i,j,k)]));
+				_elements[cnt] = new MeshLib::Hex(element_nodes, static_cast<unsigned>(_properties[_index_calculator.getCellIdx(i,j,k)]));
 				cnt++;
 			}
 		}
