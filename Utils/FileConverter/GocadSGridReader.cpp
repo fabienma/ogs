@@ -128,7 +128,6 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 //			parseRegionFlagsFileName(line);
 //		}
 	}
-	in.close();
 
 	readNodesBinary();
 
@@ -137,6 +136,8 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	createElements();
 	readSplitNodesAndModifyElements();
 	removeNullVolumeElements();
+
+	in.close();
 }
 
 GocadSGridReader::~GocadSGridReader()
@@ -248,8 +249,6 @@ void GocadSGridReader::readNodesBinary()
 	if (k != n * 3 && !in.eof())
 		ERR("Read different number of points. Expected %d floats, got %d.\n", n * 3, k);
 
-	in.close();
-
 	// Create valid _node_id_map.
 	_node_id_map.resize(_nodes.size());
 	std::iota(_node_id_map.begin(), _node_id_map.end(), 0);
@@ -275,7 +274,6 @@ void GocadSGridReader::readElementPropertiesBinary()
 	if (k != n && !in.eof())
 		ERR("Read different number of properties. Expected %d, got %d.\n", n, k);
 
-	in.close();
 }
 
 //void GocadSGridReader::readFlagsBinary(std::size_t n_flags,
