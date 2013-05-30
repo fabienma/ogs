@@ -149,14 +149,23 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 				throw std::runtime_error("Number of read regions differs from expected.\n");
 			}
 		}
+		else
+		{
+			//std::cout << "Skip: \"" << line << "\"\n";
+		}
 	}
+	std::cout << regions.size() << " regions read:\n";
+	std::copy(regions.begin(), regions.end(), std::ostream_iterator<Region>(std::cout, "\t"));
+	std::cout << "\n";
+	std::cout << layers.size() << " layers read:\n";
+	std::copy(layers.begin(), layers.end(), std::ostream_iterator<Layer>(std::cout, "\n"));
 
 	readNodesBinary();
 
-	makeNodesUnique();
+	//makeNodesUnique();
 	readElementPropertiesBinary();
 	std::vector<Bitset> region_flags = readRegionFlagsBinary();
-	mapRegionFlagsToCellProperties(region_flags);	// modifies _properties.
+	//mapRegionFlagsToCellProperties(region_flags);	// modifies _properties.
 
 	createElements();
 	readSplitNodesAndModifyElements();
@@ -285,7 +294,7 @@ void GocadSGridReader::mapRegionFlagsToCellProperties(std::vector<Bitset> const&
 	std::size_t const n = _index_calculator._n_cells;
 	_properties.resize(n);
 	std::fill(_properties.begin(), _properties.end(), -1);
-	// region flags are stored in each node ijk and give the material index for the
+	// region flags are stored in each node ijk and give the region index for the
 	// ijk-th cell.
 	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
 		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
