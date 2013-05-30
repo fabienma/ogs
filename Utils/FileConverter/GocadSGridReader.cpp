@@ -238,18 +238,17 @@ T readValue(std::ifstream& in)
 // Reads given number of bits (rounded up to next byte) into a bitset.
 // Used for reading region information which can be represented by some
 // number of bits.
-// Currently the number of bits is limited to sizeof(std::size_t)*8.
 Bitset readBits(std::ifstream& in, const std::size_t bits)
 {
-	if (bits > sizeof(std::size_t) * 8)
-	{
-		ERR("Cannot read %d bits into a std::size_t of size %d bits.\n", bits, sizeof(std::size_t) * 8);
-		throw std::runtime_error("GocadSGridReader readBits() fails.");
-	}
+	typedef Bitset::block_type block_t;
+	std::size_t const bytes = static_cast<std::size_t>(std::ceil(bits/8.));
+	std::size_t const blocks = (bytes + 1)/ sizeof(block_t);
 
-	std::size_t v;
-	in.read(reinterpret_cast<char*>(&v), static_cast<std::size_t>(std::ceil(bits/8.)));
-	return Bitset(bits, v);
+	block_t data[blocks];
+	std::fill_n(data, blocks, 0);
+	in.read(reinterpret_cast<char*>(data), bytes);
+
+	return Bitset(data, data + blocks);
 }
 
 void GocadSGridReader::readNodesBinary()
