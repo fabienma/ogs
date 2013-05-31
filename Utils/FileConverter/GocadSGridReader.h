@@ -131,7 +131,6 @@ private:
 	void readNodesBinary();
 	std::vector<int> readFlagsBinary() const;
 	std::vector<Bitset> readRegionFlagsBinary() const;
-	void makeNodesUnique();
 	void readElementPropertiesBinary();
 	void mapRegionFlagsToCellProperties(std::vector<Bitset> const& rf);
 	void createElements();
@@ -156,7 +155,6 @@ private:
 	std::vector<MeshLib::Node*> _nodes;
 	std::vector<float> _properties;
 	// calculated data
-	std::vector<std::size_t> _node_id_map;
 	std::vector<MeshLib::Element*> _elements;
 }; // end class GocadSGridReader
 

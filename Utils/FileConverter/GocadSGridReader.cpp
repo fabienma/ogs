@@ -162,7 +162,6 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 
 	readNodesBinary();
 
-	//makeNodesUnique();
 	readElementPropertiesBinary();
 	std::vector<Bitset> region_flags = readRegionFlagsBinary();
 	//mapRegionFlagsToCellProperties(region_flags);	// modifies _properties.
@@ -283,10 +282,6 @@ void GocadSGridReader::readNodesBinary()
 	}
 	if (k != n * 3 && !in.eof())
 		ERR("Read different number of points. Expected %d floats, got %d.\n", n * 3, k);
-
-	// Create valid _node_id_map.
-	_node_id_map.resize(_nodes.size());
-	std::iota(_node_id_map.begin(), _node_id_map.end(), 0);
 }
 
 void GocadSGridReader::mapRegionFlagsToCellProperties(std::vector<Bitset> const& rf)
@@ -398,31 +393,6 @@ std::vector<Bitset> GocadSGridReader::readRegionFlagsBinary() const
 	return result;
 }
 
-void GocadSGridReader::makeNodesUnique()
-{
-	// to make nodes unique GeoLib::PointVec will be employed
-	std::string pname("test");
-	std::vector<GeoLib::Point*>* tmp_nodes(new std::vector<GeoLib::Point*>(_nodes.size()));
-	std::copy(_nodes.begin(), _nodes.end(), tmp_nodes->begin());
-
-	_nodes.clear();
-
-	GeoLib::GEOObjects geo;
-	geo.addPointVec(tmp_nodes, pname);
-
-	// save node <-> id mapping needed for creating the mesh elements later on
-	_node_id_map.resize(_index_calculator._n_nodes);
-	std::vector<std::size_t> const& node_id_map(geo.getPointVecObj(pname)->getIDMap());
-	std::copy(node_id_map.begin(), node_id_map.end(), _node_id_map.begin());
-
-	// copy unique nodes
-	tmp_nodes = const_cast<std::vector<GeoLib::Point*>*>(geo.getPointVecObj(pname)->getVector());
-	_nodes.resize(tmp_nodes->size());
-	for (std::size_t k(0); k < tmp_nodes->size(); k++) {
-		_nodes[k] = new MeshLib::Node((*tmp_nodes)[k]->getCoords());
-	}
-}
-
 void GocadSGridReader::createElements()
 {
 	_elements.resize(_index_calculator._n_cells);
@@ -435,14 +405,14 @@ void GocadSGridReader::createElements()
 	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
 		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
 			for (std::size_t i(0); i < _index_calculator._x_dim-1; i++) {
-				element_nodes[0] = _nodes[_node_id_map[_index_calculator(i,j,k)]];
-				element_nodes[1] = _nodes[_node_id_map[_index_calculator(i+1,j,k)]];
-				element_nodes[2] = _nodes[_node_id_map[_index_calculator(i+1,j+1,k)]];
-				element_nodes[3] = _nodes[_node_id_map[_index_calculator(i,j+1,k)]];
-				element_nodes[4] = _nodes[_node_id_map[_index_calculator(i,j,k+1)]];
-				element_nodes[5] = _nodes[_node_id_map[_index_calculator(i+1,j,k+1)]];
-				element_nodes[6] = _nodes[_node_id_map[_index_calculator(i+1,j+1,k+1)]];
-				element_nodes[7] = _nodes[_node_id_map[_index_calculator(i,j+1,k+1)]];
+				element_nodes[0] = _nodes[_index_calculator(i,j,k)];
+				element_nodes[1] = _nodes[_index_calculator(i+1,j,k)];
+				element_nodes[2] = _nodes[_index_calculator(i+1,j+1,k)];
+				element_nodes[3] = _nodes[_index_calculator(i,j+1,k)];
+				element_nodes[4] = _nodes[_index_calculator(i,j,k+1)];
+				element_nodes[5] = _nodes[_index_calculator(i+1,j,k+1)];
+				element_nodes[6] = _nodes[_index_calculator(i+1,j+1,k+1)];
+				element_nodes[7] = _nodes[_index_calculator(i,j+1,k+1)];
 				_elements[cnt] = new MeshLib::Hex(element_nodes, static_cast<unsigned>(_properties[_index_calculator.getCellIdx(i,j,k)]));
 				cnt++;
 			}
@@ -487,7 +457,7 @@ void GocadSGridReader::readSplitNodesAndModifyElements()
 			std::size_t new_node_pos(_nodes.size());
 			_nodes.push_back(new MeshLib::Node(coords));
 			// get mesh node to substitute in elements
-			MeshLib::Node const*const node2sub(_nodes[_node_id_map[_index_calculator(u,v,w)]]);
+			MeshLib::Node const*const node2sub(_nodes[_index_calculator(u,v,w)]);
 			if (cells[0]) {
 				modifyElement(u, v, w, node2sub, _nodes[new_node_pos]);
 			}
