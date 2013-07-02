@@ -127,6 +127,15 @@ public:
 
 	};
 
+	/**
+	 * SGrid face set
+	 */
+	struct FaceSet
+	{
+		std::string _name;
+		std::vector<std::array<std::size_t, 4>> _face_pos_and_dir;
+	};
+
 private:
 	void readNodesBinary();
 	std::vector<int> readFlagsBinary() const;
@@ -150,6 +159,7 @@ private:
 
 	std::vector<Region> regions;
 	std::vector<Layer> layers;
+	std::vector<FaceSet> _face_sets;
 
 	// data read from binary points file
 	std::vector<MeshLib::Node*> _nodes;
