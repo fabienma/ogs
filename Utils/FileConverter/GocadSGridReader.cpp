@@ -20,15 +20,11 @@
 #include <sstream>
 #include <string>
 
-
 // boost
 #include <boost/tokenizer.hpp>
 
 // ThirdParty/logog
 #include "logog/include/logog.hpp"
-
-// GeoLib
-#include "GEOObjects.h"
 
 // MeshLib
 #include "Elements/Hex.h"
@@ -40,6 +36,7 @@ typedef boost::dynamic_bitset<> Bitset;
 
 typedef GocadSGridReader::Region Region;
 typedef GocadSGridReader::Layer Layer;
+typedef GocadSGridReader::FaceSet FaceSet;
 
 std::ostream& operator<<(std::ostream& os, Region const& r)
 {
@@ -52,6 +49,7 @@ std::ostream& operator<<(std::ostream& os, Layer const& l)
 		std::ostream_iterator<Region>(os, " "));
 	return os;
 }
+
 Region parseRegion(std::string const& line)
 {
 	std::istringstream iss(line);
@@ -94,6 +92,54 @@ Layer parseLayer(std::string const& line, std::vector<Region> const& regions)
 	}
 
 	return l;
+}
+
+/**
+ *
+ * @param line input/output
+ * @param in input stream containing the face set
+ * @return FaceSet
+ */
+FaceSet parseFaceSet(std::string &line, std::istream &in, std::size_t nu, std::size_t nv)
+{
+	std::istringstream iss(line);
+	std::istream_iterator<std::string> it(iss);
+	// Check first word is FACE_SET
+	if (*it != std::string("FACE_SET")) {
+		ERR("Expected FACE_SET keyword bit \"%s\" found.", it->c_str());
+		throw std::runtime_error("In parseFaceSet() expected FACE_SET keyword not found.");
+	}
+	++it;
+
+	FaceSet fs;
+	fs._name = *it;
+	it++;
+	std::size_t number_of_faces(static_cast<std::size_t>(atoi(it->c_str())));
+	std::size_t faces_cnt(0);
+
+	while (getline(in, line) && faces_cnt < number_of_faces) {
+		boost::char_separator<char> sep("\t ");
+		boost::tokenizer<boost::char_separator<char> > tokens(line, sep);
+
+		for(auto tok_it  = tokens.begin(); tok_it != tokens.end(); ) {
+			const std::size_t cell_id(static_cast<std::size_t>(atoi(tok_it->c_str())));
+			const std::size_t u(cell_id/(nu*nv));
+			const std::size_t v((cell_id%(nu*nv))/nu);
+			const std::size_t w((cell_id%(nu*nv))%nu);
+			tok_it++;
+			const std::size_t face_dir(static_cast<std::size_t>(atoi(tok_it->c_str())));
+			fs._face_pos_and_dir.push_back({u, v, w, face_dir});
+			tok_it++;
+			faces_cnt++;
+		}
+	}
+
+	if (faces_cnt != number_of_faces) {
+		ERR("Expected %d number of faces, read %d.", number_of_faces, faces_cnt);
+		throw std::runtime_error("Expected number of faces does not match number of read faces.");
+	}
+
+	return fs;
 }
 
 GocadSGridReader::GocadSGridReader(std::string const& fname) :
@@ -148,6 +194,10 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 				ERR("%d regions read but %d expected.\n", regions.size(), bit_length);
 				throw std::runtime_error("Number of read regions differs from expected.\n");
 			}
+		}
+		else if (line.compare(0, 9, "FACE_SET ") == 0) {
+			_face_sets.push_back(parseFaceSet(line, in,
+					_index_calculator._x_dim-1, _index_calculator._y_dim-1));
 		}
 		else
 		{
