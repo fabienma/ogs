@@ -106,7 +106,7 @@ FaceSet parseFaceSet(std::string &line, std::istream &in, std::size_t nu, std::s
 	std::istream_iterator<std::string> it(iss);
 	// Check first word is FACE_SET
 	if (*it != std::string("FACE_SET")) {
-		ERR("Expected FACE_SET keyword bit \"%s\" found.", it->c_str());
+		ERR("Expected FACE_SET keyword but \"%s\" found.", it->c_str());
 		throw std::runtime_error("In parseFaceSet() expected FACE_SET keyword not found.");
 	}
 	++it;
