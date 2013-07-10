@@ -227,6 +227,35 @@ GocadSGridReader::~GocadSGridReader()
 {
 }
 
+std::vector<MeshLib::Element*> GocadSGridReader::getFaceSetElements() const
+{
+	std::vector<MeshLib::Element*> elements;
+	std::size_t face_set_id(0);
+	for (auto face_set_it = _face_sets.begin(); face_set_it != _face_sets.end(); face_set_it++) {
+		for (auto face_it = face_set_it->_face_pos_and_dir.begin();
+				face_it != face_set_it->_face_pos_and_dir.end(); face_it++) {
+			const std::size_t i((*face_it)[0]);
+			const std::size_t j((*face_it)[1]);
+			const std::size_t k((*face_it)[2]);
+
+			std::array<MeshLib::Node*, 8> element_nodes;
+
+			element_nodes[0] = _nodes[_index_calculator(i, j, k)];
+			element_nodes[1] = _nodes[_index_calculator(i + 1, j, k)];
+			element_nodes[2] = _nodes[_index_calculator(i + 1, j + 1, k)];
+			element_nodes[3] = _nodes[_index_calculator(i, j + 1, k)];
+			element_nodes[4] = _nodes[_index_calculator(i, j, k + 1)];
+			element_nodes[5] = _nodes[_index_calculator(i + 1, j, k + 1)];
+			element_nodes[6] = _nodes[_index_calculator(i + 1, j + 1, k + 1)];
+			element_nodes[7] = _nodes[_index_calculator(i, j + 1, k + 1)];
+			elements.push_back(new MeshLib::Hex(element_nodes, face_set_id));
+		}
+		face_set_id++;
+	}
+
+	return elements;
+}
+
 void GocadSGridReader::parseDims(std::string const& line)
 {
 	std::size_t x_dim(0), y_dim(0), z_dim(0);

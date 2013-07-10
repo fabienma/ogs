@@ -43,6 +43,7 @@ public:
 
 	std::vector<MeshLib::Node*> const& getNodes() const { return _nodes; }
 	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
+	std::vector<MeshLib::Element*> getFaceSetElements() const;
 	std::vector<float> const& getCellProperties() const { return _properties; }
 
 private:
