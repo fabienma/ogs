@@ -81,7 +81,7 @@ private:
 		 * @param k
 		 * @return index within the field of nodes
 		 */
-		std::size_t operator()(std::size_t i, std::size_t j, std::size_t k)
+		std::size_t operator()(std::size_t i, std::size_t j, std::size_t k) const
 		{
 			const std::size_t idx(k * _x_dim * _y_dim + j * _x_dim + i);
 			if (idx >= _n_nodes) {
@@ -90,7 +90,7 @@ private:
 			return idx;
 		}
 
-		std::size_t getCellIdx(std::size_t i, std::size_t j, std::size_t k)
+		std::size_t getCellIdx(std::size_t i, std::size_t j, std::size_t k) const
 		{
 			const std::size_t idx(k * (_x_dim-1) * (_y_dim-1) + j * (_x_dim-1) + i);
 			if (idx >= _n_cells) {
