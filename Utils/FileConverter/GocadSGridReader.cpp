@@ -314,6 +314,24 @@ T swapEndianness(T const& v)
 	return b.v;
 }
 
+double swapEndianness(double const& v)
+{
+	union
+	{
+		double v;
+		char c[sizeof(double)];
+	} a, b;
+
+	a.v = v;
+	for (unsigned short i = 0; i < sizeof(double)/2; i++)
+		b.c[i] = a.c[sizeof(double)/2 - i - 1];
+
+	for (unsigned short i = sizeof(double)/2; i < sizeof(double); i++)
+		b.c[i] = a.c[sizeof(double)+sizeof(double)/2 - i - 1];
+
+	return b.v;
+}
+
 template <typename T>
 T readValue(std::ifstream& in)
 {
@@ -354,7 +372,7 @@ void GocadSGridReader::readNodesBinary()
 	std::size_t k = 0;
 	while (in && k < n * 3)
 	{
-		coords[k % 3] = readValue<float>(in);
+		coords[k % 3] = readValue<double>(in);
 		if ((k + 1) % 3 == 0)
 			_nodes[k/3] = new MeshLib::Node(coords, k/3);
 		k++;
