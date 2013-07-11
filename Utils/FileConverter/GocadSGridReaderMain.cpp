@@ -62,11 +62,15 @@ int main(int argc, char* argv[])
 	cmd.parse(argc, argv);
 
 	// read the Gocad SGrid
+	INFO("Start reading Gocad SGrid.");
 	FileIO::GocadSGridReader reader(sg_file_arg.getValue());
+	INFO("End reading Gocad SGrid.");
 	std::vector<MeshLib::Node*> const& nodes(reader.getNodes());
 	std::vector<MeshLib::Element*> const& elements(reader.getElements());
 
+	INFO("Creating mesh.");
 	MeshLib::Mesh mesh("GocadSGrid", nodes, elements);
+	INFO("Mesh created.");
 
 	FileIO::BoostVtuInterface vtu;
 	vtu.setMesh(&mesh);
