@@ -138,6 +138,7 @@ public:
 	};
 
 private:
+	void parseHeader(std::istream &in);
 	void readNodesBinary();
 	std::vector<int> readFlagsBinary() const;
 	std::vector<Bitset> readRegionFlagsBinary() const;
@@ -161,6 +162,9 @@ private:
 	std::vector<Region> regions;
 	std::vector<Layer> layers;
 	std::vector<FaceSet> _face_sets;
+
+	bool _double_precision_binary;
+	bool _bin_pnts_in_double_precision;
 
 	// data read from binary points file
 	std::vector<MeshLib::Node*> _nodes;

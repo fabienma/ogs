@@ -143,7 +143,8 @@ FaceSet parseFaceSet(std::string &line, std::istream &in, std::size_t nu, std::s
 }
 
 GocadSGridReader::GocadSGridReader(std::string const& fname) :
-		_fname(fname), _path(_fname.substr(0, _fname.find_last_of("/\\") + 1))
+		_fname(fname), _path(_fname.substr(0, _fname.find_last_of("/\\") + 1)),
+		_double_precision_binary(false), _bin_pnts_in_double_precision(false)
 {
 	// check if file exists
 	std::ifstream in(_fname.c_str());
@@ -156,6 +157,10 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	// read information in the stratigraphic grid file
 	std::string line;
 	while (std::getline(in, line)) {
+		if (line.compare(0, 8, "HEADER {") == 0)
+		{
+			parseHeader(in);
+		}
 		if (line.compare(0, 7, "AXIS_N ") == 0)
 		{
 			parseDims(line);
@@ -167,6 +172,9 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 		else if (line.compare(0, 10, "PROP_FILE ") == 0)
 		{
 			parsePropertiesFileName(line);
+		}
+		else if (line.compare(0, 35, "BINARY_POINTS_IN_DOUBLE_PRECISION 1") == 0) {
+			_bin_pnts_in_double_precision = true;
 		}
 		else if (line.compare(0, 11, "FLAGS_FILE ") == 0) {
 			parseFlagsFileName(line);
@@ -254,6 +262,19 @@ std::vector<MeshLib::Element*> GocadSGridReader::getFaceSetElements() const
 	}
 
 	return elements;
+}
+
+void GocadSGridReader::parseHeader(std::istream &in)
+{
+	std::string line;
+	while (std::getline(in, line)) {
+		if (line.compare(0, 1, "}") == 0) {
+			return;
+		}
+		if (line.compare(0, 27, "double_precision_binary: on") == 0) {
+			_double_precision_binary = true;
+		}
+	}
 }
 
 void GocadSGridReader::parseDims(std::string const& line)
@@ -372,7 +393,11 @@ void GocadSGridReader::readNodesBinary()
 	std::size_t k = 0;
 	while (in && k < n * 3)
 	{
-		coords[k % 3] = readValue<double>(in);
+		if (_bin_pnts_in_double_precision) {
+			coords[k % 3] = readValue<double>(in);
+		} else {
+			coords[k % 3] = readValue<float>(in);
+		}
 		if ((k + 1) % 3 == 0)
 			_nodes[k/3] = new MeshLib::Node(coords, k/3);
 		k++;
@@ -455,9 +480,12 @@ void GocadSGridReader::readElementPropertiesBinary()
 
 std::vector<int> GocadSGridReader::readFlagsBinary() const
 {
-	std::vector<int> result = readBinaryArray<int32_t>(
-		_flags_fname,
-		_index_calculator._n_nodes);
+	std::vector<int> result;
+	if (!_double_precision_binary) {
+		result = readBinaryArray<int32_t>(_flags_fname, _index_calculator._n_nodes);
+	} else {
+		result = readBinaryArray<int>(_flags_fname, _index_calculator._n_nodes);
+	}
 
 	if (result.empty())
 		ERR("Reading of flags file \"%s\" failed.", _flags_fname.c_str());
