@@ -304,7 +304,7 @@ T swapEndianness(T const& v)
 	union
 	{
 		T v;
-		char c[4];
+		char c[sizeof(T)];
 	} a, b;
 
 	a.v = v;
