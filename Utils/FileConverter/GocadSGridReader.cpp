@@ -222,7 +222,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 
 	readElementPropertiesBinary();
 	std::vector<Bitset> region_flags = readRegionFlagsBinary();
-	//mapRegionFlagsToCellProperties(region_flags);	// modifies _properties.
+	//mapRegionFlagsToCellProperties(region_flags);	// modifies _material_ids.
 
 	createElements();
 	readSplitNodesAndModifyElements();
@@ -409,8 +409,8 @@ void GocadSGridReader::readNodesBinary()
 void GocadSGridReader::mapRegionFlagsToCellProperties(std::vector<Bitset> const& rf)
 {
 	std::size_t const n = _index_calculator._n_cells;
-	_properties.resize(n);
-	std::fill(_properties.begin(), _properties.end(), -1);
+	_material_ids.resize(n);
+	std::fill(_material_ids.begin(), _material_ids.end(), -1);
 	// region flags are stored in each node ijk and give the region index for the
 	// ijk-th cell.
 	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
@@ -432,7 +432,7 @@ void GocadSGridReader::mapRegionFlagsToCellProperties(std::vector<Bitset> const&
 				if (layers_set.size() != 1)
 					ERR("A cell %d %d %d belongs to multiple (%d) layers.", i, j, k, layers_set.size());
 
-				_properties[_index_calculator.getCellIdx(i,j,k)] = *layers_set.begin();
+				_material_ids[_index_calculator.getCellIdx(i,j,k)] = *layers_set.begin();
 			}
 		}
 	}
@@ -523,9 +523,9 @@ void GocadSGridReader::createElements()
 	_elements.resize(_index_calculator._n_cells);
 	std::array<MeshLib::Node*, 8> element_nodes;
 	std::size_t cnt(0);
-	if (_properties.empty()) {
-		_properties.resize(_index_calculator._n_cells);
-		std::fill(_properties.begin(), _properties.end(), 0);
+	if (_material_ids.empty()) {
+		_material_ids.resize(_index_calculator._n_cells);
+		std::fill(_material_ids.begin(), _material_ids.end(), 0);
 	}
 	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
 		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
@@ -538,7 +538,7 @@ void GocadSGridReader::createElements()
 				element_nodes[5] = _nodes[_index_calculator(i+1,j,k+1)];
 				element_nodes[6] = _nodes[_index_calculator(i+1,j+1,k+1)];
 				element_nodes[7] = _nodes[_index_calculator(i,j+1,k+1)];
-				_elements[cnt] = new MeshLib::Hex(element_nodes, static_cast<unsigned>(_properties[_index_calculator.getCellIdx(i,j,k)]));
+				_elements[cnt] = new MeshLib::Hex(element_nodes, static_cast<unsigned>(_material_ids[_index_calculator.getCellIdx(i,j,k)]));
 				cnt++;
 			}
 		}

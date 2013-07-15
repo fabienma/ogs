@@ -44,7 +44,7 @@ public:
 	std::vector<MeshLib::Node*> const& getNodes() const { return _nodes; }
 	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
 	std::vector<MeshLib::Element*> getFaceSetElements() const;
-	std::vector<float> const& getCellProperties() const { return _properties; }
+	std::vector<std::size_t> const& getCellMaterialIDs() const { return _material_ids; }
 
 private:
 	void parseDims(std::string const& line);
@@ -168,6 +168,7 @@ private:
 
 	// data read from binary points file
 	std::vector<MeshLib::Node*> _nodes;
+	std::vector<std::size_t> _material_ids;
 	std::vector<float> _properties;
 	// calculated data
 	std::vector<MeshLib::Element*> _elements;
