@@ -96,6 +96,48 @@ public:
 	/// Get id of the mesh
 	std::size_t getID() const {return _id; }
 
+	/**
+	 * Adds for each element a property associated with prop_name. The
+	 * properties are stored in the vector elem_props. The number of entries
+	 * of this vector should be the same as the number of elements for scalar
+	 * values and a multiple of the number of elements for vector or matrix
+	 * properties. This method adds properties that can be expressed deploying
+	 * floating point numbers.
+	 * @param prop_name The name of the property, for instance permeability.
+	 * @param elem_props The vector containing the property values.
+	 */
+	void addDoublePropertyVec(std::string const& prop_name, std::vector<double> const& elem_props);
+
+	/**
+	 * Adds for each element a property associated with prop_name. The
+	 * properties are stored in the vector elem_props. The number of entries
+	 * of this vector should be the same as the number of elements for scalar
+	 * values and a multiple of the number of elements for vector or matrix
+	 * properties. This method adds properties that can be expressed deploying
+	 * integers.
+	 * @param prop_name The name of the property, for instance MateriaID.
+	 * @param elem_props The vector containing the property values.
+	 */
+	void addUnsignedPropertyVec(std::string const& prop_name, std::vector<unsigned> const& elem_props);
+
+	/**
+	 * Get the vector of properties associated with the name prop_name.
+	 * If there is not a vector associate with the given name an
+	 * invalid_argument exception is thrown.
+	 * @param prop_name The name of the property.
+	 * @return Vector containing the properties.
+	 */
+	std::vector<double> const& getDoublePropertyVec(std::string const& prop_name) const;
+
+	/**
+	 * Get the vector of properties associated with the name prop_name.
+	 * If there is not a vector associate with the given name an
+	 * invalid_argument exception is thrown.
+	 * @param prop_name The name of the property.
+	 * @return Vector containing the properties.
+	 */
+	std::vector<unsigned> const& getUnsignedPropertyVec(std::string const& prop_name) const;
+
 protected:
 	/// Set the minimum and maximum length over the edges of the mesh.
 	void calcEdgeLengthRange();
@@ -128,6 +170,8 @@ protected:
 	std::vector<Node*> _nodes;
 	std::vector<Element*> _elements;
 
+	std::vector<std::pair<std::string, std::vector<double> > > _double_prop_vecs;
+	std::vector<std::pair<std::string, std::vector<unsigned> > > _unsigned_prop_vecs;
 }; /* class */
 
 } /* namespace */
