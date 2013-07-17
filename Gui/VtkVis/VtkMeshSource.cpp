@@ -50,7 +50,7 @@ vtkStandardNewMacro(VtkMeshSource);
 vtkCxxRevisionMacro(VtkMeshSource, "$Revision$");
 
 VtkMeshSource::VtkMeshSource() :
-		_grid(nullptr)
+		_grid(nullptr), _matName("MaterialIDs")
 {
 	_removable = false; // From VtkAlgorithmProperties
 	this->SetNumberOfInputPorts(0);
@@ -173,6 +173,13 @@ int VtkMeshSource::RequestData( vtkInformation* request,
 					MeshElemType2String(elem->getGeomType()).c_str());
 			return 0;
 		}
+
+		materialIDs->InsertValue(i, elem->getValue());
+		vtkIdList* point_ids = vtkIdList::New();
+		const unsigned nElemNodes (elem->getNNodes());
+		point_ids->SetNumberOfIds(nElemNodes);
+		for (unsigned j = 0; j < nElemNodes; ++j)
+			point_ids->SetId(j, elem->getNode(j)->getID());
 
 		output->InsertNextCell(type, point_ids);
 	}
