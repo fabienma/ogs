@@ -364,7 +364,7 @@ MeshLib::Mesh* VtkMeshConverter::convertUnstructuredGrid(vtkUnstructuredGrid* gr
 	} else {
 		std::fill(material_ids.begin(), material_ids.end(), 0);
 	}
-	mesh->addPropertyVec("MaterialIDs", material_ids);
+	mesh->addUnsignedPropertyVec("MaterialIDs", material_ids);
 
 	return mesh;
 
