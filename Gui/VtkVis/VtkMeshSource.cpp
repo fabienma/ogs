@@ -122,10 +122,16 @@ int VtkMeshSource::RequestData( vtkInformation* request,
 
 	// Insert grid points
 	vtkSmartPointer<vtkPoints> gridPoints = vtkSmartPointer<vtkPoints>::New();
-	gridPoints->SetNumberOfPoints(nPoints);
+	gridPoints->Allocate(nPoints);
 	// Generate mesh nodes
 	for (unsigned i = 0; i < nPoints; ++i)
-		gridPoints->SetPoint(i, (*nodes[i])[0], (*nodes[i])[1], (*nodes[i])[2]);
+		gridPoints->InsertPoint(i, (*nodes[i])[0], (*nodes[i])[1], (*nodes[i])[2]);
+
+	// Generate attribute vector for material groups
+	vtkSmartPointer<vtkIntArray> materialIDs = vtkSmartPointer<vtkIntArray>::New();
+	materialIDs->SetName(_matName);
+	materialIDs->SetNumberOfComponents(1);
+	materialIDs->SetNumberOfTuples(nElems);
 
 	// Generate mesh elements
 	for (unsigned i = 0; i < nElems; ++i)
@@ -176,10 +182,10 @@ int VtkMeshSource::RequestData( vtkInformation* request,
 
 		materialIDs->InsertValue(i, elem->getValue());
 		vtkIdList* point_ids = vtkIdList::New();
+
 		const unsigned nElemNodes (elem->getNNodes());
-		point_ids->SetNumberOfIds(nElemNodes);
 		for (unsigned j = 0; j < nElemNodes; ++j)
-			point_ids->SetId(j, elem->getNode(j)->getID());
+			point_ids->InsertNextId(elem->getNode(j)->getID());
 
 		output->InsertNextCell(type, point_ids);
 	}
