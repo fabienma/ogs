@@ -307,4 +307,3 @@ std::vector<std::string> Mesh::getPropertyVecNames(bool prop_type_double) const
 }
 
 }
-
