@@ -142,6 +142,15 @@ public:
 	boost::optional<std::vector<unsigned> const&>
 	getUnsignedPropertyVec(std::string const& prop_name) const;
 
+	/**
+	 * Returns the names of the available properties.
+	 * @param prop_type_double if the value is set to true the names of all
+	 * available double property vectors will be returned, else the names of
+	 * all available unsigned property vectors will be returned.
+	 * @return The names of the available properties.
+	 */
+	std::vector<std::string> getPropertyVecNames(bool prop_type_double) const;
+
 protected:
 	/// Set the minimum and maximum length over the edges of the mesh.
 	void calcEdgeLengthRange();
