@@ -452,8 +452,9 @@ void BoostVtuInterface::buildPropertyTree()
 	const std::string data_array_indent("\t\t\t\t  ");
 
 	using boost::property_tree::ptree;
+	ptree doc;
 
-	ptree &root_node = _doc.put("VTKFile", "");
+	ptree &root_node = doc.put("VTKFile", "");
 	root_node.put("<xmlattr>.type", "UnstructuredGrid");
 	root_node.put("<xmlattr>.version", "0.1");
 	root_node.put("<xmlattr>.byte_order", "LittleEndian");
@@ -468,20 +469,43 @@ void BoostVtuInterface::buildPropertyTree()
 	piece_node.put("<xmlattr>.NumberOfCells", str_nElems.c_str());
 
 	// scalar arrays for point- and cell-data
-	piece_node.add("PointData", "");
+	piece_node.add("PointData", "\n\t\t\t");
 	// add node_area array here if necessary!
-	ptree &celldata_node = piece_node.add("CellData", "");
-	celldata_node.put("<xmlattr>.Scalars", "MaterialIDs");
 
 	std::stringstream oss(std::stringstream::out);
-	oss.precision(_out.precision());
-	oss << std::endl << data_array_indent;
-	for (unsigned i = 0; i < nElems; i++)
-		oss << elements[i]->getValue() << " ";
-	oss << std::endl << data_array_close;
-	this->addDataArray(celldata_node, "MaterialIDs", "Int32", oss.str());
-	oss.str(std::string());
-	oss.clear();
+	std::vector<std::string> names(_mesh->getPropertyVecNames(false));
+	for (auto it(names.begin()); it!=names.end(); ++it) {
+		boost::optional<std::vector<unsigned> const&> props(_mesh->getUnsignedPropertyVec(*it));
+		ptree &celldata_node = piece_node.add("CellData", "");
+		celldata_node.put("<xmlattr>.Scalars", it->c_str());
+
+		oss << std::endl << data_array_indent;
+		for (unsigned i = 0; i < nElems; i++)
+			oss << (*props)[i] << " ";
+		oss << std::endl << data_array_close;
+		this->addDataArray(celldata_node, it->c_str(), "Int32", oss.str());
+		oss.str(std::string());
+		oss.clear();
+	}
+
+	// write double properties
+	names = _mesh->getPropertyVecNames(true);
+	for (auto it(names.begin()); it!=names.end(); ++it) {
+		boost::optional<std::vector<double> const&> props(_mesh->getDoublePropertyVec(*it));
+
+		if (props) {
+			ptree & celldata_node = piece_node.add("CellData", "");
+			celldata_node.put("<xmlattr>.Scalars", it->c_str());
+
+			oss << std::endl << data_array_indent;
+			for (unsigned i = 0; i < nElems; i++)
+				oss << (*props)[i] << " ";
+			oss << std::endl << data_array_close;
+			this->addDataArray(celldata_node, it->c_str(), "Float64", oss.str());
+			oss.str(std::string());
+			oss.clear();
+		}
+	}
 
 	// point coordinates
 	ptree &points_node = piece_node.add("Points", "");
