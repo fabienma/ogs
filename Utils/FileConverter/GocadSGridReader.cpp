@@ -473,7 +473,9 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
 
 void GocadSGridReader::readElementPropertiesBinary()
 {
-	_properties = readBinaryArray<float>(_properties_fname, _index_calculator._n_cells);
+	std::vector<float> float_properties = readBinaryArray<float>(_properties_fname, _index_calculator._n_cells);
+	_properties.resize(float_properties.size());
+	std::copy(float_properties.begin(), float_properties.end(), _properties.begin());
 	if (_properties.empty())
 		ERR("Reading of element properties file \"%s\" failed.", _properties_fname.c_str());
 }
@@ -538,7 +540,7 @@ void GocadSGridReader::createElements()
 				element_nodes[5] = _nodes[_index_calculator(i+1,j,k+1)];
 				element_nodes[6] = _nodes[_index_calculator(i+1,j+1,k+1)];
 				element_nodes[7] = _nodes[_index_calculator(i,j+1,k+1)];
-				_elements[cnt] = new MeshLib::Hex(element_nodes, static_cast<unsigned>(_material_ids[_index_calculator.getCellIdx(i,j,k)]));
+				_elements[cnt] = new MeshLib::Hex(element_nodes, _index_calculator.getCellIdx(i,j,k));
 				cnt++;
 			}
 		}

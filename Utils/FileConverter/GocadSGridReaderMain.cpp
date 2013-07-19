@@ -72,6 +72,8 @@ int main(int argc, char* argv[])
 	MeshLib::Mesh mesh("GocadSGrid", nodes, elements);
 	INFO("Mesh created.");
 
+	mesh.addPropertyVec("Property1", reader.getProperties());
+
 	FileIO::BoostVtuInterface vtu;
 	vtu.setMesh(&mesh);
 	// output file name

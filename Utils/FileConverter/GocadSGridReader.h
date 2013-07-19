@@ -45,6 +45,7 @@ public:
 	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
 	std::vector<MeshLib::Element*> getFaceSetElements() const;
 	std::vector<std::size_t> const& getCellMaterialIDs() const { return _material_ids; }
+	std::vector<double> const& getProperties() const { return _properties; }
 
 private:
 	void parseDims(std::string const& line);
@@ -169,7 +170,7 @@ private:
 	// data read from binary points file
 	std::vector<MeshLib::Node*> _nodes;
 	std::vector<std::size_t> _material_ids;
-	std::vector<float> _properties;
+	std::vector<double> _properties;
 	// calculated data
 	std::vector<MeshLib::Element*> _elements;
 }; // end class GocadSGridReader
