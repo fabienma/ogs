@@ -489,13 +489,11 @@ void BoostVtuInterface::buildPropertyTree()
 
 	// write double properties
 	names = _mesh->getPropertyVecNames(true);
+	ptree & celldata_node = piece_node.add("CellData", "");
 	for (auto it(names.begin()); it!=names.end(); ++it) {
 		boost::optional<std::vector<double> const&> props(_mesh->getDoublePropertyVec(*it));
 
 		if (props) {
-			ptree & celldata_node = piece_node.add("CellData", "");
-			celldata_node.put("<xmlattr>.Scalars", it->c_str());
-
 			oss << std::endl << data_array_indent;
 			for (unsigned i = 0; i < nElems; i++)
 				oss << (*props)[i] << " ";
