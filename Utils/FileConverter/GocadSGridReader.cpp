@@ -37,6 +37,7 @@ typedef boost::dynamic_bitset<> Bitset;
 typedef GocadSGridReader::Region Region;
 typedef GocadSGridReader::Layer Layer;
 typedef GocadSGridReader::FaceSet FaceSet;
+typedef GocadSGridReader::GocadProperty GocadProperty;
 
 std::ostream& operator<<(std::ostream& os, Region const& r)
 {
@@ -48,6 +49,12 @@ std::ostream& operator<<(std::ostream& os, Layer const& l)
 	std::copy(l.regions.begin(), l.regions.end(),
 		std::ostream_iterator<Region>(os, " "));
 	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, GocadProperty const& p)
+{
+	return os << p._property_name << " " << p._property_id << " "
+			<< p._property_data_type << " " << p._property_data_fname;
 }
 
 Region parseRegion(std::string const& line)
@@ -92,6 +99,94 @@ Layer parseLayer(std::string const& line, std::vector<Region> const& regions)
 	}
 
 	return l;
+}
+
+GocadProperty parseGocadPropertyMetaData(std::string &line, std::istream &in, std::string const& path)
+{
+	boost::char_separator<char> sep("\t ");
+	boost::tokenizer<boost::char_separator<char> > tokens(line, sep);
+	auto tok_it(tokens.begin());
+	// A property section in Gocad file starts with a line
+	// PROPERTY id "property_name"
+	if (tok_it->compare("PROPERTY") != 0 ) {
+		ERR("Expected PROPERTY keyword but \"%s\" found.", tok_it->c_str());
+		throw std::runtime_error("In parseGocadPropertyMetaData() expected PROPERTY keyword not found.");
+	}
+	tok_it++;
+
+	GocadProperty prop;
+	prop._property_id = BaseLib::str2number<std::size_t>(*tok_it);
+	tok_it++;
+	prop._property_name = *tok_it;
+	BaseLib::trim(prop._property_name, '\"');
+
+	while (getline(in, line)) {
+		tokens.assign(line);
+
+		tok_it = tokens.begin();
+		// this is the last entry of the property
+		if (tok_it->compare("PROP_FILE") == 0) {
+			tok_it++;
+			if (! prop.checkID(*tok_it)) {
+				throw std::runtime_error("parseGocadPropertyMetaData(): id mismatch.");
+			}
+			tok_it++;
+			prop._property_data_fname = path + *tok_it;
+			return prop;
+		}
+
+		if (tok_it->compare("PROPERTY_CLASS") == 0) {
+			tok_it++;
+			if (! prop.checkID(*tok_it)) {
+				throw std::runtime_error("parseGocadPropertyMetaData(): id mismatch.");
+			}
+			tok_it++;
+			prop._property_class_name = *tok_it;
+		}
+
+		if (tok_it->compare("PROPERTY_CLASS") == 0) {
+			tok_it++;
+			if (! prop.checkID(*tok_it)) {
+				throw std::runtime_error("parseGocadPropertyMetaData(): id mismatch.");
+			}
+			tok_it++;
+			prop._property_class_name = *tok_it;
+		}
+
+		if (tok_it->compare("PROPERTY_SUBCLASS") == 0) {
+			tok_it++;
+			if (! prop.checkID(*tok_it)) {
+				throw std::runtime_error("parseGocadPropertyMetaData(): id mismatch.");
+			}
+			tok_it++;
+			if (tok_it->compare("QUANTITY") != 0) {
+				ERR("Expected keyword QUANTITY but found \"%s\".", tok_it->c_str());
+				throw std::runtime_error("parseGocadPropertyMetaData(): id mismatch.");
+			}
+			tok_it++;
+			prop._property_data_type = *tok_it;
+		}
+
+		if (tok_it->compare("PROP_UNIT") == 0 ||
+				tok_it->compare("PROP_ORIGINAL_UNIT") == 0) {
+			tok_it++;
+			if (! prop.checkID(*tok_it)) {
+				throw std::runtime_error("parseGocadPropertyMetaData(): id mismatch.");
+			}
+			tok_it++;
+			prop._property_unit = *tok_it;
+		}
+
+		if (tok_it->compare("PROP_NO_DATA_VALUE") == 0) {
+			tok_it++;
+			if (! prop.checkID(*tok_it)) {
+				throw std::runtime_error("parseGocadPropertyMetaData(): id mismatch.");
+			}
+			tok_it++;
+			prop._property_no_data_value = BaseLib::str2number<double>(*tok_it);
+		}
+	}
+	return prop;
 }
 
 /**
@@ -169,9 +264,9 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 		{
 			parsePointsFileName(line);
 		}
-		else if (line.compare(0, 10, "PROP_FILE ") == 0)
+		else if (line.compare(0, 9, "PROPERTY ") == 0)
 		{
-			parsePropertiesFileName(line);
+			_property_meta_data_vecs.push_back(parseGocadPropertyMetaData(line, in, _path));
 		}
 		else if (line.compare(0, 35, "BINARY_POINTS_IN_DOUBLE_PRECISION 1") == 0) {
 			_bin_pnts_in_double_precision = true;
@@ -217,6 +312,10 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	std::cout << "\n";
 	std::cout << layers.size() << " layers read:\n";
 	std::copy(layers.begin(), layers.end(), std::ostream_iterator<Layer>(std::cout, "\n"));
+
+	std::cout << "meta data for " << _property_meta_data_vecs.size() << " properties read:\n";
+	std::copy(_property_meta_data_vecs.begin(), _property_meta_data_vecs.end(),
+			std::ostream_iterator<GocadProperty>(std::cout, "\n"));
 
 	readNodesBinary();
 
@@ -473,11 +572,21 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
 
 void GocadSGridReader::readElementPropertiesBinary()
 {
-	std::vector<float> float_properties = readBinaryArray<float>(_properties_fname, _index_calculator._n_cells);
-	_properties.resize(float_properties.size());
-	std::copy(float_properties.begin(), float_properties.end(), _properties.begin());
-	if (_properties.empty())
-		ERR("Reading of element properties file \"%s\" failed.", _properties_fname.c_str());
+	for (auto prop_it(_property_meta_data_vecs.begin());
+			prop_it != _property_meta_data_vecs.end();
+			prop_it++) {
+		std::string const& fname(prop_it->_property_data_fname);
+		std::vector<float> float_properties =
+				readBinaryArray<float>(fname, _index_calculator._n_cells);
+		std::vector<double> properties;
+		properties.resize(float_properties.size());
+		std::copy(float_properties.begin(), float_properties.end(), properties.begin());
+		if (properties.empty()) {
+			ERR("Reading of element properties file \"%s\" failed.", fname.c_str());
+		} else {
+			_property_vecs.push_back(properties);
+		}
+	}
 }
 
 std::vector<int> GocadSGridReader::readFlagsBinary() const
@@ -648,6 +757,31 @@ void GocadSGridReader::removeNullVolumeElements()
 			)
 	);
 	_elements.erase(new_end, _elements.end());
+}
+
+boost::optional<std::vector<double> const&>
+GocadSGridReader::getPropertyVec(std::string const& name) const
+{
+	auto const it(std::find_if(_property_meta_data_vecs.begin(), _property_meta_data_vecs.end(),
+			[&name](GocadProperty const& p) { return p._property_name.compare(name) == 0; }));
+	if (it != _property_meta_data_vecs.end())
+		return boost::optional<std::vector<double> const&>(
+				_property_vecs[std::distance(_property_meta_data_vecs.begin(), it)]);
+	else
+		return boost::optional<std::vector<double> const&>();
+}
+
+std::vector<std::string> GocadSGridReader::getPropertyNames() const
+{
+	std::vector<std::string> names;
+	std::transform(_property_meta_data_vecs.begin(),
+			_property_meta_data_vecs.end(),
+			std::back_inserter(names),
+			[](GocadProperty const& p) {
+				return p._property_name;
+			}
+		);
+	return names;
 }
 
 } // end namespace FileIO

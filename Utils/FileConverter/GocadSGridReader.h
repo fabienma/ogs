@@ -20,6 +20,12 @@
 #include <string>
 #include <vector>
 
+// logog
+#include "logog/include/logog.hpp"
+
+// BaseLib
+#include "StringTools.h"
+
 // MeshLib
 #include "Node.h"
 #include "Elements/Element.h"
@@ -45,7 +51,10 @@ public:
 	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
 	std::vector<MeshLib::Element*> getFaceSetElements() const;
 	std::vector<std::size_t> const& getCellMaterialIDs() const { return _material_ids; }
-	std::vector<double> const& getProperties() const { return _properties; }
+
+	boost::optional<std::vector<double> const&>
+	getPropertyVec(std::string const& name) const;
+	std::vector<std::string> getPropertyNames() const;
 
 private:
 	void parseDims(std::string const& line);
@@ -129,6 +138,28 @@ public:
 
 	};
 
+	struct GocadProperty
+	{
+		std::size_t _property_id;
+		std::string _property_name;
+		std::string _property_class_name;
+		std::string _property_unit;
+		std::string _property_data_type;
+		std::string _property_data_fname;
+		double _property_no_data_value;
+
+		bool checkID(std::string const& id_string)
+		{
+			if (_property_id != BaseLib::str2number<std::size_t>(id_string)) {
+				ERR("Expected property id \"%d\" but found \"%d\".",
+						_property_id,
+						BaseLib::str2number<std::size_t>(id_string));
+				return false;
+			}
+			return true;
+		}
+	};
+
 	/**
 	 * SGrid face set
 	 */
@@ -170,7 +201,9 @@ private:
 	// data read from binary points file
 	std::vector<MeshLib::Node*> _nodes;
 	std::vector<std::size_t> _material_ids;
-	std::vector<double> _properties;
+	// properties
+	std::vector<std::vector<double>> _property_vecs;
+	std::vector<GocadProperty> _property_meta_data_vecs;
 	// calculated data
 	std::vector<MeshLib::Element*> _elements;
 }; // end class GocadSGridReader

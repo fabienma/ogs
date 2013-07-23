@@ -72,7 +72,14 @@ int main(int argc, char* argv[])
 	MeshLib::Mesh mesh("GocadSGrid", nodes, elements);
 	INFO("Mesh created.");
 
-	mesh.addPropertyVec("Property1", reader.getProperties());
+	std::vector<std::string> const& prop_names(reader.getPropertyNames());
+	for (auto name_it(prop_names.begin()); name_it != prop_names.end(); name_it++) {
+		boost::optional<std::vector<double> const&> prop(reader.getPropertyVec(*name_it));
+		if (prop) {
+			INFO("Adding property \"%s\".", name_it->c_str());
+			mesh.addPropertyVec(*name_it, *prop);
+		}
+	}
 
 	FileIO::BoostVtuInterface vtu;
 	vtu.setMesh(&mesh);
