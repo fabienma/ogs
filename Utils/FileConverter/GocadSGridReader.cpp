@@ -131,7 +131,9 @@ GocadProperty parseGocadPropertyMetaData(std::string &line, std::istream &in, st
 				throw std::runtime_error("parseGocadPropertyMetaData(): id mismatch.");
 			}
 			tok_it++;
-			prop._property_data_fname = path + *tok_it;
+			std::string tmp(*tok_it);
+			BaseLib::trim(tmp, '\"');
+			prop._property_data_fname = path + tmp;
 			return prop;
 		}
 
@@ -370,25 +372,33 @@ void GocadSGridReader::parseDims(std::string const& line)
 void GocadSGridReader::parsePointsFileName(std::string const& line)
 {
 	std::size_t beg_pos(line.find_first_of(" ") + 1);
-	_pnts_fname = _path + line.substr(beg_pos, line.length() - beg_pos);
+	std::string fname(line.substr(beg_pos, line.length() - beg_pos));
+	BaseLib::trim(fname, '\"');
+	_pnts_fname = _path + fname;
 }
 
 void GocadSGridReader::parsePropertiesFileName(std::string const& line)
 {
 	std::size_t beg_pos(line.find_first_of(" ") + 3);
-	_properties_fname = _path + line.substr(beg_pos, line.length() - beg_pos);
+	std::string fname(line.substr(beg_pos, line.length() - beg_pos));
+	BaseLib::trim(fname, '\"');
+	_properties_fname = _path + fname;
 }
 
 void GocadSGridReader::parseFlagsFileName(std::string const& line)
 {
 	std::size_t beg_pos(line.find_first_of(" ") + 1);
-	_flags_fname = _path + line.substr(beg_pos, line.length() - beg_pos);
+	std::string fname(line.substr(beg_pos, line.length() - beg_pos));
+	BaseLib::trim(fname, '\"');
+	_flags_fname = _path + fname;
 }
 
 void GocadSGridReader::parseRegionFlagsFileName(std::string const& line)
 {
 	std::size_t beg_pos(line.find_first_of(" ") + 1);
-	_region_flags_fname = _path + line.substr(beg_pos, line.length() - beg_pos);
+	std::string fname(line.substr(beg_pos, line.length() - beg_pos));
+	BaseLib::trim(fname, '\"');
+	_region_flags_fname = _path + fname;
 }
 
 template <typename T>
