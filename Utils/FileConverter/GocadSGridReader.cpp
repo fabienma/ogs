@@ -507,34 +507,34 @@ void GocadSGridReader::readNodesBinary()
 
 void GocadSGridReader::mapRegionFlagsToCellProperties(std::vector<Bitset> const& rf)
 {
-	std::size_t const n = _index_calculator._n_cells;
-	_material_ids.resize(n);
-	std::fill(_material_ids.begin(), _material_ids.end(), -1);
-	// region flags are stored in each node ijk and give the region index for the
-	// ijk-th cell.
-	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
-		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
-			for (std::size_t i(0); i < _index_calculator._x_dim-1; i++) {
-				// Find layers containing regions given by bits.
-				// Run over bits and push back set bits
-				std::set<std::size_t> layers_set;
-				for (auto r = regions.begin(); r != regions.end(); ++r)
-				{
-					if (rf[_index_calculator(i,j,k)].test(r->bit))
-					{
-						// Bit is set, find a layer.
-						for (std::size_t l_id = 0; l_id < layers.size(); ++l_id)
-							if (layers[l_id].hasRegion(*r))
-								layers_set.insert(l_id);
-					}
-				}
-				if (layers_set.size() != 1)
-					ERR("A cell %d %d %d belongs to multiple (%d) layers.", i, j, k, layers_set.size());
-
-				_material_ids[_index_calculator.getCellIdx(i,j,k)] = *layers_set.begin();
-			}
-		}
-	}
+//	std::size_t const n = _index_calculator._n_cells;
+//	_material_ids.resize(n);
+//	std::fill(_material_ids.begin(), _material_ids.end(), -1);
+//	// region flags are stored in each node ijk and give the region index for the
+//	// ijk-th cell.
+//	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
+//		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
+//			for (std::size_t i(0); i < _index_calculator._x_dim-1; i++) {
+//				// Find layers containing regions given by bits.
+//				// Run over bits and push back set bits
+//				std::set<std::size_t> layers_set;
+//				for (auto r = regions.begin(); r != regions.end(); ++r)
+//				{
+//					if (rf[_index_calculator(i,j,k)].test(r->bit))
+//					{
+//						// Bit is set, find a layer.
+//						for (std::size_t l_id = 0; l_id < layers.size(); ++l_id)
+//							if (layers[l_id].hasRegion(*r))
+//								layers_set.insert(l_id);
+//					}
+//				}
+//				if (layers_set.size() != 1)
+//					ERR("A cell %d %d %d belongs to multiple (%d) layers.", i, j, k, layers_set.size());
+//
+//				_material_ids[_index_calculator.getCellIdx(i,j,k)] = *layers_set.begin();
+//			}
+//		}
+//	}
 }
 
 template <typename T>
@@ -634,10 +634,6 @@ void GocadSGridReader::createElements()
 	_elements.resize(_index_calculator._n_cells);
 	std::array<MeshLib::Node*, 8> element_nodes;
 	std::size_t cnt(0);
-	if (_material_ids.empty()) {
-		_material_ids.resize(_index_calculator._n_cells);
-		std::fill(_material_ids.begin(), _material_ids.end(), 0);
-	}
 	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
 		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
 			for (std::size_t i(0); i < _index_calculator._x_dim-1; i++) {

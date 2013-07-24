@@ -50,7 +50,6 @@ public:
 	std::vector<MeshLib::Node*> const& getNodes() const { return _nodes; }
 	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
 	std::vector<MeshLib::Element*> getFaceSetElements() const;
-	std::vector<std::size_t> const& getCellMaterialIDs() const { return _material_ids; }
 
 	boost::optional<std::vector<double> const&>
 	getPropertyVec(std::string const& name) const;
@@ -200,7 +199,6 @@ private:
 
 	// data read from binary points file
 	std::vector<MeshLib::Node*> _nodes;
-	std::vector<std::size_t> _material_ids;
 	// properties
 	std::vector<std::vector<double>> _property_vecs;
 	std::vector<GocadProperty> _property_meta_data_vecs;
