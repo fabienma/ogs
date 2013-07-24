@@ -195,7 +195,7 @@ GocadProperty parseGocadPropertyMetaData(std::string &line, std::istream &in, st
  * @param in input stream containing the face set
  * @return FaceSet
  */
-FaceSet parseFaceSet(std::string &line, std::istream &in, std::size_t nu, std::size_t nv)
+FaceSet parseFaceSet(std::string &line, std::istream &in)
 {
 	std::istringstream iss(line);
 	std::istream_iterator<std::string> it(iss);
@@ -217,14 +217,12 @@ FaceSet parseFaceSet(std::string &line, std::istream &in, std::size_t nu, std::s
 		boost::tokenizer<boost::char_separator<char> > tokens(line, sep);
 
 		for(auto tok_it  = tokens.begin(); tok_it != tokens.end(); ) {
-			const std::size_t cell_id(static_cast<std::size_t>(atoi(tok_it->c_str())));
-			const std::size_t u(cell_id/(nu*nv));
-			const std::size_t v((cell_id%(nu*nv))/nu);
-			const std::size_t w((cell_id%(nu*nv))%nu);
+			std::size_t node_id(static_cast<std::size_t>(atoi(tok_it->c_str())));
 			tok_it++;
 			const std::size_t face_dir(static_cast<std::size_t>(atoi(tok_it->c_str())));
-			fs._face_pos_and_dir.push_back({u, v, w, face_dir});
 			tok_it++;
+
+			fs._node_id_and_dir.push_back({node_id, face_dir});
 			faces_cnt++;
 		}
 	}
@@ -299,8 +297,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 			}
 		}
 		else if (line.compare(0, 9, "FACE_SET ") == 0) {
-			_face_sets.push_back(parseFaceSet(line, in,
-					_index_calculator._x_dim-1, _index_calculator._y_dim-1));
+			_face_sets.push_back(parseFaceSet(line, in));
 		}
 		else
 		{
@@ -334,33 +331,9 @@ GocadSGridReader::~GocadSGridReader()
 {
 }
 
-std::vector<MeshLib::Element*> GocadSGridReader::getFaceSetElements() const
+std::vector<std::array<std::size_t, 2> > const& GocadSGridReader::getFaceSet(std::size_t n) const
 {
-	std::vector<MeshLib::Element*> elements;
-	std::size_t face_set_id(0);
-	for (auto face_set_it = _face_sets.begin(); face_set_it != _face_sets.end(); face_set_it++) {
-		for (auto face_it = face_set_it->_face_pos_and_dir.begin();
-				face_it != face_set_it->_face_pos_and_dir.end(); face_it++) {
-			const std::size_t i((*face_it)[0]);
-			const std::size_t j((*face_it)[1]);
-			const std::size_t k((*face_it)[2]);
-
-			std::array<MeshLib::Node*, 8> element_nodes;
-
-			element_nodes[0] = _nodes[_index_calculator(i, j, k)];
-			element_nodes[1] = _nodes[_index_calculator(i + 1, j, k)];
-			element_nodes[2] = _nodes[_index_calculator(i + 1, j + 1, k)];
-			element_nodes[3] = _nodes[_index_calculator(i, j + 1, k)];
-			element_nodes[4] = _nodes[_index_calculator(i, j, k + 1)];
-			element_nodes[5] = _nodes[_index_calculator(i + 1, j, k + 1)];
-			element_nodes[6] = _nodes[_index_calculator(i + 1, j + 1, k + 1)];
-			element_nodes[7] = _nodes[_index_calculator(i, j + 1, k + 1)];
-			elements.push_back(new MeshLib::Hex(element_nodes, face_set_id));
-		}
-		face_set_id++;
-	}
-
-	return elements;
+	return _face_sets[n]._node_id_and_dir;
 }
 
 void GocadSGridReader::parseHeader(std::istream &in)

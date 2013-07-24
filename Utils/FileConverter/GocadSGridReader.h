@@ -49,7 +49,8 @@ public:
 
 	std::vector<MeshLib::Node*> const& getNodes() const { return _nodes; }
 	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
-	std::vector<MeshLib::Element*> getFaceSetElements() const;
+	std::size_t getNFaceSets() const { return _face_sets.size(); }
+	std::vector<std::array<std::size_t, 2> > const& getFaceSet(std::size_t n) const;
 
 	boost::optional<std::vector<double> const&>
 	getPropertyVec(std::string const& name) const;
@@ -165,7 +166,7 @@ public:
 	struct FaceSet
 	{
 		std::string _name;
-		std::vector<std::array<std::size_t, 4>> _face_pos_and_dir;
+		std::vector<std::array<std::size_t, 2>> _node_id_and_dir;
 	};
 
 private:
