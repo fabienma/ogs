@@ -50,7 +50,7 @@ public:
 	std::vector<MeshLib::Node*> const& getNodes() const { return _nodes; }
 	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
 	std::size_t getNFaceSets() const { return _face_sets.size(); }
-	std::vector<std::array<std::size_t, 2> > const& getFaceSet(std::size_t n) const;
+	std::vector<std::array<std::size_t, 2> > const& getFaceSetData(std::size_t n) const;
 
 	boost::optional<std::vector<double> const&>
 	getPropertyVec(std::string const& name) const;

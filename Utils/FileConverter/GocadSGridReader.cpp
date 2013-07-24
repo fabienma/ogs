@@ -333,7 +333,7 @@ GocadSGridReader::~GocadSGridReader()
 {
 }
 
-std::vector<std::array<std::size_t, 2> > const& GocadSGridReader::getFaceSet(std::size_t n) const
+std::vector<std::array<std::size_t, 2> > const& GocadSGridReader::getFaceSetData(std::size_t n) const
 {
 	return _face_sets[n]._node_id_and_dir;
 }
