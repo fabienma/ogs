@@ -377,14 +377,6 @@ void GocadSGridReader::parsePointsFileName(std::string const& line)
 	_pnts_fname = _path + fname;
 }
 
-void GocadSGridReader::parsePropertiesFileName(std::string const& line)
-{
-	std::size_t beg_pos(line.find_first_of(" ") + 3);
-	std::string fname(line.substr(beg_pos, line.length() - beg_pos));
-	BaseLib::trim(fname, '\"');
-	_properties_fname = _path + fname;
-}
-
 void GocadSGridReader::parseFlagsFileName(std::string const& line)
 {
 	std::size_t beg_pos(line.find_first_of(" ") + 1);

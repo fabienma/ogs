@@ -59,7 +59,6 @@ public:
 private:
 	void parseDims(std::string const& line);
 	void parsePointsFileName(std::string const& line);
-	void parsePropertiesFileName(std::string const& line);
 	void parseFlagsFileName(std::string const& line);
 	void parseRegionFlagsFileName(std::string const& line);
 
@@ -187,7 +186,6 @@ private:
 	// data read from sg file
 	IndexCalculator _index_calculator;
 	std::string _pnts_fname;
-	std::string _properties_fname;
 	std::string _flags_fname;
 	std::string _region_flags_fname;
 
