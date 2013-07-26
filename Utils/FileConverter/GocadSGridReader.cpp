@@ -36,7 +36,6 @@ typedef boost::dynamic_bitset<> Bitset;
 
 typedef GocadSGridReader::Region Region;
 typedef GocadSGridReader::Layer Layer;
-typedef GocadSGridReader::FaceSet FaceSet;
 typedef GocadSGridReader::GocadProperty GocadProperty;
 
 std::ostream& operator<<(std::ostream& os, Region const& r)
@@ -191,55 +190,10 @@ GocadProperty parseGocadPropertyMetaData(std::string &line, std::istream &in, st
 	return prop;
 }
 
-/**
- *
- * @param line input/output
- * @param in input stream containing the face set
- * @return FaceSet
- */
-FaceSet parseFaceSet(std::string &line, std::istream &in)
-{
-	std::istringstream iss(line);
-	std::istream_iterator<std::string> it(iss);
-	// Check first word is FACE_SET
-	if (*it != std::string("FACE_SET")) {
-		ERR("Expected FACE_SET keyword but \"%s\" found.", it->c_str());
-		throw std::runtime_error("In parseFaceSet() expected FACE_SET keyword not found.");
-	}
-	++it;
-
-	FaceSet fs;
-	fs._name = *it;
-	it++;
-	std::size_t number_of_faces(static_cast<std::size_t>(atoi(it->c_str())));
-	std::size_t faces_cnt(0);
-
-	while (getline(in, line) && faces_cnt < number_of_faces) {
-		boost::char_separator<char> sep("\t ");
-		boost::tokenizer<boost::char_separator<char> > tokens(line, sep);
-
-		for(auto tok_it  = tokens.begin(); tok_it != tokens.end(); ) {
-			std::size_t node_id(static_cast<std::size_t>(atoi(tok_it->c_str())));
-			tok_it++;
-			const std::size_t face_dir(static_cast<std::size_t>(atoi(tok_it->c_str())));
-			tok_it++;
-
-			fs._node_id_and_dir.push_back({node_id, face_dir});
-			faces_cnt++;
-		}
-	}
-
-	if (faces_cnt != number_of_faces) {
-		ERR("Expected %d number of faces, read %d.", number_of_faces, faces_cnt);
-		throw std::runtime_error("Expected number of faces does not match number of read faces.");
-	}
-
-	return fs;
-}
-
 GocadSGridReader::GocadSGridReader(std::string const& fname) :
 		_fname(fname), _path(_fname.substr(0, _fname.find_last_of("/\\") + 1)),
-		_double_precision_binary(false), _bin_pnts_in_double_precision(false)
+		_n_face_sets(0), _double_precision_binary(false), _bin_pnts_in_double_precision(false)
+
 {
 	// check if file exists
 	std::ifstream in(_fname.c_str());
@@ -248,6 +202,8 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 		in.close();
 		return;
 	}
+
+	bool pnts_read(false);
 
 	// read information in the stratigraphic grid file
 	std::string line;
@@ -299,7 +255,12 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 			}
 		}
 		else if (line.compare(0, 9, "FACE_SET ") == 0) {
-			_face_sets.push_back(parseFaceSet(line, in));
+			// first read the points
+			if (! pnts_read) {
+				readNodesBinary();
+				pnts_read = true;
+			}
+			parseFaceSet(line, in);
 		}
 		else
 		{
@@ -316,8 +277,11 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	std::copy(_property_meta_data_vecs.begin(), _property_meta_data_vecs.end(),
 			std::ostream_iterator<GocadProperty>(std::cout, "\n"));
 
-	readNodesBinary();
-
+	// if not done already read the points
+	if (! pnts_read) {
+		readNodesBinary();
+		pnts_read = true;
+	}
 	readElementPropertiesBinary();
 	std::vector<Bitset> region_flags = readRegionFlagsBinary();
 	//mapRegionFlagsToCellProperties(region_flags);	// modifies _material_ids.
@@ -331,11 +295,6 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 
 GocadSGridReader::~GocadSGridReader()
 {
-}
-
-std::vector<std::array<std::size_t, 2> > const& GocadSGridReader::getFaceSetData(std::size_t n) const
-{
-	return _face_sets[n]._node_id_and_dir;
 }
 
 void GocadSGridReader::parseHeader(std::istream &in)
@@ -392,6 +351,51 @@ void GocadSGridReader::parseRegionFlagsFileName(std::string const& line)
 	BaseLib::trim(fname, '\"');
 	_region_flags_fname = _path + fname;
 }
+
+/**
+ * @param line input/output
+ * @param in input stream containing the face set
+ */
+void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
+{
+	std::istringstream iss(line);
+	std::istream_iterator<std::string> it(iss);
+	// Check first word is FACE_SET
+	if (*it != std::string("FACE_SET")) {
+		ERR("Expected FACE_SET keyword but \"%s\" found.", it->c_str());
+		throw std::runtime_error("In GocadSGridReader::parseFaceSet() expected FACE_SET keyword not found.");
+	}
+	++it;
+	++it; // skip face set name
+	std::size_t const number_of_faces(static_cast<std::size_t>(atoi(it->c_str())));
+	std::size_t const n_nodes(_nodes.size());
+	std::size_t faces_cnt(0);
+
+	while (getline(in, line) && faces_cnt < number_of_faces) {
+		boost::char_separator<char> sep("\t ");
+		boost::tokenizer<boost::char_separator<char> > tokens(line, sep);
+
+		for(auto tok_it  = tokens.begin(); tok_it != tokens.end(); ) {
+			std::size_t node_id(static_cast<std::size_t>(atoi(tok_it->c_str())));
+			tok_it++;
+			tok_it++;
+
+			if (node_id >= n_nodes) {
+				ERR("Face set node id %d is greater than the number of nodes (%d).", node_id, n_nodes);
+			} else {
+				dynamic_cast<MeshLib::GocadNode*>(_nodes[node_id])->setFaceSetNumber(_n_face_sets+1);
+			}
+			faces_cnt++;
+		}
+	}
+
+	if (faces_cnt != number_of_faces) {
+		ERR("Expected %d number of face set points, read %d.", number_of_faces, faces_cnt);
+		throw std::runtime_error("Expected number of face set points does not match number of read points.");
+	}
+	_n_face_sets++;
+}
+
 
 template <typename T>
 T swapEndianness(T const& v)
@@ -473,7 +477,7 @@ void GocadSGridReader::readNodesBinary()
 			coords[k % 3] = readValue<float>(in);
 		}
 		if ((k + 1) % 3 == 0)
-			_nodes[k/3] = new MeshLib::Node(coords, k/3);
+			_nodes[k/3] = new MeshLib::GocadNode(coords, k/3);
 		k++;
 	}
 	if (k != n * 3 && !in.eof())
@@ -517,8 +521,8 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
 {
 	std::ifstream in(filename.c_str());
 	if (!in) {
-		ERR("readBinaryArray(): Error while reading from file \"%s\".\n", filename.c_str());
-		ERR("Could not open file \"%s\" for input.\n", filename.c_str());
+		ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
+		ERR("Could not open file \"%s\" for input.", filename.c_str());
 		in.close();
 		return std::vector<T>();
 	}
@@ -531,15 +535,15 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
 
 	if (!in.eof())
 	{
-		ERR("readBinaryArray(): Error while reading from file \"%s\".\n", filename.c_str());
+		ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
 		ERR("Input stream invalid.\n");
 		return std::vector<T>();
 	}
 
 	if (result.size() - 1 != n)
 	{
-		ERR("readBinaryArray(): Error while reading from file \"%s\".\n", filename.c_str());
-		ERR("Read different number of values. Expected %d, got %d.\n", n, result.size());
+		ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
+		ERR("Read different number of values. Expected %d, got %d.", n, result.size());
 	}
 
 	return result;
@@ -662,7 +666,7 @@ void GocadSGridReader::readSplitNodesAndModifyElements()
 				ss >> cells[k];
 			}
 			std::size_t new_node_pos(_nodes.size());
-			_nodes.push_back(new MeshLib::Node(coords));
+			_nodes.push_back(new MeshLib::GocadNode(coords, new_node_pos));
 			// get mesh node to substitute in elements
 			MeshLib::Node const*const node2sub(_nodes[_index_calculator(u,v,w)]);
 			if (cells[0]) {
@@ -728,6 +732,11 @@ void GocadSGridReader::removeNullVolumeElements()
 			)
 	);
 	_elements.erase(new_end, _elements.end());
+
+	std::size_t const n_elements(_elements.size());
+	for (std::size_t k(0); k < n_elements; k++) {
+		_elements[k]->setValue(k);
+	}
 }
 
 boost::optional<std::vector<double> const&>

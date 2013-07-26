@@ -65,8 +65,6 @@ public:
 
 	std::vector<MeshLib::Node*> const& getNodes() const { return _nodes; }
 	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
-	std::size_t getNFaceSets() const { return _face_sets.size(); }
-	std::vector<std::array<std::size_t, 2> > const& getFaceSetData(std::size_t n) const;
 
 	boost::optional<std::vector<double> const&>
 	getPropertyVec(std::string const& name) const;
@@ -77,6 +75,8 @@ private:
 	void parsePointsFileName(std::string const& line);
 	void parseFlagsFileName(std::string const& line);
 	void parseRegionFlagsFileName(std::string const& line);
+	void parseHeader(std::istream &in);
+	void parseFaceSet(std::string &line, std::istream &in);
 
 	/**
 	 * Class for calculating the index to given 3d position within the structured grid.
@@ -175,17 +175,7 @@ public:
 		}
 	};
 
-	/**
-	 * SGrid face set
-	 */
-	struct FaceSet
-	{
-		std::string _name;
-		std::vector<std::array<std::size_t, 2>> _node_id_and_dir;
-	};
-
 private:
-	void parseHeader(std::istream &in);
 	void readNodesBinary();
 	std::vector<int> readFlagsBinary() const;
 	std::vector<Bitset> readRegionFlagsBinary() const;
@@ -207,7 +197,7 @@ private:
 
 	std::vector<Region> regions;
 	std::vector<Layer> layers;
-	std::vector<FaceSet> _face_sets;
+	std::size_t _n_face_sets;
 
 	bool _double_precision_binary;
 	bool _bin_pnts_in_double_precision;
