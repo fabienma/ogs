@@ -32,6 +32,22 @@
 
 #include <boost/dynamic_bitset.hpp>
 
+namespace MeshLib
+{
+class GocadNode : public Node
+{
+public:
+	GocadNode(double const*const coords, std::size_t id) :
+		Node(coords, id), _face_set_number(std::numeric_limits<std::size_t>::max())
+	{}
+
+	void setFaceSetNumber(std::size_t face_set_number) { _face_set_number = face_set_number; }
+	std::size_t getFaceSetNumber() const { return _face_set_number; }
+private:
+	std::size_t _face_set_number;
+};
+} // end namespace MeshLib
+
 namespace FileIO
 {
 
