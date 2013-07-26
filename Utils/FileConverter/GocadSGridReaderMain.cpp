@@ -41,6 +41,44 @@
 // Utils/FileConverter
 #include "GocadSGridReader.h"
 
+void generateFaceSetMeshes(MeshLib::Mesh &mesh)
+{
+	std::size_t const n_elements(mesh.getNElements());
+	std::vector<unsigned> face_set_prop(n_elements);
+	std::fill(face_set_prop.begin(), face_set_prop.end(), 0);
+
+	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
+		MeshLib::GocadNode* gocad_node(
+				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(mesh.getNode(k))));
+
+		std::size_t const face_set_number(gocad_node->getFaceSetNumber());
+		if (face_set_number != std::numeric_limits < std::size_t > ::max()) {
+			auto neighbor_elements = gocad_node->getElements();
+			for (auto it(neighbor_elements.begin()); it != neighbor_elements.end(); it++) {
+				if (*it) {
+					std::size_t const element_id((*it)->getValue());
+					if (element_id < n_elements)
+						face_set_prop[element_id] = face_set_number;
+				}
+			}
+		}
+	}
+	std::string name("FaceSetElements");
+	mesh.addPropertyVec(name, face_set_prop);
+}
+
+void addGocadPropertiesToMesh(FileIO::GocadSGridReader const& reader, MeshLib::Mesh &mesh)
+{
+	std::vector<std::string> const& prop_names(reader.getPropertyNames());
+	for (auto name_it(prop_names.begin()); name_it != prop_names.end(); name_it++) {
+		boost::optional<std::vector<double> const&> prop(reader.getPropertyVec(*name_it));
+		if (prop) {
+			INFO("Adding property \"%s\".", name_it->c_str());
+			mesh.addPropertyVec(*name_it, *prop);
+		}
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	LOGOG_INITIALIZE();
@@ -72,44 +110,12 @@ int main(int argc, char* argv[])
 	MeshLib::Mesh mesh("GocadSGrid", nodes, elements);
 	INFO("Mesh created.");
 
-	std::size_t const n_elements(elements.size());
-	std::vector<unsigned> face_set_prop(n_elements);
-	std::fill(face_set_prop.begin(), face_set_prop.end(), 0);
+	INFO("Generating a mesh for every face set.");
+	generateFaceSetMeshes(mesh);
+	INFO("Add Gocad properties to mesh.");
+	addGocadPropertiesToMesh(reader, mesh);
 
-	for (std::size_t k(0); k<mesh.getNNodes(); k++) {
-		MeshLib::GocadNode* gocad_node(
-				dynamic_cast<MeshLib::GocadNode*>(
-					const_cast<MeshLib::Node*>(
-							mesh.getNode(k)
-					)
-				)
-			);
-
-		std::size_t const face_set_number(gocad_node->getFaceSetNumber());
-		if (face_set_number != std::numeric_limits<std::size_t>::max()) {
-			auto neighbor_elements = gocad_node->getElements();
-			for (auto it(neighbor_elements.begin()); it != neighbor_elements.end(); it++) {
-				if (*it) {
-					std::size_t const element_id((*it)->getValue());
-					if (element_id < n_elements)
-						face_set_prop[element_id] = face_set_number;
-				}
-			}
-		}
-	}
-	std::string name("FaceSetElements");
-	mesh.addPropertyVec(name, face_set_prop);
-
-
-	std::vector<std::string> const& prop_names(reader.getPropertyNames());
-	for (auto name_it(prop_names.begin()); name_it != prop_names.end(); name_it++) {
-		boost::optional<std::vector<double> const&> prop(reader.getPropertyVec(*name_it));
-		if (prop) {
-			INFO("Adding property \"%s\".", name_it->c_str());
-			mesh.addPropertyVec(*name_it, *prop);
-		}
-	}
-
+	INFO("Writing mesh in vtu format.");
 	FileIO::BoostVtuInterface vtu;
 	vtu.setMesh(&mesh);
 	// output file name
