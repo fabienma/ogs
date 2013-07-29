@@ -546,23 +546,19 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
 	std::vector<T> result;
 	result.reserve(n);
 
-	while (in)
+	for (std::size_t p = 0; in && !in.eof() && p < n; ++p)
 		result.push_back(readValue<T>(in));
 
+	if (result.size() == n)
+		return result;
+
+	ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
+	ERR("Read different number of values. Expected %d, got %d.", n, result.size());
+
 	if (!in.eof())
-	{
-		ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
-		ERR("Input stream invalid.\n");
-		return std::vector<T>();
-	}
+		ERR("EOF reached.\n");
 
-	if (result.size() - 1 != n)
-	{
-		ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
-		ERR("Read different number of values. Expected %d, got %d.", n, result.size());
-	}
-
-	return result;
+	return std::vector<T>();
 }
 
 void GocadSGridReader::readElementPropertiesBinary()
