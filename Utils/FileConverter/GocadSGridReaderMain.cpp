@@ -37,6 +37,7 @@
 #include "Mesh.h"
 #include "Node.h"
 #include "Elements/Element.h"
+#include "MeshSurfaceExtraction.h"
 
 // Utils/FileConverter
 #include "GocadSGridReader.h"
@@ -164,6 +165,16 @@ void addGocadPropertiesToMesh(FileIO::GocadSGridReader const& reader, MeshLib::M
 	}
 }
 
+MeshLib::Mesh* extractSurfaceMesh(MeshLib::Mesh &mesh)
+{
+	double* dir (new double[3]);
+	dir[0] = 0.0;
+	dir[1] = -1.0;
+	dir[2] = 0.0;
+	return MeshLib::MeshSurfaceExtraction::getMeshSurface(mesh, dir);
+}
+
+
 int main(int argc, char* argv[])
 {
 	LOGOG_INITIALIZE();
@@ -199,6 +210,18 @@ int main(int argc, char* argv[])
 //	generateFaceSetMeshes(mesh);
 	INFO("Add Gocad properties to mesh.");
 	addGocadPropertiesToMesh(reader, mesh);
+
+	{
+		MeshLib::Mesh *surface_mesh(extractSurfaceMesh(mesh));
+		INFO("Writing surface mesh in vtu format.");
+		FileIO::BoostVtuInterface vtu;
+		vtu.setMesh(surface_mesh);
+		// output file name
+		std::string mesh_out_fname(BaseLib::extractPath(sg_file_arg.getValue()) +
+					BaseLib::extractBaseNameWithoutExtension(sg_file_arg.getValue()) + "_surface.vtu");
+		vtu.writeToFile(mesh_out_fname);
+		delete surface_mesh;
+	}
 
 	INFO("Writing mesh in vtu format.");
 	FileIO::BoostVtuInterface vtu;
