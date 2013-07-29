@@ -41,12 +41,9 @@
 // Utils/FileConverter
 #include "GocadSGridReader.h"
 
-void generateFaceSetMeshes(MeshLib::Mesh &mesh)
+void markElementsWithFaceSetNodes(MeshLib::Mesh &mesh, std::vector<unsigned> & face_set_prop)
 {
 	std::size_t const n_elements(mesh.getNElements());
-	std::vector<unsigned> face_set_prop(n_elements);
-	std::fill(face_set_prop.begin(), face_set_prop.end(), 0);
-
 	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
 		MeshLib::GocadNode* gocad_node(
 				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(mesh.getNode(k))));
@@ -65,6 +62,94 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh)
 	}
 	std::string name("FaceSetElements");
 	mesh.addPropertyVec(name, face_set_prop);
+}
+
+void generateFaceSetMeshes(MeshLib::Mesh &mesh)
+{
+	std::size_t const n_elements(mesh.getNElements());
+	std::vector<unsigned> face_set_prop(n_elements);
+	std::fill(face_set_prop.begin(), face_set_prop.end(), 0);
+
+	markElementsWithFaceSetNodes(mesh, face_set_prop);
+
+	for (std::size_t l(1); l<=2; l++) {
+		std::vector<MeshLib::Node*> face_set_nodes;
+		std::vector<MeshLib::Element*> face_set_elements;
+
+		std::vector<MeshLib::Node*> remaining_nodes;
+		std::vector<MeshLib::Element*> remaining_elements;
+
+		std::vector<MeshLib::Element*> const& elements(mesh.getElements());
+		for (std::size_t k(0); k<n_elements; k++) {
+			if (face_set_prop[k] != l)
+				continue;
+			MeshLib::Element const*const elem(elements[k]);
+			std::size_t n_faces(elem->getNFaces());
+			for (std::size_t j(0); j<n_faces; j++) {
+				MeshLib::Element const*const face(elem->getFace(j));
+				std::size_t const n_nodes(face->getNNodes());
+				std::size_t node_cnt(0); // count nodes belonging to face
+				for (std::size_t i(0); i<n_nodes; i++) {
+					MeshLib::GocadNode const*const node(
+							dynamic_cast<MeshLib::GocadNode*>(
+								const_cast<MeshLib::Node*>(face->getNode(i))
+							)
+					);
+					if (node != nullptr) {
+						if (node->getFaceSetNumber() != std::numeric_limits<std::size_t>::max())
+							node_cnt++;
+					}
+				}
+				if (node_cnt == 4) {
+					MeshLib::Element *face_set_elem(face->clone());
+					for (std::size_t i(0); i<n_nodes; i++) {
+						// deep copy of the face nodes
+						face_set_nodes.push_back(new MeshLib::Node(*(face->getNode(i))));
+						// reset the node pointer in face_set_elem
+						face_set_elem->setNode(i, face_set_nodes[face_set_nodes.size()-1]);
+					}
+					face_set_elements.push_back(face_set_elem);
+				} else {
+					if (node_cnt != 2)
+						continue;
+					MeshLib::Element *remaining_elem(face->clone());
+					for (std::size_t i(0); i<n_nodes; i++) {
+						// deep copy of the face nodes
+						remaining_nodes.push_back(new MeshLib::Node(*(face->getNode(i))));
+						// reset the node pointer in remaining_elem
+						remaining_elem->setNode(i, remaining_nodes[remaining_nodes.size()-1]);
+					}
+					remaining_elements.push_back(remaining_elem);
+				}
+			}
+		}
+
+		{
+			INFO("Creating face set mesh.");
+			MeshLib::Mesh face_set_mesh("GocadSGridFaceSet", face_set_nodes, face_set_elements);
+			INFO("Face set mesh created.");
+
+			INFO("Writing face set mesh in vtu format.");
+			FileIO::BoostVtuInterface vtu;
+			vtu.setMesh(&face_set_mesh);
+			// output file name
+			std::string mesh_out_fname("FaceSetMesh-" + BaseLib::number2str(l) + ".vtu");
+			vtu.writeToFile(mesh_out_fname);
+		}
+
+		{
+			INFO("Creating remaining mesh.");
+			MeshLib::Mesh remaining_mesh("GocadSGridRemaining", remaining_nodes, remaining_elements);
+			INFO("remaining mesh created.");
+
+			INFO("Writing remaining mesh in vtu format.");
+			FileIO::BoostVtuInterface vtu;
+			vtu.setMesh(&remaining_mesh);
+			// output file name
+			std::string mesh_out_fname("RemainingMesh-" + BaseLib::number2str(l) + ".vtu");
+			vtu.writeToFile(mesh_out_fname);
+		}
+	}
 }
 
 void addGocadPropertiesToMesh(FileIO::GocadSGridReader const& reader, MeshLib::Mesh &mesh)
@@ -110,8 +195,8 @@ int main(int argc, char* argv[])
 	MeshLib::Mesh mesh("GocadSGrid", nodes, elements);
 	INFO("Mesh created.");
 
-	INFO("Generating a mesh for every face set.");
-	generateFaceSetMeshes(mesh);
+//	INFO("Generating a mesh for every face set.");
+//	generateFaceSetMeshes(mesh);
 	INFO("Add Gocad properties to mesh.");
 	addGocadPropertiesToMesh(reader, mesh);
 
