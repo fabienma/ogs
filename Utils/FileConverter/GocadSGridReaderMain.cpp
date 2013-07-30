@@ -153,6 +153,32 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh)
 	}
 }
 
+void cleanUpNoDataValues(MeshLib::Mesh &mesh, double no_data_value,
+		std::vector<double> const& original,
+		std::vector<double> & reworked)
+{
+	std::vector<MeshLib::Element*> const& elements(mesh.getElements());
+	for (std::size_t k(0); k<original.size(); ++k) {
+		if (std::abs(original[k] - no_data_value) > std::numeric_limits<double>::epsilon()) {
+			reworked[k] = original[k];
+		} else {
+			std::size_t const n_neighbors(elements[k]->getNNeighbors());
+			double prop_value(0.0);
+			std::size_t cnt(0); // count neighbors with valid property values
+			// simple average
+			for (std::size_t j(0); j<n_neighbors; ++j) {
+				double neighbor_val(original[elements[k]->getNeighbor(j)->getValue()]);
+				if (std::abs(neighbor_val - no_data_value) > std::numeric_limits<double>::epsilon()) {
+					prop_value += neighbor_val;
+					cnt++;
+				}
+			}
+			prop_value /= cnt;
+			reworked[k] = prop_value;
+		}
+	}
+}
+
 void addGocadPropertiesToMesh(FileIO::GocadSGridReader const& reader, MeshLib::Mesh &mesh)
 {
 	std::vector<std::string> const& prop_names(reader.getPropertyNames());
@@ -160,7 +186,10 @@ void addGocadPropertiesToMesh(FileIO::GocadSGridReader const& reader, MeshLib::M
 		boost::optional<FileIO::GocadSGridReader::GocadProperty const&> prop(reader.getProperty(*name_it));
 		if (prop) {
 			INFO("Adding property \"%s\".", name_it->c_str());
-			mesh.addPropertyVec(*name_it, (*prop)._property_data);
+			std::vector<double> reworked_properties;
+			reworked_properties.resize((*prop)._property_data.size());
+			cleanUpNoDataValues(mesh, (*prop)._property_no_data_value, (*prop)._property_data, reworked_properties);
+			mesh.addPropertyVec(*name_it, reworked_properties);
 		}
 	}
 }
