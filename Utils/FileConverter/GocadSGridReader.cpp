@@ -570,12 +570,10 @@ void GocadSGridReader::readElementPropertiesBinary()
 		std::vector<float> float_properties =
 				readBinaryArray<float>(fname, _index_calculator._n_cells);
 		std::vector<double> properties;
-		properties.resize(float_properties.size());
-		std::copy(float_properties.begin(), float_properties.end(), properties.begin());
-		if (properties.empty()) {
+		prop_it->_property_data.resize(float_properties.size());
+		std::copy(float_properties.begin(), float_properties.end(), prop_it->_property_data.begin());
+		if (prop_it->_property_data.empty()) {
 			ERR("Reading of element properties file \"%s\" failed.", fname.c_str());
-		} else {
-			_property_vecs.push_back(properties);
 		}
 	}
 }
@@ -751,16 +749,15 @@ void GocadSGridReader::removeNullVolumeElements()
 	}
 }
 
-boost::optional<std::vector<double> const&>
-GocadSGridReader::getPropertyVec(std::string const& name) const
+boost::optional<GocadProperty const&>
+GocadSGridReader::getProperty(std::string const& name) const
 {
 	auto const it(std::find_if(_property_meta_data_vecs.begin(), _property_meta_data_vecs.end(),
 			[&name](GocadProperty const& p) { return p._property_name.compare(name) == 0; }));
 	if (it != _property_meta_data_vecs.end())
-		return boost::optional<std::vector<double> const&>(
-				_property_vecs[std::distance(_property_meta_data_vecs.begin(), it)]);
+		return boost::optional<GocadProperty const&>(*it);
 	else
-		return boost::optional<std::vector<double> const&>();
+		return boost::optional<GocadProperty const&>();
 }
 
 std::vector<std::string> GocadSGridReader::getPropertyNames() const

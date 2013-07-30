@@ -157,10 +157,10 @@ void addGocadPropertiesToMesh(FileIO::GocadSGridReader const& reader, MeshLib::M
 {
 	std::vector<std::string> const& prop_names(reader.getPropertyNames());
 	for (auto name_it(prop_names.begin()); name_it != prop_names.end(); name_it++) {
-		boost::optional<std::vector<double> const&> prop(reader.getPropertyVec(*name_it));
+		boost::optional<FileIO::GocadSGridReader::GocadProperty const&> prop(reader.getProperty(*name_it));
 		if (prop) {
 			INFO("Adding property \"%s\".", name_it->c_str());
-			mesh.addPropertyVec(*name_it, *prop);
+			mesh.addPropertyVec(*name_it, (*prop)._property_data);
 		}
 	}
 }

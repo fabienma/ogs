@@ -64,30 +64,6 @@ public:
 	std::vector<MeshLib::Node*> const& getNodes() const { return _nodes; }
 	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
 
-	boost::optional<std::vector<double> const&>
-	getPropertyVec(std::string const& name) const;
-	std::vector<std::string> getPropertyNames() const;
-
-	struct Region
-	{
-		std::string name;
-		unsigned bit;
-
-		bool operator==(Region const& r) const { return bit == r.bit; }
-	};
-
-	// Each model layer own several regions.
-	struct Layer
-	{
-		std::vector<Region> regions;
-
-		bool hasRegion(Region const& r) const
-		{
-			return (std::find(regions.begin(), regions.end(), r) != regions.end());
-		}
-
-	};
-
 	struct GocadProperty
 	{
 		std::size_t _property_id;
@@ -108,6 +84,32 @@ public:
 			}
 			return true;
 		}
+
+		std::vector<double> _property_data;
+	};
+
+	boost::optional<GocadProperty const&>
+	getProperty(std::string const& name) const;
+	std::vector<std::string> getPropertyNames() const;
+
+	struct Region
+	{
+		std::string name;
+		unsigned bit;
+
+		bool operator==(Region const& r) const { return bit == r.bit; }
+	};
+
+	// Each model layer own several regions.
+	struct Layer
+	{
+		std::vector<Region> regions;
+
+		bool hasRegion(Region const& r) const
+		{
+			return (std::find(regions.begin(), regions.end(), r) != regions.end());
+		}
+
 	};
 
 private:
@@ -203,7 +205,6 @@ private:
 	// data read from binary points file
 	std::vector<MeshLib::Node*> _nodes;
 	// properties
-	std::vector<std::vector<double>> _property_vecs;
 	std::vector<GocadProperty> _property_meta_data_vecs;
 	// calculated data
 	std::vector<MeshLib::Element*> _elements;
