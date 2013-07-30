@@ -65,7 +65,7 @@ void markElementsWithFaceSetNodes(MeshLib::Mesh &mesh, std::vector<unsigned> & f
 	mesh.addPropertyVec(name, face_set_prop);
 }
 
-void generateFaceSetMeshes(MeshLib::Mesh &mesh)
+void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 {
 	std::size_t const n_elements(mesh.getNElements());
 	std::vector<unsigned> face_set_prop(n_elements);
@@ -128,26 +128,14 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh)
 		{
 			INFO("Creating face set mesh.");
 			MeshLib::Mesh face_set_mesh("GocadSGridFaceSet", face_set_nodes, face_set_elements);
-			INFO("Face set mesh created.");
+			INFO("Face set mesh created. #nodes: %d, #elements: %d", face_set_mesh.getNNodes(),
+					face_set_mesh.getNElements());
 
-			INFO("Writing face set mesh in vtu format.");
 			FileIO::BoostVtuInterface vtu;
 			vtu.setMesh(&face_set_mesh);
 			// output file name
-			std::string mesh_out_fname("FaceSetMesh-" + BaseLib::number2str(l) + ".vtu");
-			vtu.writeToFile(mesh_out_fname);
-		}
-
-		{
-			INFO("Creating remaining mesh.");
-			MeshLib::Mesh remaining_mesh("GocadSGridRemaining", remaining_nodes, remaining_elements);
-			INFO("remaining mesh created.");
-
-			INFO("Writing remaining mesh in vtu format.");
-			FileIO::BoostVtuInterface vtu;
-			vtu.setMesh(&remaining_mesh);
-			// output file name
-			std::string mesh_out_fname("RemainingMesh-" + BaseLib::number2str(l) + ".vtu");
+			std::string mesh_out_fname(path+"FaceSetMesh-" + BaseLib::number2str(l) + ".vtu");
+			INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 			vtu.writeToFile(mesh_out_fname);
 		}
 	}
@@ -235,11 +223,14 @@ int main(int argc, char* argv[])
 	MeshLib::Mesh mesh("GocadSGrid", nodes, elements);
 	INFO("Mesh created.");
 
-//	INFO("Generating a mesh for every face set.");
-//	generateFaceSetMeshes(mesh);
 	INFO("Add Gocad properties to mesh.");
 	addGocadPropertiesToMesh(reader, mesh);
 
+	INFO("Generating a mesh for every face set.");
+	generateFaceSetMeshes(mesh, BaseLib::extractPath(sg_file_arg.getValue()));
+
+//	{
+//		MeshLib::Mesh *surface_mesh(extractSurfaceMesh(mesh));
 	{
 		MeshLib::Mesh *surface_mesh(extractSurfaceMesh(mesh));
 		INFO("Writing surface mesh in vtu format.");
