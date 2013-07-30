@@ -53,8 +53,6 @@ namespace FileIO
 
 class GocadSGridReader
 {
-private:
-	typedef boost::dynamic_bitset<> Bitset;
 public:
 	/**
 	 * Constructor takes as argument the Gocad .sg text file.
@@ -70,7 +68,51 @@ public:
 	getPropertyVec(std::string const& name) const;
 	std::vector<std::string> getPropertyNames() const;
 
+	struct Region
+	{
+		std::string name;
+		unsigned bit;
+
+		bool operator==(Region const& r) const { return bit == r.bit; }
+	};
+
+	// Each model layer own several regions.
+	struct Layer
+	{
+		std::vector<Region> regions;
+
+		bool hasRegion(Region const& r) const
+		{
+			return (std::find(regions.begin(), regions.end(), r) != regions.end());
+		}
+
+	};
+
+	struct GocadProperty
+	{
+		std::size_t _property_id;
+		std::string _property_name;
+		std::string _property_class_name;
+		std::string _property_unit;
+		std::string _property_data_type;
+		std::string _property_data_fname;
+		double _property_no_data_value;
+
+		bool checkID(std::string const& id_string)
+		{
+			if (_property_id != BaseLib::str2number<std::size_t>(id_string)) {
+				ERR("Expected property id \"%d\" but found \"%d\".",
+						_property_id,
+						BaseLib::str2number<std::size_t>(id_string));
+				return false;
+			}
+			return true;
+		}
+	};
+
 private:
+	typedef boost::dynamic_bitset<> Bitset;
+
 	void parseDims(std::string const& line);
 	void parsePointsFileName(std::string const& line);
 	void parseFlagsFileName(std::string const& line);
@@ -132,50 +174,6 @@ private:
 		std::size_t _n_cells;
 	};
 
-public:
-	struct Region
-	{
-		std::string name;
-		unsigned bit;
-
-		bool operator==(Region const& r) const { return bit == r.bit; }
-	};
-
-	// Each model layer own several regions.
-	struct Layer
-	{
-		std::vector<Region> regions;
-
-		bool hasRegion(Region const& r) const
-		{
-			return (std::find(regions.begin(), regions.end(), r) != regions.end());
-		}
-
-	};
-
-	struct GocadProperty
-	{
-		std::size_t _property_id;
-		std::string _property_name;
-		std::string _property_class_name;
-		std::string _property_unit;
-		std::string _property_data_type;
-		std::string _property_data_fname;
-		double _property_no_data_value;
-
-		bool checkID(std::string const& id_string)
-		{
-			if (_property_id != BaseLib::str2number<std::size_t>(id_string)) {
-				ERR("Expected property id \"%d\" but found \"%d\".",
-						_property_id,
-						BaseLib::str2number<std::size_t>(id_string));
-				return false;
-			}
-			return true;
-		}
-	};
-
-private:
 	void readNodesBinary();
 	std::vector<int> readFlagsBinary() const;
 	std::vector<Bitset> readRegionFlagsBinary() const;
