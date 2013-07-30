@@ -676,9 +676,12 @@ void GocadSGridReader::readSplitNodesAndModifyElements()
 				ss >> cells[k];
 			}
 			std::size_t new_node_pos(_nodes.size());
-			_nodes.push_back(new MeshLib::GocadNode(coords, new_node_pos));
+			MeshLib::GocadNode *new_node(new MeshLib::GocadNode(coords, new_node_pos));
+			new_node->setFaceSetNumber(static_cast<MeshLib::GocadNode*>(_nodes[_index_calculator(u,v,w)])->getFaceSetNumber());
+			_nodes.push_back(new_node);
 			// get mesh node to substitute in elements
 			MeshLib::Node const*const node2sub(_nodes[_index_calculator(u,v,w)]);
+
 			if (cells[0]) {
 				modifyElement(u, v, w, node2sub, _nodes[new_node_pos]);
 			}
