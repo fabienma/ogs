@@ -19,6 +19,8 @@
 #include <iomanip>
 #include <sstream>
 
+#include <boost/optional.hpp>
+
 // ThirdParty/logog
 #include "logog/include/logog.hpp"
 
@@ -267,10 +269,17 @@ void MeshIO::writeElements(std::vector<MeshLib::Element*> const& ele_vec,
 	const size_t ele_vector_size (ele_vec.size());
 
 	out << ele_vector_size << "\n";
-	for (size_t i(0); i < ele_vector_size; ++i) {
-		out << i << " " << ele_vec[i]->getValue() << " " << this->ElemType2StringOutput(ele_vec[i]->getGeomType()) << " ";
+	boost::optional<std::vector<unsigned> const&> material_ids
+		(_mesh->getUnsignedPropertyVec("MaterialIDs"));
+
+	for (std::size_t i(0); i < ele_vector_size; ++i) {
+		if (material_ids) {
+			out << i << " " << (*material_ids)[i] << " " << MeshElemType2String(ele_vec[i]->getGeomType()) << " ";
+		} else {
+			out << i << " 0 " << MeshElemType2String(ele_vec[i]->getGeomType()) << " ";
+		}
 		unsigned nElemNodes (ele_vec[i]->getNNodes());
-		for(size_t j = 0; j < nElemNodes; ++j)
+		for(unsigned j = 0; j < nElemNodes; ++j)
 			out << ele_vec[i]->getNode(j)->getID() << " ";
 		out << "\n";
 	}
