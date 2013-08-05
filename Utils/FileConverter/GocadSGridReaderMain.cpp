@@ -42,6 +42,31 @@
 // Utils/FileConverter
 #include "GocadSGridReader.h"
 
+void writeFaceSetNodes(MeshLib::Mesh const& mesh, std::size_t face_set_number, std::string const& path)
+{
+	std::stringstream ss;
+	std::size_t cnt(0); // count face set nodes
+	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
+		MeshLib::GocadNode* gocad_node(
+				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(mesh.getNode(k))));
+
+		bool const face_set_member(gocad_node->isMemberOfFaceSet(face_set_number));
+		if (face_set_member) {
+			ss << cnt << " " << *gocad_node << " $NAME " << face_set_number << "\n";
+			cnt++;
+		}
+	}
+	if (cnt > 0) {
+		std::string fname(path + "Surfaces/FaceSetNodes-" + BaseLib::number2str(face_set_number) + ".gli");
+		INFO("Writing nodes of face set to file \"%s\".", fname.c_str());
+		std::ofstream os(fname.c_str());
+		os << "#POINTS\n";
+		os << ss.str();
+		os << "#STOP";
+		os.close();
+	}
+}
+
 void markElementsWithFaceSetNodes(MeshLib::Mesh &mesh, std::vector<unsigned> & face_set_prop)
 {
 	std::size_t const n_elements(mesh.getNElements());
@@ -74,6 +99,7 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 	markElementsWithFaceSetNodes(mesh, face_set_prop);
 
 	for (std::size_t l(0); l<128; l++) {
+		writeFaceSetNodes(mesh, l, path);
 		std::vector<MeshLib::Node*> face_set_nodes;
 		std::vector<MeshLib::Element*> face_set_elements;
 
