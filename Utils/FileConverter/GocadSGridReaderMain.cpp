@@ -219,6 +219,39 @@ MeshLib::Mesh* extractSurfaceMesh(MeshLib::Mesh &mesh)
 	return MeshLib::MeshSurfaceExtraction::getMeshSurface(mesh, dir);
 }
 
+void writeMeshPropertiesToFile(std::string const& fname, std::string const& prop_name,
+		MeshLib::Mesh const& mesh)
+{
+	boost::optional<std::vector<double> const&> prop_vec(mesh.getDoublePropertyVec(prop_name));
+	if (! prop_vec) {
+		ERR("Could not read property \"%s\" from mesh.", prop_name.c_str());
+		return;
+	}
+
+	std::ofstream os(fname.c_str());
+	if (!os) {
+		ERR("Could not open file \"%s\".", fname.c_str());
+		return;
+	} else {
+		INFO("Open file \"%s\" for writing.", fname.c_str());
+	}
+
+	os << "# OpenGeoSys material property file - " << prop_name << " \n";
+	if (prop_name.compare("Porosity") == 0) {
+		for (std::size_t k(0); k<(*prop_vec).size(); k++) {
+			os << k << " " << (*prop_vec)[k] / 100.0 << "\n";
+		}
+	}
+	if (prop_name.compare("Permeability") == 0) {
+		const double scale(9.86923 * 1e-16 * 9.81 * 1e3 * 1e3);
+		for (std::size_t k(0); k<(*prop_vec).size(); k++) {
+			os << k << " " << (*prop_vec)[k] * scale << "\n";
+		}
+	}
+
+	os << "#STOP\n";
+	os.close();
+}
 
 int main(int argc, char* argv[])
 {
@@ -259,24 +292,35 @@ int main(int argc, char* argv[])
 
 //	{
 //		MeshLib::Mesh *surface_mesh(extractSurfaceMesh(mesh));
+//		INFO("Writing surface mesh in vtu format.");
+//		FileIO::BoostVtuInterface vtu;
+//		vtu.setMesh(surface_mesh);
+//		// output file name
+//		std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + "_surface.vtu");
+//		vtu.writeToFile(mesh_out_fname);
+//		delete surface_mesh;
+//	}
+
 	{
-		MeshLib::Mesh *surface_mesh(extractSurfaceMesh(mesh));
-		INFO("Writing surface mesh in vtu format.");
-		FileIO::BoostVtuInterface vtu;
-		vtu.setMesh(surface_mesh);
-		// output file name
-		std::string mesh_out_fname(BaseLib::extractPath(sg_file_arg.getValue()) +
-					BaseLib::extractBaseNameWithoutExtension(sg_file_arg.getValue()) + "_surface.vtu");
-		vtu.writeToFile(mesh_out_fname);
-		delete surface_mesh;
+		std::string prop_name("Porosity");
+		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+						"-" + prop_name + ".txt");
+		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
+	}
+
+	{
+		std::string prop_name("Permeability");
+		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+						"-" + prop_name + ".txt");
+		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
 	}
 
 	INFO("Writing mesh in vtu format.");
 	FileIO::BoostVtuInterface vtu;
 	vtu.setMesh(&mesh);
 	// output file name
-	std::string mesh_out_fname(BaseLib::extractPath(sg_file_arg.getValue()) +
-				BaseLib::extractBaseNameWithoutExtension(sg_file_arg.getValue()) + ".vtu");
+	std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + ".vtu");
+
 	vtu.writeToFile(mesh_out_fname);
 
 	delete logog;
