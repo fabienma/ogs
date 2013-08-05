@@ -49,14 +49,14 @@ void markElementsWithFaceSetNodes(MeshLib::Mesh &mesh, std::vector<unsigned> & f
 		MeshLib::GocadNode* gocad_node(
 				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(mesh.getNode(k))));
 
-		std::size_t const face_set_number(gocad_node->getFaceSetNumber());
-		if (face_set_number != std::numeric_limits < std::size_t > ::max()) {
+		bool const face_set_member(gocad_node->isMemberOfAnyFaceSet());
+		if (face_set_member) {
 			auto neighbor_elements = gocad_node->getElements();
 			for (auto it(neighbor_elements.begin()); it != neighbor_elements.end(); it++) {
 				if (*it) {
 					std::size_t const element_id((*it)->getValue());
 					if (element_id < n_elements)
-						face_set_prop[element_id] = face_set_number;
+						face_set_prop[element_id]++;
 				}
 			}
 		}
@@ -73,7 +73,7 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 
 	markElementsWithFaceSetNodes(mesh, face_set_prop);
 
-	for (std::size_t l(1); l<=2; l++) {
+	for (std::size_t l(0); l<128; l++) {
 		std::vector<MeshLib::Node*> face_set_nodes;
 		std::vector<MeshLib::Element*> face_set_elements;
 
@@ -82,7 +82,7 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 
 		std::vector<MeshLib::Element*> const& elements(mesh.getElements());
 		for (std::size_t k(0); k<n_elements; k++) {
-			if (face_set_prop[k] != l)
+			if (face_set_prop[k] == 0)
 				continue;
 			MeshLib::Element const*const elem(elements[k]);
 			std::size_t n_faces(elem->getNFaces());
@@ -97,7 +97,7 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 							)
 					);
 					if (node != nullptr) {
-						if (node->getFaceSetNumber() != std::numeric_limits<std::size_t>::max())
+						if (node->isMemberOfFaceSet(l))
 							node_cnt++;
 					}
 				}
@@ -126,6 +126,8 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 		}
 
 		{
+			if (face_set_nodes.size() == 0)
+				continue;
 			INFO("Creating face set mesh.");
 			MeshLib::Mesh face_set_mesh("GocadSGridFaceSet", face_set_nodes, face_set_elements);
 			INFO("Face set mesh created. #nodes: %d, #elements: %d", face_set_mesh.getNNodes(),
@@ -134,7 +136,7 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 			FileIO::BoostVtuInterface vtu;
 			vtu.setMesh(&face_set_mesh);
 			// output file name
-			std::string mesh_out_fname(path+"FaceSetMesh-" + BaseLib::number2str(l) + ".vtu");
+			std::string mesh_out_fname(path+"Surfaces/FaceSetMesh-" + BaseLib::number2str(l) + ".vtu");
 			INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 			vtu.writeToFile(mesh_out_fname);
 		}

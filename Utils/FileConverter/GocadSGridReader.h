@@ -19,6 +19,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <bitset>
 
 // logog
 #include "logog/include/logog.hpp"
@@ -38,13 +39,41 @@ class GocadNode : public Node
 {
 public:
 	GocadNode(double const*const coords, std::size_t id) :
-		Node(coords, id), _face_set_number(std::numeric_limits<std::size_t>::max())
+		Node(coords, id), _face_set_membership()
 	{}
 
-	void setFaceSetNumber(std::size_t face_set_number) { _face_set_number = face_set_number; }
-	std::size_t getFaceSetNumber() const { return _face_set_number; }
+	GocadNode(GocadNode const& src) :
+		Node(src._x, src._id), _face_set_membership(src._face_set_membership)
+	{}
+
+	void setFaceSetNumber(std::size_t face_set_number)
+	{
+		_face_set_membership[face_set_number] = true;
+	}
+
+	/**
+	 * Checks if this GocadNode is in the face set with the number
+	 * face_set_number.
+	 * @param face_set_number the number of the face set
+	 * @return true/false
+	 */
+	bool isMemberOfFaceSet(std::size_t face_set_number) const
+	{
+		return _face_set_membership[face_set_number];
+	}
+
+	bool isMemberOfAnyFaceSet() const
+	{
+		return _face_set_membership.any();
+	}
+
+	void resetID(std::size_t id)
+	{
+		this->setID(id);
+	}
+
 private:
-	std::size_t _face_set_number;
+	std::bitset<128> _face_set_membership;
 };
 } // end namespace MeshLib
 
