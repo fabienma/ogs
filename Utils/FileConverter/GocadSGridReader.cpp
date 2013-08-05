@@ -383,11 +383,11 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 	}
 	++it;
 	++it; // skip face set name
-	std::size_t const number_of_faces(static_cast<std::size_t>(atoi(it->c_str())));
+	std::size_t const n_of_face_nodes(static_cast<std::size_t>(atoi(it->c_str())));
 	std::size_t const n_nodes(_nodes.size());
-	std::size_t faces_cnt(0);
+	std::size_t face_node_cnt(0);
 
-	while (getline(in, line) && faces_cnt < number_of_faces) {
+	while (getline(in, line) && face_node_cnt < n_of_face_nodes) {
 		boost::char_separator<char> sep("\t ");
 		boost::tokenizer<boost::char_separator<char> > tokens(line, sep);
 
@@ -401,12 +401,12 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 			} else {
 				dynamic_cast<MeshLib::GocadNode*>(_nodes[node_id])->setFaceSetNumber(_n_face_sets+1);
 			}
-			faces_cnt++;
+			face_node_cnt++;
 		}
 	}
 
-	if (faces_cnt != number_of_faces) {
-		ERR("Expected %d number of face set points, read %d.", number_of_faces, faces_cnt);
+	if (face_node_cnt != n_of_face_nodes) {
+		ERR("Expected %d number of face set points, read %d.", n_of_face_nodes, face_node_cnt);
 		throw std::runtime_error("Expected number of face set points does not match number of read points.");
 	}
 	_n_face_sets++;
