@@ -72,6 +72,8 @@ public:
 		this->setID(id);
 	}
 
+	std::bitset<128> const& getFaceSetMembership() const { return _face_set_membership; }
+
 private:
 	std::bitset<128> _face_set_membership;
 };
