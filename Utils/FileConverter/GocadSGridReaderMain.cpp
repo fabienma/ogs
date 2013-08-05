@@ -103,9 +103,6 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 		std::vector<MeshLib::Node*> face_set_nodes;
 		std::vector<MeshLib::Element*> face_set_elements;
 
-		std::vector<MeshLib::Node*> remaining_nodes;
-		std::vector<MeshLib::Element*> remaining_elements;
-
 		std::vector<MeshLib::Element*> const& elements(mesh.getElements());
 		for (std::size_t k(0); k<n_elements; k++) {
 			if (face_set_prop[k] == 0)
@@ -137,16 +134,7 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 					}
 					face_set_elements.push_back(face_set_elem);
 				} else {
-					if (node_cnt != 2)
-						continue;
-					MeshLib::Element *remaining_elem(face->clone());
-					for (std::size_t i(0); i<n_nodes; i++) {
-						// deep copy of the face nodes
-						remaining_nodes.push_back(new MeshLib::Node(*(face->getNode(i))));
-						// reset the node pointer in remaining_elem
-						remaining_elem->setNode(i, remaining_nodes[remaining_nodes.size()-1]);
-					}
-					remaining_elements.push_back(remaining_elem);
+
 				}
 			}
 		}
