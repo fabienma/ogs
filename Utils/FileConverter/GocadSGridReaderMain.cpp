@@ -67,7 +67,7 @@ void writeFaceSetNodes(MeshLib::Mesh const& mesh, std::size_t face_set_number, s
 	}
 }
 
-void markElementsWithFaceSetNodes(MeshLib::Mesh &mesh, std::vector<unsigned> & face_set_prop)
+void markElementsWithFaceSetNodes(MeshLib::Mesh const& mesh, std::vector<std::bitset<128>> & face_set_membership)
 {
 	std::size_t const n_elements(mesh.getNElements());
 	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
@@ -80,23 +80,54 @@ void markElementsWithFaceSetNodes(MeshLib::Mesh &mesh, std::vector<unsigned> & f
 			for (auto it(neighbor_elements.begin()); it != neighbor_elements.end(); it++) {
 				if (*it) {
 					std::size_t const element_id((*it)->getValue());
-					if (element_id < n_elements)
-						face_set_prop[element_id]++;
+					if (element_id < n_elements) {
+						face_set_membership[element_id]
+						              |= gocad_node->getFaceSetMembership();
+					}
 				}
 			}
 		}
 	}
-	std::string name("FaceSetElements");
-	mesh.addPropertyVec(name, face_set_prop);
+}
+
+std::size_t getNumberOfNodesInFaceBelongingToFaceSet(MeshLib::Element const* const face,
+		std::size_t face_set_number)
+{
+	std::size_t const n_face_nodes(face->getNNodes());
+	std::size_t node_cnt(0); // count nodes belonging to face
+	for (std::size_t k(0); k<n_face_nodes; k++) {
+		MeshLib::GocadNode const*const node(
+				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(face->getNode(k))));
+		if (node != nullptr) {
+			if (node->isMemberOfFaceSet(face_set_number))
+				node_cnt++;
+		}
+	}
+
+	return node_cnt;
+}
+
+void addFaceSetFace(MeshLib::Element const*const face,
+		std::vector<MeshLib::Node*> &face_set_nodes,
+		std::vector<MeshLib::Element*> &face_set_elements)
+{
+	MeshLib::Element *face_set_elem(face->clone());
+	std::size_t const n_nodes(face_set_elem->getNNodes());
+	for (std::size_t i(0); i<n_nodes; i++) {
+		// deep copy of the face nodes
+		face_set_nodes.push_back(new MeshLib::Node(*(face->getNode(i))));
+		// reset the node pointer in face_set_elem
+		face_set_elem->setNode(i, face_set_nodes[face_set_nodes.size()-1]);
+	}
+	face_set_elements.push_back(face_set_elem);
 }
 
 void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 {
 	std::size_t const n_elements(mesh.getNElements());
-	std::vector<unsigned> face_set_prop(n_elements);
-	std::fill(face_set_prop.begin(), face_set_prop.end(), 0);
+	std::vector<std::bitset<128>> face_set_membership(n_elements);
 
-	markElementsWithFaceSetNodes(mesh, face_set_prop);
+	markElementsWithFaceSetNodes(mesh, face_set_membership);
 
 	for (std::size_t l(0); l<128; l++) {
 		writeFaceSetNodes(mesh, l, path);
@@ -105,36 +136,36 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 
 		std::vector<MeshLib::Element*> const& elements(mesh.getElements());
 		for (std::size_t k(0); k<n_elements; k++) {
-			if (face_set_prop[k] == 0)
+			if (face_set_membership[k].none())
 				continue;
 			MeshLib::Element const*const elem(elements[k]);
 			std::size_t n_faces(elem->getNFaces());
 			for (std::size_t j(0); j<n_faces; j++) {
 				MeshLib::Element const*const face(elem->getFace(j));
-				std::size_t const n_nodes(face->getNNodes());
-				std::size_t node_cnt(0); // count nodes belonging to face
-				for (std::size_t i(0); i<n_nodes; i++) {
-					MeshLib::GocadNode const*const node(
-							dynamic_cast<MeshLib::GocadNode*>(
-								const_cast<MeshLib::Node*>(face->getNode(i))
-							)
-					);
-					if (node != nullptr) {
-						if (node->isMemberOfFaceSet(l))
-							node_cnt++;
-					}
-				}
-				if (node_cnt == 4) {
-					MeshLib::Element *face_set_elem(face->clone());
-					for (std::size_t i(0); i<n_nodes; i++) {
-						// deep copy of the face nodes
-						face_set_nodes.push_back(new MeshLib::Node(*(face->getNode(i))));
-						// reset the node pointer in face_set_elem
-						face_set_elem->setNode(i, face_set_nodes[face_set_nodes.size()-1]);
-					}
-					face_set_elements.push_back(face_set_elem);
-				} else {
+				std::size_t node_cnt(getNumberOfNodesInFaceBelongingToFaceSet(face, l));
 
+				if (node_cnt == 4) {
+					addFaceSetFace(face, face_set_nodes, face_set_elements);
+					continue;
+				}
+
+				// check the neighbor to fix gaps
+				if (node_cnt == 2) {
+					std::size_t const n_neighbor_elems(elem->getNNeighbors());
+					for (std::size_t i(0); i<n_neighbor_elems; i++) {
+						MeshLib::Element const*const neighbor_elem(elem->getNeighbor(i));
+						if (neighbor_elem == nullptr)
+							continue;
+						std::size_t n_neighbor_faces(neighbor_elem->getNFaces());
+						for (std::size_t jj(0); jj < n_neighbor_faces; jj++) {
+							MeshLib::Element const* const neighbor_face(neighbor_elem->getFace(jj));
+							std::size_t const neighbor_node_cnt(getNumberOfNodesInFaceBelongingToFaceSet(neighbor_face, l));
+							if (neighbor_node_cnt >= 2) {
+								addFaceSetFace(face, face_set_nodes, face_set_elements);
+								addFaceSetFace(neighbor_face, face_set_nodes, face_set_elements);
+							}
+						}
+					}
 				}
 			}
 		}
