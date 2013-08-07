@@ -39,11 +39,12 @@ class GocadNode : public Node
 {
 public:
 	GocadNode(double const*const coords, std::size_t id) :
-		Node(coords, id), _face_set_membership()
+		Node(coords, id), _face_set_membership(), _is_split(false)
 	{}
 
 	GocadNode(GocadNode const& src) :
-		Node(src._x, src._id), _face_set_membership(src._face_set_membership)
+		Node(src._x, src._id), _face_set_membership(src._face_set_membership),
+		_is_split(src._is_split)
 	{}
 
 	void flipFaceSetFlag(std::size_t face_set_number)
@@ -74,8 +75,12 @@ public:
 
 	std::bitset<128> const& getFaceSetMembership() const { return _face_set_membership; }
 
+	void setSplit(bool info) { _is_split = info; }
+	bool isSplit() const { return _is_split; }
+
 private:
 	std::bitset<128> _face_set_membership;
+	bool _is_split;
 };
 } // end namespace MeshLib
 
