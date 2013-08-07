@@ -46,9 +46,9 @@ public:
 		Node(src._x, src._id), _face_set_membership(src._face_set_membership)
 	{}
 
-	void setFaceSetNumber(std::size_t face_set_number)
+	void flipFaceSetFlag(std::size_t face_set_number)
 	{
-		_face_set_membership[face_set_number] = true;
+		_face_set_membership.flip(face_set_number);
 	}
 
 	/**
