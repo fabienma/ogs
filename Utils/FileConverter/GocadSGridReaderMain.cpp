@@ -37,6 +37,7 @@
 #include "Mesh.h"
 #include "Node.h"
 #include "Elements/Element.h"
+#include "Elements/Edge.h"
 #include "MeshSurfaceExtraction.h"
 
 // Utils/FileConverter
@@ -120,6 +121,16 @@ void addFaceSetFace(MeshLib::Element const*const face,
 		face_set_elem->setNode(i, face_set_nodes[face_set_nodes.size()-1]);
 	}
 	face_set_elements.push_back(face_set_elem);
+}
+
+bool operator== (MeshLib::Edge const& e0, MeshLib::Edge const& e1)
+{
+	if (e0.getNode(0) == e1.getNode(0) && e0.getNode(1) == e1.getNode(1))
+		return true;
+	if (e0.getNode(0) == e1.getNode(1) && e0.getNode(1) == e1.getNode(0))
+		return true;
+
+	return false;
 }
 
 void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
