@@ -196,6 +196,45 @@ bool operator== (MeshLib::Edge const& e0, MeshLib::Edge const& e1)
 	return false;
 }
 
+//bool doesFacesIntersects(MeshLib::Element const*const face0,
+//		MeshLib::Element const*const face1, std::size_t face_set_number)
+//{
+//	std::size_t const n_edges0(face0->getNEdges());
+//	std::size_t const n_edges1(face1->getNEdges());
+//
+//	for (std::size_t i(0); i<n_edges0; i++) {
+//		MeshLib::Edge const*const edge_0i(dynamic_cast<MeshLib::Edge const*>(face0->getEdge(i)));
+//		for (std::size_t j(0); j<n_edges1; j++) {
+//			MeshLib::Edge const*const edge_1j(dynamic_cast<MeshLib::Edge const*>(face1->getEdge(j)));
+//			if (*edge_0i == *edge_1j) {
+//				MeshLib::GocadNode *edge_0i_node0(dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(edge_0i->getNode(0))));
+//				if (edge_0i_node0->isMemberOfFaceSet(face_set_number))
+//					return false;
+//
+//				MeshLib::GocadNode *edge_0i_node1(dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(edge_0i->getNode(1))));
+//				if (edge_0i_node1->isMemberOfFaceSet(face_set_number))
+//					return false;
+//
+//				MeshLib::GocadNode *edge_1j_node0(
+//						dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(edge_1j->getNode(
+//								0))));
+//				if (edge_1j_node0->isMemberOfFaceSet(face_set_number))
+//					return false;
+//
+//				MeshLib::GocadNode *edge_1j_node1(
+//						dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(edge_1j->getNode(
+//								1))));
+//				if (edge_1j_node1->isMemberOfFaceSet(face_set_number))
+//					return false;
+//
+//				return true;
+//			}
+//		}
+//	}
+//
+//	return false;
+//}
+
 void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 {
 	std::size_t const n_elements(mesh.getNElements());
@@ -384,27 +423,27 @@ int main(int argc, char* argv[])
 //		delete surface_mesh;
 //	}
 
-	{
-		std::string prop_name("Porosity");
-		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
-						"-" + prop_name + ".txt");
-		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
-	}
+//	{
+//		std::string prop_name("Porosity");
+//		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+//						"-" + prop_name + ".txt");
+//		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
+//	}
 
-	{
-		std::string prop_name("Permeability");
-		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
-						"-" + prop_name + ".txt");
-		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
-	}
+//	{
+//		std::string prop_name("Permeability");
+//		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+//						"-" + prop_name + ".txt");
+//		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
+//	}
 
-	INFO("Writing mesh in vtu format.");
-	FileIO::BoostVtuInterface vtu;
-	vtu.setMesh(&mesh);
-	// output file name
-	std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + ".vtu");
-
-	vtu.writeToFile(mesh_out_fname);
+//	INFO("Writing mesh in vtu format.");
+//	FileIO::BoostVtuInterface vtu;
+//	vtu.setMesh(&mesh);
+//	// output file name
+//	std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + ".vtu");
+//
+//	vtu.writeToFile(mesh_out_fname);
 
 	delete logog;
 	delete custom_format;
