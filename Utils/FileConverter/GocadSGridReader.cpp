@@ -746,7 +746,11 @@ void GocadSGridReader::removeNullVolumeElements()
 	auto const new_end(
 			std::remove_if(_elements.begin(), _elements.end(),
 					[](MeshLib::Element *elem) {
-						return (elem->getContent() < std::numeric_limits<double>::epsilon());
+						if (elem->getContent() < std::numeric_limits<double>::epsilon()) {
+							delete elem;
+							return true;
+						}
+						return false;
 					}
 			)
 	);
