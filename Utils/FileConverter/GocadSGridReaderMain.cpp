@@ -259,6 +259,7 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 
 				if (node_cnt == 4) {
 					addFaceSetFace(face, face_set_nodes, face_set_elements);
+					delete face;
 					continue;
 				}
 
@@ -269,6 +270,7 @@ void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
 					}
 
 				}
+				delete face;
 			}
 		}
 
