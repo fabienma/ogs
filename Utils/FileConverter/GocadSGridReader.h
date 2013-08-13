@@ -47,9 +47,9 @@ public:
 		_is_split(src._is_split)
 	{}
 
-	void flipFaceSetFlag(std::size_t face_set_number)
+	void setFaceSetFlag(std::size_t face_set_number)
 	{
-		_face_set_membership.flip(face_set_number);
+		_face_set_membership.set(face_set_number);
 	}
 
 	/**
