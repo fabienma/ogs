@@ -35,6 +35,13 @@
 
 namespace MeshLib
 {
+enum class FaceIndicator : char
+{
+	U,
+	V,
+	W
+};
+
 class GocadNode : public Node
 {
 public:
@@ -44,12 +51,27 @@ public:
 
 	GocadNode(GocadNode const& src) :
 		Node(src._x, src._id), _face_set_membership(src._face_set_membership),
+		_face_indicators(src._face_indicators),
 		_is_split(src._is_split)
 	{}
 
-	void setFaceSetFlag(std::size_t face_set_number)
+	void setFaceSet(std::size_t face_set_number, std::size_t face_indicator)
 	{
 		_face_set_membership.set(face_set_number);
+		switch (face_indicator) {
+		case 0:
+			_face_indicators.push_back(std::pair<std::size_t, FaceIndicator> (face_set_number, FaceIndicator::U));
+			break;
+		case 1:
+			_face_indicators.push_back(std::pair<std::size_t, FaceIndicator> (face_set_number, FaceIndicator::V));
+			break;
+		case 2:
+			_face_indicators.push_back(std::pair<std::size_t, FaceIndicator> (face_set_number, FaceIndicator::W));
+			break;
+		default:
+			ERR("GocadNode::setFaceSet(): unknown face indicator %d.", face_indicator);
+			exit(1);
+		}
 	}
 
 	/**
@@ -78,8 +100,18 @@ public:
 	void setSplit(bool info) { _is_split = info; }
 	bool isSplit() const { return _is_split; }
 
+	FaceIndicator getFaceIndicator(std::size_t face_set_number) const
+	{
+		auto it = _face_indicators.cbegin();
+		while (it != _face_indicators.cend() && it->first != face_set_number) {
+			it++;
+		}
+		return it->second;
+	}
+
 private:
 	std::bitset<128> _face_set_membership;
+	std::vector<std::pair<std::size_t, FaceIndicator> > _face_indicators;
 	bool _is_split;
 };
 } // end namespace MeshLib

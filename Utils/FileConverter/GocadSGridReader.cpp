@@ -394,12 +394,13 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 		for(auto tok_it  = tokens.begin(); tok_it != tokens.end(); ) {
 			std::size_t node_id(static_cast<std::size_t>(atoi(tok_it->c_str())));
 			tok_it++;
+			std::size_t face_indicator(static_cast<std::size_t>(atoi(tok_it->c_str())));
 			tok_it++;
 
 			if (node_id >= n_nodes) {
 				ERR("Face set node id %d is greater than the number of nodes (%d).", node_id, n_nodes);
 			} else {
-				dynamic_cast<MeshLib::GocadNode*>(_nodes[node_id])->setFaceSetFlag(_n_face_sets+1);
+				dynamic_cast<MeshLib::GocadNode*>(_nodes[node_id])->setFaceSet(_n_face_sets+1, face_indicator);
 			}
 			face_node_cnt++;
 		}
