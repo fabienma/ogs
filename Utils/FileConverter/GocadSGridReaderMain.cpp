@@ -77,17 +77,31 @@ void writeFaceSetNodes(MeshLib::Mesh const& mesh, std::size_t face_set_number, s
 
 		bool const face_set_member(gocad_node->isMemberOfFaceSet(face_set_number));
 		if (face_set_member) {
-			ss << cnt << " " << *gocad_node << " $NAME " << face_set_number << "\n";
+			ss << (*gocad_node)[0] << "," << (*gocad_node)[1] << "," << (*gocad_node)[2] << ",";
+
+			switch (gocad_node->getFaceIndicator(face_set_number))
+			{
+			case MeshLib::FaceIndicator::U:
+				ss << "0";
+				break;
+			case MeshLib::FaceIndicator::V:
+				ss << "1";
+				break;
+			case MeshLib::FaceIndicator::W:
+				ss << "2";
+				break;
+			default:
+				ss << "unknown";
+			}
+			ss << "\n";
 			cnt++;
 		}
 	}
 	if (cnt > 0) {
-		std::string fname(path + "Surfaces/FaceSetNodes-" + BaseLib::number2str(face_set_number) + ".gli");
+		std::string fname(path + "Surfaces/FaceSetNodes-" + BaseLib::number2str(face_set_number) + ".csv");
 		INFO("Writing nodes of face set to file \"%s\".", fname.c_str());
 		std::ofstream os(fname.c_str());
-		os << "#POINTS\n";
 		os << ss.str();
-		os << "#STOP";
 		os.close();
 	}
 }
