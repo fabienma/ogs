@@ -255,10 +255,13 @@ void cleanUpNoDataValues(MeshLib::Mesh &mesh, double no_data_value,
 			std::size_t cnt(0); // count neighbors with valid property values
 			// simple average
 			for (std::size_t j(0); j<n_neighbors; ++j) {
-				double neighbor_val(original[elements[k]->getNeighbor(j)->getValue()]);
-				if (std::abs(neighbor_val - no_data_value) > std::numeric_limits<double>::epsilon()) {
-					prop_value += neighbor_val;
-					cnt++;
+				MeshLib::Element const*const j_th_neighbor(elements[k]->getNeighbor(j));
+				if (j_th_neighbor != nullptr) {
+					double neighbor_val(original[j_th_neighbor->getValue()]);
+					if (std::abs(neighbor_val - no_data_value) > std::numeric_limits<double>::epsilon()) {
+						prop_value += neighbor_val;
+						cnt++;
+					}
 				}
 			}
 			prop_value /= cnt;
