@@ -221,7 +221,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 		}
 		else if (line.compare(0, 12, "POINTS_FILE ") == 0)
 		{
-			parsePointsFileName(line);
+			parseFileName(line, _pnts_fname);
 		}
 		else if (line.compare(0, 9, "PROPERTY ") == 0)
 		{
@@ -231,11 +231,11 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 			_bin_pnts_in_double_precision = true;
 		}
 		else if (line.compare(0, 11, "FLAGS_FILE ") == 0) {
-			parseFlagsFileName(line);
+			parseFileName(line, _flags_fname);
 		}
 		else if (line.compare(0, 18, "REGION_FLAGS_FILE ") == 0)
 		{
-			parseRegionFlagsFileName(line);
+			parseFileName(line, _region_flags_fname);
 		}
 		else if (line.compare(0, 7, "REGION ") == 0 || line.compare(0, 13, "MODEL_REGION ") == 0)
 		{
@@ -344,28 +344,12 @@ void GocadSGridReader::parseDims(std::string const& line)
 	_index_calculator = IndexCalculator(x_dim, y_dim, z_dim);
 }
 
-void GocadSGridReader::parsePointsFileName(std::string const& line)
+void GocadSGridReader::parseFileName(std::string const& line, std::string &result_string) const
 {
 	std::size_t beg_pos(line.find_first_of(" ") + 1);
 	std::string fname(line.substr(beg_pos, line.length() - beg_pos));
 	BaseLib::trim(fname, '\"');
-	_pnts_fname = _path + fname;
-}
-
-void GocadSGridReader::parseFlagsFileName(std::string const& line)
-{
-	std::size_t beg_pos(line.find_first_of(" ") + 1);
-	std::string fname(line.substr(beg_pos, line.length() - beg_pos));
-	BaseLib::trim(fname, '\"');
-	_flags_fname = _path + fname;
-}
-
-void GocadSGridReader::parseRegionFlagsFileName(std::string const& line)
-{
-	std::size_t beg_pos(line.find_first_of(" ") + 1);
-	std::string fname(line.substr(beg_pos, line.length() - beg_pos));
-	BaseLib::trim(fname, '\"');
-	_region_flags_fname = _path + fname;
+	result_string = _path + fname;
 }
 
 /**

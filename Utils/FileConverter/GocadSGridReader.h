@@ -184,9 +184,7 @@ private:
 	typedef boost::dynamic_bitset<> Bitset;
 
 	void parseDims(std::string const& line);
-	void parsePointsFileName(std::string const& line);
-	void parseFlagsFileName(std::string const& line);
-	void parseRegionFlagsFileName(std::string const& line);
+	void parseFileName(std::string const& line, std::string &result_string) const;
 	void parseHeader(std::istream &in);
 	void parseFaceSet(std::string &line, std::istream &in);
 
