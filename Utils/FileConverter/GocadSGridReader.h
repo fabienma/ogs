@@ -50,7 +50,7 @@ public:
 	{}
 
 	GocadNode(GocadNode const& src) :
-		Node(src._x, src._id), _face_set_membership(src._face_set_membership),
+		Node(src.getCoords(), src._id), _face_set_membership(src._face_set_membership),
 		_face_indicators(src._face_indicators),
 		_is_split(src._is_split)
 	{}
