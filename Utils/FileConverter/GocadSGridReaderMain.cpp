@@ -298,7 +298,7 @@ void writeMeshPropertiesToFile(std::string const& fname, std::string const& prop
 		MeshLib::Mesh const& mesh)
 {
 	boost::optional<std::vector<double> const&> prop_vec(mesh.getDoublePropertyVec(prop_name));
-	if (! prop_vec) {
+	if (!prop_vec) {
 		ERR("Could not read property \"%s\" from mesh.", prop_name.c_str());
 		return;
 	}
@@ -311,16 +311,37 @@ void writeMeshPropertiesToFile(std::string const& fname, std::string const& prop
 		INFO("Open file \"%s\" for writing.", fname.c_str());
 	}
 
-	os << "# OpenGeoSys material property file - " << prop_name << " \n";
+	// write header
+	os << "; OpenGeoSys material property file - " << prop_name << " \n";
+	os << "#MEDIUM_PROPERTIES_DISTRIBUTED\n";
+	os << "$MSH_TYPE\n";
+	os << " NO_PCS\n";
+	os << "$MMP_TYPE\n";
 	if (prop_name.compare("Porosity") == 0) {
-		for (std::size_t k(0); k<(*prop_vec).size(); k++) {
-			os << k << " " << (*prop_vec)[k] / 100.0 << "\n";
+		os << " POROSITY\n";
+	}
+	if (prop_name.compare("Permeability") == 0) {
+		os << " PERMEABILITY\n";
+	}
+	os << "$DIS_TYPE\n";
+	os << " ELEMENT\n";
+	os << "$DATA\n";
+
+	if (prop_name.compare("Porosity") == 0) {
+		for (std::size_t k(0); k < (*prop_vec).size(); k++) {
+			if ((*prop_vec)[k] == 0)
+				os << k << " " << 0.0001 << "\n";
+			else
+				os << k << " " << (*prop_vec)[k] / 100.0 << "\n";
 		}
 	}
 	if (prop_name.compare("Permeability") == 0) {
 		const double scale(9.86923 * 1e-16 * 9.81 * 1e3 * 1e3);
-		for (std::size_t k(0); k<(*prop_vec).size(); k++) {
-			os << k << " " << (*prop_vec)[k] * scale << "\n";
+		for (std::size_t k(0); k < (*prop_vec).size(); k++) {
+			if ((*prop_vec)[k] == 0)
+				os << k << " " << 1e-3 * scale << "\n";
+			else
+				os << k << " " << (*prop_vec)[k] * scale << "\n";
 		}
 	}
 
