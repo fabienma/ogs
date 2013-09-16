@@ -386,8 +386,8 @@ int main(int argc, char* argv[])
 //	INFO("Writing split nodes.");
 //	writeSplitNodes(mesh, BaseLib::extractPath(sg_file_arg.getValue()));
 
-	INFO("Generating a mesh for every face set.");
-	generateFaceSetMeshes(mesh, BaseLib::extractPath(sg_file_arg.getValue()));
+//	INFO("Generating a mesh for every face set.");
+//	generateFaceSetMeshes(mesh, BaseLib::extractPath(sg_file_arg.getValue()));
 
 //	{
 //		MeshLib::Mesh *surface_mesh(extractSurfaceMesh(mesh));
@@ -400,27 +400,27 @@ int main(int argc, char* argv[])
 //		delete surface_mesh;
 //	}
 
-//	{
-//		std::string prop_name("Porosity");
-//		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
-//						"-" + prop_name + ".txt");
-//		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
-//	}
+	{
+		std::string prop_name("Porosity");
+		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+						"-" + prop_name + ".txt");
+		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
+	}
 
-//	{
-//		std::string prop_name("Permeability");
-//		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
-//						"-" + prop_name + ".txt");
-//		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
-//	}
+	{
+		std::string prop_name("Permeability");
+		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+						"-" + prop_name + ".txt");
+		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
+	}
 
-//	INFO("Writing mesh in vtu format.");
-//	FileIO::BoostVtuInterface vtu;
-//	vtu.setMesh(&mesh);
-//	// output file name
-//	std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + ".vtu");
-//
-//	vtu.writeToFile(mesh_out_fname);
+	INFO("Writing mesh in vtu format.");
+	FileIO::BoostVtuInterface vtu;
+	vtu.setMesh(&mesh);
+	// output file name
+	std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + ".vtu");
+
+	vtu.writeToFile(mesh_out_fname);
 
 	delete logog;
 	delete custom_format;
