@@ -304,8 +304,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 			}
 	);
 
-	removeNullVolumeElements();
-
+//	removeNullVolumeElements();
 	in.close();
 }
 
