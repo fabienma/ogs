@@ -370,6 +370,19 @@ void GocadSGridReader::parseFileName(std::string const& line, std::string &resul
  */
 void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 {
+	// create and initialize a GocadProperty object for storing face set data
+	GocadProperty face_set_property;
+	face_set_property._property_id = 0;
+	face_set_property._property_name = "FaceSet";
+	face_set_property._property_class_name = "FaceSetData";
+	face_set_property._property_unit = "unitless";
+	face_set_property._property_data_type = "double";
+	face_set_property._property_data_fname = "";
+	face_set_property._property_no_data_value = -1.0;
+	face_set_property._property_data.resize(_index_calculator._n_cells);
+	std::fill(face_set_property._property_data.begin(), face_set_property._property_data.end(),
+			face_set_property._property_no_data_value);
+
 	std::istringstream iss(line);
 	std::istream_iterator<std::string> it(iss);
 	// Check first word is FACE_SET
@@ -378,12 +391,12 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 		throw std::runtime_error("In GocadSGridReader::parseFaceSet() expected FACE_SET keyword not found.");
 	}
 	++it;
-	++it; // skip face set name
-	std::size_t const n_of_face_nodes(static_cast<std::size_t>(atoi(it->c_str())));
-	std::size_t const n_nodes(_nodes.size());
-	std::size_t face_node_cnt(0);
+	face_set_property._property_name += BaseLib::number2str(*it);
+	++it;
+	std::size_t const n_of_face_set_ids(static_cast<std::size_t>(atoi(it->c_str())));
+	std::size_t face_set_id_cnt(0);
 
-	while (getline(in, line) && face_node_cnt < n_of_face_nodes) {
+	while (getline(in, line) && face_set_id_cnt < n_of_face_set_ids) {
 		boost::char_separator<char> sep("\t ");
 		boost::tokenizer<boost::char_separator<char> > tokens(line, sep);
 
@@ -393,20 +406,32 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 			std::size_t face_indicator(static_cast<std::size_t>(atoi(tok_it->c_str())));
 			tok_it++;
 
-			if (id >= n_nodes) {
-				ERR("Face set node id %d is greater than the number of nodes (%d).", id, n_nodes);
+			if (id >= _index_calculator._n_nodes) {
+				ERR("Face set id %d is greater than the number of nodes (%d).", id, _index_calculator._n_nodes);
 			} else {
 				dynamic_cast<MeshLib::GocadNode*>(_nodes[id])->setFaceSet(_n_face_sets+1, face_indicator);
+				std::array<std::size_t,3> coords(_index_calculator.getCoordsForID(id));
+				if (coords[0] >= _index_calculator._x_dim-1)
+					ERR("****** i coord %d to big for id %d.", coords[0], id);
+				if (coords[1] >= _index_calculator._y_dim-1)
+					ERR("****** j coord %d to big for id %d.", coords[1], id);
+				if (coords[2] >= _index_calculator._z_dim-1)
+					ERR("****** k coord %d to big for id %d.", coords[2], id);
+				std::size_t const cell_id( _index_calculator.getCellIdx(coords[0], coords[1], coords[2]));
+				std::cout << "id: " << id << ", coords: (" << coords[0] << ", " << coords[1] << ", " << coords[2] << "), cell_id: " << cell_id << std::endl;
+				face_set_property._property_data[cell_id] = face_indicator;
 			}
-			face_node_cnt++;
+			face_set_id_cnt++;
 		}
 	}
 
-	if (face_node_cnt != n_of_face_nodes) {
-		ERR("Expected %d number of face set points, read %d.", n_of_face_nodes, face_node_cnt);
+	if (face_set_id_cnt != n_of_face_set_ids) {
+		ERR("Expected %d number of face set ids, read %d.", n_of_face_set_ids, face_set_id_cnt);
 		throw std::runtime_error("Expected number of face set points does not match number of read points.");
 	}
 	_n_face_sets++;
+
+	_property_meta_data_vecs.push_back(face_set_property);
 }
 
 
