@@ -305,6 +305,19 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	);
 
 //	removeNullVolumeElements();
+	GocadProperty face_set_property;
+	face_set_property._property_id = 0;
+	face_set_property._property_name = "CellIDs";
+	face_set_property._property_class_name = "CellIDsData";
+	face_set_property._property_unit = "unitless";
+	face_set_property._property_data_type = "double";
+	face_set_property._property_data_fname = "";
+	face_set_property._property_no_data_value = -1.0;
+	face_set_property._property_data.resize(_index_calculator._n_cells);
+	std::iota(face_set_property._property_data.begin(), face_set_property._property_data.end(),
+			0.0);
+
+	_property_meta_data_vecs.push_back(face_set_property);
 	in.close();
 }
 
