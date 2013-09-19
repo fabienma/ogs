@@ -589,6 +589,10 @@ void GocadSGridReader::readElementPropertiesBinary()
 			prop_it != _property_meta_data_vecs.end();
 			prop_it++) {
 		std::string const& fname(prop_it->_property_data_fname);
+		if (prop_it->_property_data_fname.empty()) {
+			WARN("Empty filename for property %s.", prop_it->_property_name.c_str());
+			continue;
+		}
 		std::vector<float> float_properties =
 				readBinaryArray<float>(fname, _index_calculator._n_cells);
 		std::vector<double> properties;
