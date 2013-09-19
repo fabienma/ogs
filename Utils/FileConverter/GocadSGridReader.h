@@ -235,6 +235,16 @@ private:
 			return idx;
 		}
 
+		std::array<std::size_t, 3> getCoordsForID(std::size_t id) const
+		{
+			std::array<std::size_t, 3> coords;
+			coords[2] = id /(_x_dim * _y_dim);
+			coords[1] = (id % (_x_dim * _y_dim)) / _x_dim;
+			coords[0] = (id % (_x_dim * _y_dim)) % _x_dim;
+
+			return coords;
+		}
+
 		std::size_t _x_dim;
 		std::size_t _y_dim;
 		std::size_t _z_dim;
