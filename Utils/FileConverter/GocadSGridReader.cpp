@@ -31,6 +31,7 @@
 
 // MeshLib
 #include "Elements/Hex.h"
+#include "Elements/Quad.h"
 
 namespace FileIO
 {
@@ -810,6 +811,39 @@ std::vector<std::string> GocadSGridReader::getPropertyNames() const
 			}
 		);
 	return names;
+}
+
+void GocadSGridReader::getQuadFromFaceSetNode(MeshLib::GocadNode const* face_set_node,
+			std::size_t face_set_number,
+			std::vector<MeshLib::Node*> &face_set_nodes,
+			std::vector<MeshLib::Element*> &face_set_elements) const
+{
+	const MeshLib::FaceIndicator dir(face_set_node->getFaceIndicator(face_set_number));
+	const std::size_t id(face_set_node->getID());
+	std::array<std::size_t, 3> coords (_index_calculator.getCoordsForID(id));
+
+	std::size_t const size(face_set_nodes.size());
+	face_set_nodes.push_back(new MeshLib::Node(face_set_node->getCoords()));
+	switch (dir) {
+	case MeshLib::FaceIndicator::U:
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(coords[0], coords[1]+1, coords[2])]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(coords[0], coords[1]+1, coords[2]+1)]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(coords[0], coords[1], coords[2]+1)]));
+		break;
+	case MeshLib::FaceIndicator::V:
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(coords[0]+1, coords[1], coords[2])]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(coords[0]+1, coords[1], coords[2]+1)]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(coords[0], coords[1], coords[2]+1)]));
+		break;
+	case MeshLib::FaceIndicator::W:
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(coords[0]+1, coords[1], coords[2])]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(coords[0]+1, coords[1]+1, coords[2])]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(coords[0], coords[1]+1, coords[2])]));
+		break;
+	default:
+		ERR("Could not create face for node with id %d.", id);
+	}
+	face_set_elements.push_back(new MeshLib::Quad(face_set_nodes[size], face_set_nodes[size+1], face_set_nodes[size+2], face_set_nodes[size+3]));
 }
 
 } // end namespace FileIO
