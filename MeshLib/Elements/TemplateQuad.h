@@ -52,10 +52,6 @@ public:
 	/// Constructs an edge from array of Node pointers.
 	TemplateQuad(std::array<Node*, NNODES> const& nodes, unsigned value = 0, std::size_t id = std::numeric_limits<std::size_t>::max());
 
-	/// Constructs a quad from NNODES of Nodes initializing Face with
-	//  value = 0.
-	TemplateQuad(Node* n0, Node* n1, Node* n2, Node* n3, ...);
-
 	/// Copy constructor
 	TemplateQuad(const TemplateQuad &quad);
 
