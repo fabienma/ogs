@@ -437,14 +437,6 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 	_property_meta_data_vecs.push_back(face_set_property);
 }
 
-template <typename T>
-T readValue(std::ifstream& in)
-{
-	T v;
-	in.read(reinterpret_cast<char*>(&v), sizeof(T));
-	return BaseLib::swapEndianness(v);
-}
-
 // Reads given number of bits (rounded up to next byte) into a bitset.
 // Used for reading region information which can be represented by some
 // number of bits.
@@ -478,9 +470,9 @@ void GocadSGridReader::readNodesBinary()
 	while (in && k < n * 3)
 	{
 		if (_bin_pnts_in_double_precision) {
-			coords[k % 3] = readValue<double>(in);
+			coords[k % 3] = BaseLib::swapEndianness(BaseLib::readBinaryValue<double>(in));
 		} else {
-			coords[k % 3] = readValue<float>(in);
+			coords[k % 3] = BaseLib::swapEndianness(BaseLib::readBinaryValue<float>(in));
 		}
 		if ((k + 1) % 3 == 0)
 			_nodes[k/3] = new MeshLib::GocadNode(coords, k/3);
@@ -537,7 +529,7 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
 	result.reserve(n);
 
 	for (std::size_t p = 0; in && !in.eof() && p < n; ++p)
-		result.push_back(readValue<T>(in));
+		result.push_back(BaseLib::swapEndianness(BaseLib::readBinaryValue<T>(in)));
 
 	if (result.size() == n)
 		return result;
