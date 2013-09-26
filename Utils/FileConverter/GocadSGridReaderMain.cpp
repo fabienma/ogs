@@ -350,11 +350,11 @@ int main(int argc, char* argv[])
 	INFO("Add Gocad properties to mesh.");
 	addGocadPropertiesToMesh(reader, mesh);
 
-//	INFO("Writing split nodes.");
-//	writeSplitNodes(mesh, BaseLib::extractPath(sg_file_arg.getValue()));
+	INFO("Writing split nodes.");
+	writeSplitNodes(mesh, BaseLib::extractPath(sg_file_arg.getValue()));
 
 //	INFO("Generating a mesh for every face set.");
-//	generateFaceSetMeshes(mesh, BaseLib::extractPath(sg_file_arg.getValue()));
+//	generateFaceSetMeshes(reader, BaseLib::extractPath(sg_file_arg.getValue()));
 
 //	{
 //		MeshLib::Mesh *surface_mesh(extractSurfaceMesh(mesh));
@@ -366,20 +366,20 @@ int main(int argc, char* argv[])
 //		vtu.writeToFile(mesh_out_fname);
 //		delete surface_mesh;
 //	}
-
-	{
-		std::string prop_name("Porosity");
-		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
-						"-" + prop_name + ".txt");
-		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
-	}
-
-	{
-		std::string prop_name("Permeability");
-		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
-						"-" + prop_name + ".txt");
-		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
-	}
+//
+//	{
+//		std::string prop_name("Porosity");
+//		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+//						"-" + prop_name + ".txt");
+//		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
+//	}
+//
+//	{
+//		std::string prop_name("Permeability");
+//		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+//						"-" + prop_name + ".txt");
+//		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
+//	}
 
 	INFO("Writing mesh in vtu format.");
 	FileIO::BoostVtuInterface vtu;
