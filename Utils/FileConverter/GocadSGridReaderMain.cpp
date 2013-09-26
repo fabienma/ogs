@@ -187,57 +187,24 @@ bool operator== (MeshLib::Edge const& e0, MeshLib::Edge const& e1)
 	return false;
 }
 
-void generateFaceSetMeshes(MeshLib::Mesh &mesh, std::string const& path)
+void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string const& path)
 {
-	std::size_t const n_elements(mesh.getNElements());
-	std::vector<std::bitset<128>> face_set_membership(n_elements);
-
-	markElementsWithFaceSetNodes(mesh, face_set_membership);
-
 	for (std::size_t l(0); l<128; l++) {
-		writeFaceSetNodes(mesh, l, path);
-		std::vector<MeshLib::Node*> face_set_nodes;
-		std::vector<MeshLib::Element*> face_set_elements;
+		MeshLib::Mesh *face_set_mesh(reader.getFaceSetMesh(l));
 
-		std::vector<MeshLib::Element*> const& elements(mesh.getElements());
-		for (std::size_t k(0); k<n_elements; k++) {
-			if (face_set_membership[k].none())
-				continue;
-			MeshLib::Element const*const elem(elements[k]);
-			std::size_t n_faces(elem->getNFaces());
-			for (std::size_t j(0); j<n_faces; j++) {
-				MeshLib::Element const*const face(elem->getFace(j));
-				std::size_t node_cnt(getNumberOfNodesInFaceBelongingToFaceSet(face, l));
-
-				if (node_cnt == 4) {
-					addFaceSetFace(face, face_set_nodes, face_set_elements);
-					delete face;
-					continue;
-				}
-
-				if (node_cnt == 2) {
-					if (getNumberOfSplitNodesInFace(face) == 4) {
-						addFaceSetFace(face, face_set_nodes, face_set_elements);
-					}
-
-				}
-				delete face;
-			}
-		}
-
-		if (face_set_nodes.size() == 0)
+		if (face_set_mesh == nullptr)
 			continue;
 		INFO("Creating face set mesh.");
-		MeshLib::Mesh face_set_mesh("GocadSGridFaceSet", face_set_nodes, face_set_elements);
-		INFO("Face set mesh created. #nodes: %d, #elements: %d", face_set_mesh.getNNodes(),
-				face_set_mesh.getNElements());
+		INFO("Face set mesh created. #nodes: %d, #elements: %d", face_set_mesh->getNNodes(),
+				face_set_mesh->getNElements());
 
 		FileIO::BoostVtuInterface vtu;
-		vtu.setMesh(&face_set_mesh);
+		vtu.setMesh(face_set_mesh);
 		// output file name
 		std::string mesh_out_fname(path+"Surfaces/FaceSetMesh-" + BaseLib::number2str(l) + ".vtu");
 		INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 		vtu.writeToFile(mesh_out_fname);
+		delete face_set_mesh;
 	}
 }
 
