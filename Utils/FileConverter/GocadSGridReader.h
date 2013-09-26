@@ -180,10 +180,7 @@ public:
 
 	};
 
-	void getQuadFromFaceSetNode(MeshLib::GocadNode const* face_set_node,
-			std::size_t face_set_number,
-			std::vector<MeshLib::Node*> &face_set_nodes,
-			std::vector<MeshLib::Element*> &face_set_elements) const;
+	MeshLib::Mesh* getFaceSetMesh(std::size_t face_set_number) const;
 
 private:
 	typedef boost::dynamic_bitset<> Bitset;
