@@ -526,9 +526,9 @@ void GocadSGridReader::readElementPropertiesBinary()
 		}
 		std::vector<float> float_properties =
 				BaseLib::readBinaryArray<float>(fname, _index_calculator._n_cells);
-		std::for_each(float_properties.begin(), float_properties.end(),
-				[](float& val) {
-					BaseLib::swapEndianness(val);
+		std::transform(float_properties.cbegin(), float_properties.cend(), float_properties.begin(),
+				[](float const& val) {
+					return BaseLib::swapEndianness(val);
 				});
 
 		std::vector<double> properties;
