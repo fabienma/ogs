@@ -373,7 +373,7 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 {
 	// create and initialize a GocadProperty object for storing face set data
 	GocadProperty face_set_property;
-	face_set_property._property_id = 0;
+	face_set_property._property_id = _n_face_sets;
 	face_set_property._property_name = "FaceSet";
 	face_set_property._property_class_name = "FaceSetData";
 	face_set_property._property_unit = "unitless";
@@ -419,7 +419,6 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 				if (coords[2] >= _index_calculator._z_dim-1)
 					ERR("****** k coord %d to big for id %d.", coords[2], id);
 				std::size_t const cell_id( _index_calculator.getCellIdx(coords[0], coords[1], coords[2]));
-				std::cout << "id: " << id << ", coords: (" << coords[0] << ", " << coords[1] << ", " << coords[2] << "), cell_id: " << cell_id << std::endl;
 				face_set_property._property_data[cell_id] = face_indicator;
 			}
 			face_set_id_cnt++;
