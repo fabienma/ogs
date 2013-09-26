@@ -246,8 +246,9 @@ void addGocadPropertiesToMesh(FileIO::GocadSGridReader const& reader, MeshLib::M
 			INFO("Adding property \"%s\".", name_it->c_str());
 			std::vector<double> reworked_properties;
 			reworked_properties.resize((*prop)._property_data.size());
-			cleanUpNoDataValues(mesh, (*prop)._property_no_data_value, (*prop)._property_data, reworked_properties);
-			mesh.addPropertyVec(*name_it, reworked_properties);
+//			cleanUpNoDataValues(mesh, (*prop)._property_no_data_value, (*prop)._property_data, reworked_properties);
+//			mesh.addPropertyVec(*name_it, reworked_properties);
+			mesh.addPropertyVec(*name_it, (*prop)._property_data);
 		}
 	}
 }
