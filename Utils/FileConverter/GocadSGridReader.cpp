@@ -26,6 +26,9 @@
 // ThirdParty/logog
 #include "logog/include/logog.hpp"
 
+// BaseLib
+#include "FileTools.h"
+
 // GeoLib
 #include "AABB.h"
 
@@ -434,47 +437,12 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 	_property_meta_data_vecs.push_back(face_set_property);
 }
 
-
-template <typename T>
-T swapEndianness(T const& v)
-{
-	union
-	{
-		T v;
-		char c[sizeof(T)];
-	} a, b;
-
-	a.v = v;
-	for (unsigned short i = 0; i < sizeof(T); i++)
-		b.c[i] = a.c[sizeof(T) - i - 1];
-
-	return b.v;
-}
-
-double swapEndianness(double const& v)
-{
-	union
-	{
-		double v;
-		char c[sizeof(double)];
-	} a, b;
-
-	a.v = v;
-	for (unsigned short i = 0; i < sizeof(double)/2; i++)
-		b.c[i] = a.c[sizeof(double)/2 - i - 1];
-
-	for (unsigned short i = sizeof(double)/2; i < sizeof(double); i++)
-		b.c[i] = a.c[sizeof(double)+sizeof(double)/2 - i - 1];
-
-	return b.v;
-}
-
 template <typename T>
 T readValue(std::ifstream& in)
 {
 	T v;
 	in.read(reinterpret_cast<char*>(&v), sizeof(T));
-	return swapEndianness(v);
+	return BaseLib::swapEndianness(v);
 }
 
 // Reads given number of bits (rounded up to next byte) into a bitset.
