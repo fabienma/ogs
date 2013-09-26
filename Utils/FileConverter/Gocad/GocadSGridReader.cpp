@@ -329,6 +329,16 @@ GocadSGridReader::~GocadSGridReader()
 {
 }
 
+std::vector<MeshLib::Node*> GocadSGridReader::getNodes() const
+{
+	return _nodes;
+}
+
+std::vector<MeshLib::Element*> GocadSGridReader::getElements() const
+{
+	return _elements;
+}
+
 void GocadSGridReader::parseHeader(std::istream &in)
 {
 	std::string line;

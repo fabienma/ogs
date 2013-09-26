@@ -21,6 +21,8 @@
 #include <vector>
 #include <bitset>
 
+#include <boost/dynamic_bitset.hpp>
+
 // logog
 #include "logog/include/logog.hpp"
 
@@ -31,7 +33,6 @@
 #include "Node.h"
 #include "Elements/Element.h"
 
-#include <boost/dynamic_bitset.hpp>
 #include "GocadNode.h"
 
 namespace FileIO
@@ -47,8 +48,8 @@ public:
 	GocadSGridReader(std::string const& fname);
 	~GocadSGridReader();
 
-	std::vector<MeshLib::Node*> const& getNodes() const { return _nodes; }
-	std::vector<MeshLib::Element*> const& getElements() const { return _elements; }
+	std::vector<MeshLib::Node*> getNodes() const;
+	std::vector<MeshLib::Element*> getElements() const;
 
 	struct GocadProperty
 	{
