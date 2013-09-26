@@ -514,35 +514,6 @@ void GocadSGridReader::mapRegionFlagsToCellProperties(std::vector<Bitset> const&
 //	}
 }
 
-template <typename T>
-std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
-{
-	std::ifstream in(filename.c_str());
-	if (!in) {
-		ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
-		ERR("Could not open file \"%s\" for input.", filename.c_str());
-		in.close();
-		return std::vector<T>();
-	}
-
-	std::vector<T> result;
-	result.reserve(n);
-
-	for (std::size_t p = 0; in && !in.eof() && p < n; ++p)
-		result.push_back(BaseLib::readBinaryValue<T>(in));
-
-	if (result.size() == n)
-		return result;
-
-	ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
-	ERR("Read different number of values. Expected %d, got %d.", n, result.size());
-
-	if (!in.eof())
-		ERR("EOF reached.\n");
-
-	return std::vector<T>();
-}
-
 void GocadSGridReader::readElementPropertiesBinary()
 {
 	for (auto prop_it(_property_meta_data_vecs.begin());
@@ -554,7 +525,7 @@ void GocadSGridReader::readElementPropertiesBinary()
 			continue;
 		}
 		std::vector<float> float_properties =
-				readBinaryArray<float>(fname, _index_calculator._n_cells);
+				BaseLib::readBinaryArray<float>(fname, _index_calculator._n_cells);
 		std::for_each(float_properties.begin(), float_properties.end(),
 				[](float& val) {
 					BaseLib::swapEndianness(val);
@@ -573,13 +544,13 @@ std::vector<int> GocadSGridReader::readFlagsBinary() const
 {
 	std::vector<int> result;
 	if (!_double_precision_binary) {
-		result = readBinaryArray<int32_t>(_flags_fname, _index_calculator._n_nodes);
+		result = BaseLib::readBinaryArray<int32_t>(_flags_fname, _index_calculator._n_nodes);
 		std::for_each(result.begin(), result.end(),
 						[](int32_t& val) {
 							BaseLib::swapEndianness(val);
 						});
 	} else {
-		result = readBinaryArray<int>(_flags_fname, _index_calculator._n_nodes);
+		result = BaseLib::readBinaryArray<int>(_flags_fname, _index_calculator._n_nodes);
 		std::for_each(result.begin(), result.end(),
 						[](int& val) {
 							BaseLib::swapEndianness(val);
