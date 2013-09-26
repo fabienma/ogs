@@ -529,7 +529,7 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
 	result.reserve(n);
 
 	for (std::size_t p = 0; in && !in.eof() && p < n; ++p)
-		result.push_back(BaseLib::swapEndianness(BaseLib::readBinaryValue<T>(in)));
+		result.push_back(BaseLib::readBinaryValue<T>(in));
 
 	if (result.size() == n)
 		return result;
@@ -555,6 +555,11 @@ void GocadSGridReader::readElementPropertiesBinary()
 		}
 		std::vector<float> float_properties =
 				readBinaryArray<float>(fname, _index_calculator._n_cells);
+		std::for_each(float_properties.begin(), float_properties.end(),
+				[](float& val) {
+					BaseLib::swapEndianness(val);
+				});
+
 		std::vector<double> properties;
 		prop_it->_property_data.resize(float_properties.size());
 		std::copy(float_properties.begin(), float_properties.end(), prop_it->_property_data.begin());
@@ -569,8 +574,16 @@ std::vector<int> GocadSGridReader::readFlagsBinary() const
 	std::vector<int> result;
 	if (!_double_precision_binary) {
 		result = readBinaryArray<int32_t>(_flags_fname, _index_calculator._n_nodes);
+		std::for_each(result.begin(), result.end(),
+						[](int32_t& val) {
+							BaseLib::swapEndianness(val);
+						});
 	} else {
 		result = readBinaryArray<int>(_flags_fname, _index_calculator._n_nodes);
+		std::for_each(result.begin(), result.end(),
+						[](int& val) {
+							BaseLib::swapEndianness(val);
+						});
 	}
 
 	if (result.empty())
