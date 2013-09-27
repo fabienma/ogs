@@ -631,6 +631,7 @@ void GocadSGridReader::readSplitNodesAndModifyElements()
 		return;
 	}
 
+	// read split information from the stratigraphic grid file
 	// read information in the stratigraphic grid file
 	std::string line;
 	std::stringstream ss;
@@ -639,10 +640,10 @@ void GocadSGridReader::readSplitNodesAndModifyElements()
 		if (pos != std::string::npos) {
 			ss << line.substr(pos+6, line.size()-(pos+6));
 			// read position in grid
-			std::size_t u, v, w;
-			ss >> u;
-			ss >> v;
-			ss >> w;
+			std::array<std::size_t, 3> grid_coords;
+			ss >> grid_coords[0];
+			ss >> grid_coords[1];
+			ss >> grid_coords[2];
 			// read coordinates for the split node
 			double coords[3];
 			ss >> coords[0];
@@ -652,46 +653,46 @@ void GocadSGridReader::readSplitNodesAndModifyElements()
 			std::size_t id;
 			ss >> id;
 			// read the affected cells
-			std::array<bool, 8> cells;
-			for (std::size_t k(0); k<cells.size(); k++) {
-				ss >> cells[k];
+			std::array<bool, 8> affected_cells;
+			for (std::size_t k(0); k<affected_cells.size(); k++) {
+				ss >> affected_cells[k];
 			}
+			_split_nodes.push_back(
+					new MeshLib::GocadSplitNode(coords, id, grid_coords, affected_cells));
 
-			std::size_t const new_node_pos(_nodes.size());
-			MeshLib::GocadNode *new_node(new MeshLib::GocadNode(* static_cast<MeshLib::GocadNode*>(_nodes[_index_calculator(u,v,w)])));
-			new_node->resetID(new_node_pos);
-			(*new_node)[0] = coords[0];
-			(*new_node)[1] = coords[1];
-			(*new_node)[2] = coords[2];
-			_nodes.push_back(new_node);
+		std::size_t const new_node_pos(_nodes.size());
+		_nodes.push_back(new MeshLib::Node(_split_nodes[k]->getCoords(), new_node_pos));
 
-			// get mesh node to substitute in elements
-			MeshLib::Node const*const node2sub(_nodes[_index_calculator(u,v,w)]);
+		// get grid coordinates
+		std::array<std::size_t, 3> const& gc(_split_nodes[k]->getGridCoords());
+		// get affected cells
+		std::array<bool, 8> const& affected_cells(_split_nodes[k]->getAffectedCells());
+		// get mesh node to substitute in elements
+		MeshLib::Node const*const node2sub(_nodes[_index_calculator(gc[0],gc[1],gc[2])]);
 
-			if (cells[0]) {
-				modifyElement(u, v, w, node2sub, _nodes[new_node_pos]);
-			}
-			if (cells[1]) {
-				modifyElement(u - 1, v, w, node2sub, _nodes[new_node_pos]);
-			}
-			if (cells[2]) {
-				modifyElement(u, v - 1, w, node2sub, _nodes[new_node_pos]);
-			}
-			if (cells[3]) {
-				modifyElement(u - 1, v - 1, w, node2sub, _nodes[new_node_pos]);
-			}
-			if (cells[4]) {
-				modifyElement(u, v, w - 1, node2sub, _nodes[new_node_pos]);
-			}
-			if (cells[5]) {
-				modifyElement(u - 1, v, w - 1, node2sub, _nodes[new_node_pos]);
-			}
-			if (cells[6]) {
-				modifyElement(u, v - 1, w - 1, node2sub, _nodes[new_node_pos]);
-			}
-			if (cells[7]) {
-				modifyElement(u - 1, v - 1, w - 1, node2sub, _nodes[new_node_pos]);
-			}
+		if (affected_cells[0]) {
+			modifyElement(gc[0], gc[1], gc[2], node2sub, _nodes[new_node_pos]);
+		}
+		if (affected_cells[1]) {
+			modifyElement(gc[0] - 1, gc[1], gc[2], node2sub, _nodes[new_node_pos]);
+		}
+		if (affected_cells[2]) {
+			modifyElement(gc[0], gc[1]-1, gc[2], node2sub, _nodes[new_node_pos]);
+		}
+		if (affected_cells[3]) {
+			modifyElement(gc[0] - 1, gc[1] - 1, gc[2], node2sub, _nodes[new_node_pos]);
+		}
+		if (affected_cells[4]) {
+			modifyElement(gc[0], gc[1], gc[2]-1, node2sub, _nodes[new_node_pos]);
+		}
+		if (affected_cells[5]) {
+			modifyElement(gc[0]-1, gc[1], gc[2]-1, node2sub, _nodes[new_node_pos]);
+		}
+		if (affected_cells[6]) {
+			modifyElement(gc[0], gc[1]-1, gc[2]-1, node2sub, _nodes[new_node_pos]);
+		}
+		if (affected_cells[7]) {
+			modifyElement(gc[0]-1, gc[1]-1, gc[2]-1, node2sub, _nodes[new_node_pos]);
 		}
 	}
 }

@@ -96,6 +96,25 @@ private:
 	std::bitset<128> _face_set_membership;
 	std::vector<std::pair<std::size_t, FaceIndicator> > _face_indicators;
 };
+
+class GocadSplitNode : public GocadNode
+{
+public:
+	GocadSplitNode(double const*const coords, std::size_t id,
+			std::array<std::size_t,3> const& grid_coords,
+			std::array<bool, 8> affected_cells) :
+		GocadNode(coords, id),
+		_grid_coords(grid_coords) ,
+		_affected_cells(affected_cells)
+	{}
+
+	std::array<std::size_t, 3> const& getGridCoords() const { return _grid_coords; }
+	std::array<bool, 8> const& getAffectedCells() const { return _affected_cells; }
+private:
+	std::array<std::size_t,3> _grid_coords;
+	std::array<bool, 8> _affected_cells;
+};
+
 } // end namespace MeshLib
 
 #endif /* GOCADNODE_H_ */

@@ -201,6 +201,7 @@ private:
 
 	// data read from binary points file
 	std::vector<MeshLib::Node*> _nodes;
+	std::vector<MeshLib::GocadSplitNode*> _split_nodes;
 	// properties
 	std::vector<GocadProperty> _property_meta_data_vecs;
 	// calculated data
