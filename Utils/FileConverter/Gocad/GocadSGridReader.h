@@ -179,7 +179,10 @@ private:
 	void readElementPropertiesBinary();
 	void mapRegionFlagsToCellProperties(std::vector<Bitset> const& rf);
 	void createElements();
-	void readSplitNodesAndModifyElements();
+
+	// split handling
+	void readSplitInformation();
+	void applySplitInformation();
 	void modifyElement(std::size_t u, std::size_t v, std::size_t w, MeshLib::Node const* node2sub,
 			MeshLib::Node * substitute_node);
 	void removeNullVolumeElements();

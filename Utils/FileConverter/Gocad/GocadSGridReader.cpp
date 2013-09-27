@@ -295,7 +295,8 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 
 	createElements();
 
-	readSplitNodesAndModifyElements();
+	readSplitInformation();
+	applySplitInformation();
 
 	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
 	MeshLib::Node center_node((aabb.getMaxPoint()[0] + aabb.getMinPoint()[0])/2.0,
@@ -622,7 +623,7 @@ void GocadSGridReader::createElements()
 	}
 }
 
-void GocadSGridReader::readSplitNodesAndModifyElements()
+void GocadSGridReader::readSplitInformation()
 {
 	std::ifstream in(_fname.c_str());
 	if (!in) {
@@ -632,7 +633,6 @@ void GocadSGridReader::readSplitNodesAndModifyElements()
 	}
 
 	// read split information from the stratigraphic grid file
-	// read information in the stratigraphic grid file
 	std::string line;
 	std::stringstream ss;
 	while (std::getline(in, line)) {
@@ -659,7 +659,13 @@ void GocadSGridReader::readSplitNodesAndModifyElements()
 			}
 			_split_nodes.push_back(
 					new MeshLib::GocadSplitNode(coords, id, grid_coords, affected_cells));
+		}
+	}
+}
 
+void GocadSGridReader::applySplitInformation()
+{
+	for (std::size_t k(0); k<_split_nodes.size(); k++) {
 		std::size_t const new_node_pos(_nodes.size());
 		_nodes.push_back(new MeshLib::Node(_split_nodes[k]->getCoords(), new_node_pos));
 
