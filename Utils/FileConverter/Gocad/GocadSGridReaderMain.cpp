@@ -82,71 +82,6 @@ void writeFaceSetNodes(MeshLib::Mesh const& mesh, std::size_t face_set_number, s
 	}
 }
 
-void markElementsWithFaceSetNodes(MeshLib::Mesh const& mesh, std::vector<std::bitset<128>> & face_set_membership)
-{
-	std::size_t const n_elements(mesh.getNElements());
-	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
-		MeshLib::GocadNode* gocad_node(
-				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(mesh.getNode(k))));
-
-		bool const face_set_member(gocad_node->isMemberOfAnyFaceSet());
-		if (face_set_member) {
-			auto neighbor_elements = gocad_node->getElements();
-			for (auto it(neighbor_elements.begin()); it != neighbor_elements.end(); it++) {
-				if (*it) {
-					std::size_t const element_id((*it)->getValue());
-					if (element_id < n_elements) {
-						face_set_membership[element_id]
-						              |= gocad_node->getFaceSetMembership();
-					}
-				}
-			}
-		}
-	}
-}
-
-std::size_t getNumberOfNodesInFaceBelongingToFaceSet(MeshLib::Element const* const face,
-		std::size_t face_set_number)
-{
-	std::size_t const n_face_nodes(face->getNNodes());
-	std::size_t node_cnt(0); // count nodes belonging to face
-	for (std::size_t k(0); k<n_face_nodes; k++) {
-		MeshLib::GocadNode const*const node(
-				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(face->getNode(k))));
-		if (node != nullptr) {
-			if (node->isMemberOfFaceSet(face_set_number))
-				node_cnt++;
-		}
-	}
-
-	return node_cnt;
-}
-
-void addFaceSetFace(MeshLib::Element const*const face,
-		std::vector<MeshLib::Node*> &face_set_nodes,
-		std::vector<MeshLib::Element*> &face_set_elements)
-{
-	MeshLib::Element *face_set_elem(face->clone());
-	std::size_t const n_nodes(face_set_elem->getNNodes());
-	for (std::size_t i(0); i<n_nodes; i++) {
-		// deep copy of the face nodes
-		face_set_nodes.push_back(new MeshLib::Node(*(face->getNode(i))));
-		// reset the node pointer in face_set_elem
-		face_set_elem->setNode(i, face_set_nodes[face_set_nodes.size()-1]);
-	}
-	face_set_elements.push_back(face_set_elem);
-}
-
-bool operator== (MeshLib::Edge const& e0, MeshLib::Edge const& e1)
-{
-	if (e0.getNode(0) == e1.getNode(0) && e0.getNode(1) == e1.getNode(1))
-		return true;
-	if (e0.getNode(0) == e1.getNode(1) && e0.getNode(1) == e1.getNode(0))
-		return true;
-
-	return false;
-}
-
 void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string const& path)
 {
 	for (std::size_t l(0); l<128; l++) {
@@ -211,15 +146,6 @@ void addGocadPropertiesToMesh(FileIO::GocadSGridReader const& reader, MeshLib::M
 			mesh.addPropertyVec(*name_it, (*prop)._property_data);
 		}
 	}
-}
-
-MeshLib::Mesh* extractSurfaceMesh(MeshLib::Mesh &mesh)
-{
-	double* dir (new double[3]);
-	dir[0] = 0.0;
-	dir[1] = -1.0;
-	dir[2] = 0.0;
-	return MeshLib::MeshSurfaceExtraction::getMeshSurface(mesh, dir);
 }
 
 void writeMeshPropertiesToFile(std::string const& fname, std::string const& prop_name,
