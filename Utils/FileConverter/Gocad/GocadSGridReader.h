@@ -185,7 +185,6 @@ private:
 	void applySplitInformation();
 	void modifyElement(std::size_t u, std::size_t v, std::size_t w, MeshLib::Node const* node2sub,
 			MeshLib::Node * substitute_node);
-	void removeNullVolumeElements();
 
 	std::string const& _fname;
 	std::string const _path;

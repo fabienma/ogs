@@ -310,7 +310,6 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 			}
 	);
 
-//	removeNullVolumeElements();
 	GocadProperty face_set_property;
 	face_set_property._property_id = 0;
 	face_set_property._property_name = "CellIDs";
@@ -725,27 +724,6 @@ void GocadSGridReader::modifyElement(std::size_t u, std::size_t v, std::size_t w
 	// set the split node instead of the node2sub
 	if (node_pos != hex_nodes+8) {
 		const_cast<MeshLib::Node**>(hex_nodes)[std::distance(hex_nodes, node_pos)] = substitute_node;
-	}
-}
-
-void GocadSGridReader::removeNullVolumeElements()
-{
-	auto const new_end(
-			std::remove_if(_elements.begin(), _elements.end(),
-					[](MeshLib::Element *elem) {
-						if (elem->getContent() < std::numeric_limits<double>::epsilon()) {
-							delete elem;
-							return true;
-						}
-						return false;
-					}
-			)
-	);
-	_elements.erase(new_end, _elements.end());
-
-	std::size_t const n_elements(_elements.size());
-	for (std::size_t k(0); k < n_elements; k++) {
-		_elements[k]->setValue(k);
 	}
 }
 
