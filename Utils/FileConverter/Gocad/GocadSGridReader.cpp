@@ -294,6 +294,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	//mapRegionFlagsToCellProperties(region_flags);	// modifies _material_ids.
 
 	createElements();
+
 	readSplitNodesAndModifyElements();
 
 	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
@@ -656,7 +657,6 @@ void GocadSGridReader::readSplitNodesAndModifyElements()
 				ss >> cells[k];
 			}
 
-			static_cast<MeshLib::GocadNode*>(_nodes[_index_calculator(u,v,w)])->setSplit(true);
 			std::size_t const new_node_pos(_nodes.size());
 			MeshLib::GocadNode *new_node(new MeshLib::GocadNode(* static_cast<MeshLib::GocadNode*>(_nodes[_index_calculator(u,v,w)])));
 			new_node->resetID(new_node_pos);

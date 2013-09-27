@@ -43,30 +43,6 @@
 // Utils/FileConverter
 #include "GocadSGridReader.h"
 
-void writeSplitNodes(MeshLib::Mesh const& mesh, std::string const& path)
-{
-	std::stringstream ss;
-	std::size_t cnt(0); // count face set nodes
-	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
-		MeshLib::GocadNode* gocad_node(
-				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(mesh.getNode(k))));
-
-		if (gocad_node->isSplit()) {
-			ss << cnt << " " << *gocad_node << "\n";
-			cnt++;
-		}
-	}
-	if (cnt > 0) {
-		std::string fname(path + "Surfaces/SplitNodes.gli");
-		INFO("Writing split nodes to file \"%s\".", fname.c_str());
-		std::ofstream os(fname.c_str());
-		os << "#POINTS\n";
-		os << ss.str();
-		os << "#STOP";
-		os.close();
-	}
-}
-
 void writeFaceSetNodes(MeshLib::Mesh const& mesh, std::size_t face_set_number, std::string const& path)
 {
 	std::stringstream ss;
@@ -139,22 +115,6 @@ std::size_t getNumberOfNodesInFaceBelongingToFaceSet(MeshLib::Element const* con
 				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(face->getNode(k))));
 		if (node != nullptr) {
 			if (node->isMemberOfFaceSet(face_set_number))
-				node_cnt++;
-		}
-	}
-
-	return node_cnt;
-}
-
-std::size_t getNumberOfSplitNodesInFace(MeshLib::Element const* const face)
-{
-	std::size_t const n_face_nodes(face->getNNodes());
-	std::size_t node_cnt(0); // count split nodes
-	for (std::size_t k(0); k<n_face_nodes; k++) {
-		MeshLib::GocadNode const*const node(
-				dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(face->getNode(k))));
-		if (node != nullptr) {
-			if (node->isSplit())
 				node_cnt++;
 		}
 	}
@@ -350,9 +310,6 @@ int main(int argc, char* argv[])
 
 	INFO("Add Gocad properties to mesh.");
 	addGocadPropertiesToMesh(reader, mesh);
-
-	INFO("Writing split nodes.");
-	writeSplitNodes(mesh, BaseLib::extractPath(sg_file_arg.getValue()));
 
 //	INFO("Generating a mesh for every face set.");
 //	generateFaceSetMeshes(reader, BaseLib::extractPath(sg_file_arg.getValue()));
