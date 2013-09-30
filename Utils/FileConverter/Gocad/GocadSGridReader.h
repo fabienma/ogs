@@ -218,7 +218,7 @@ private:
 	bool _bin_pnts_in_double_precision;
 
 	// data read from binary points file
-	std::vector<MeshLib::Node*> _nodes;
+	std::vector<MeshLib::GocadNode*> _nodes;
 	std::vector<MeshLib::GocadSplitNode*> _split_nodes;
 	// properties
 	std::vector<GocadProperty> _property_meta_data_vecs;
