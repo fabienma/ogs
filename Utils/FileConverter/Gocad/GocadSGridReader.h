@@ -147,12 +147,17 @@ private:
 			return idx;
 		}
 
-		std::size_t getCellIdx(std::size_t i, std::size_t j, std::size_t k) const
+		std::size_t getCellIdx(std::size_t u, std::size_t v, std::size_t w) const
 		{
-			const std::size_t idx(k * (_x_dim-1) * (_y_dim-1) + j * (_x_dim-1) + i);
-			if (idx >= _n_cells) {
-				return std::numeric_limits < std::size_t > ::max();
+			// ensure (u,v,w) is a valid cell
+			if (u >= _x_dim - 1 || v >= _y_dim - 1 || w >= _z_dim - 1) {
+				ERR("GocadSGridReader::IndexCalculator::getCellIdx(): At least one grid coordinate to big.");
+				ERR("\t Given: (%d, %d, %d), max allowed cell grid coords: (%d, %d, %d).",
+						u, v, w, _x_dim - 1, _y_dim - 1, _z_dim - 1);
+				return std::numeric_limits < std::size_t > ::max();;
 			}
+
+			const std::size_t idx(w * (_x_dim-1) * (_y_dim-1) + v * (_x_dim-1) + u);
 			return idx;
 		}
 
