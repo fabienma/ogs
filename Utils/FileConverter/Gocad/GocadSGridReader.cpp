@@ -688,35 +688,47 @@ void GocadSGridReader::applySplitInformation(std::vector<MeshLib::Node*> &nodes,
 		// get mesh node to substitute in elements
 		MeshLib::Node const*const node2sub(nodes[_index_calculator(gc[0],gc[1],gc[2])]);
 
-		if (affected_cells[0]) {
+		if (affected_cells[0]
+		                   && gc[0] < _index_calculator._x_dim-1
+		                   && gc[1] < _index_calculator._y_dim-1
+		                   && gc[2] < _index_calculator._z_dim-1) {
 			const std::size_t idx(_index_calculator.getCellIdx(gc[0], gc[1], gc[2]));
 			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
-		if (affected_cells[1]) {
+		if (affected_cells[1] && gc[0] > 0
+				&& gc[1] < _index_calculator._y_dim-1
+				&& gc[2] < _index_calculator._z_dim-1) {
 			const std::size_t idx(_index_calculator.getCellIdx(gc[0]-1, gc[1], gc[2]));
 			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
-		if (affected_cells[2]) {
+		if (affected_cells[2] && gc[1] > 0
+				&& gc[0] < _index_calculator._x_dim-1
+				&& gc[2] < _index_calculator._z_dim-1) {
 			const std::size_t idx(_index_calculator.getCellIdx(gc[0], gc[1]-1, gc[2]));
 			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
-		if (affected_cells[3]) {
+		if (affected_cells[3] && gc[0] > 0 && gc[1] > 0
+				&& gc[2] < _index_calculator._z_dim-1) {
 			const std::size_t idx(_index_calculator.getCellIdx(gc[0]-1, gc[1]-1, gc[2]));
 			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
-		if (affected_cells[4]) {
+		if (affected_cells[4] && gc[2] > 0
+				&& gc[0] < _index_calculator._x_dim-1
+                && gc[1] < _index_calculator._y_dim-1) {
 			const std::size_t idx(_index_calculator.getCellIdx(gc[0], gc[1], gc[2]-1));
 			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
-		if (affected_cells[5]) {
+		if (affected_cells[5] && gc[0] > 0 && gc[2] > 0
+				&& gc[1] < _index_calculator._y_dim-1) {
 			const std::size_t idx(_index_calculator.getCellIdx(gc[0]-1, gc[1], gc[2]-1));
 			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
-		if (affected_cells[6]) {
+		if (affected_cells[6] && gc[1] > 0 && gc[2] > 0
+				&& gc[0] < _index_calculator._x_dim-1) {
 			const std::size_t idx(_index_calculator.getCellIdx(gc[0], gc[1]-1, gc[2]-1));
-			modifyElement(elements[idx], node2sub, _nodes[new_node_pos]);
+			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
-		if (affected_cells[7]) {
+		if (affected_cells[7] && gc[0] > 0 && gc[1] > 0 && gc[2] > 0) {
 			const std::size_t idx(_index_calculator.getCellIdx(gc[0]-1, gc[1]-1, gc[2]-1));
 			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
