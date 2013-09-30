@@ -146,6 +146,15 @@ private:
 			return idx;
 		}
 
+		std::size_t operator()(std::array<std::size_t, 3> &c) const
+		{
+			const std::size_t idx(c[2] * _x_dim * _y_dim + c[1] * _x_dim + c[0]);
+			if (idx >= _n_nodes) {
+				return std::numeric_limits < std::size_t > ::max();
+			}
+			return idx;
+		}
+
 		std::size_t getCellIdx(std::size_t u, std::size_t v, std::size_t w) const
 		{
 			// ensure (u,v,w) is a valid cell
