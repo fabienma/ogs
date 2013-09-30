@@ -774,16 +774,59 @@ std::vector<std::string> GocadSGridReader::getPropertyNames() const
 
 MeshLib::Mesh* GocadSGridReader::getFaceSetMesh(std::size_t face_set_number) const
 {
-	auto const it = std::find_if(_property_meta_data_vecs.cbegin(), _property_meta_data_vecs.cend(),
-			[face_set_number](GocadProperty const& p)
-			{
-				return (p._property_name.compare("FaceSet") == 0) && (p._property_id == face_set_number);
-			}
-		);
-	if (it == _property_meta_data_vecs.cend())
-		return nullptr;
+	std::vector<MeshLib::Node*> face_set_nodes;
+	std::vector<MeshLib::Element*> face_set_elements;
 
-	return nullptr;
+	for (std::size_t k(0); k<_nodes.size(); k++) {
+		if (_nodes[k]->isMemberOfFaceSet(face_set_number)) {
+			addFaceSetQuad(_nodes[k], face_set_number, face_set_nodes, face_set_elements);
+		}
+	}
+
+	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
+	MeshLib::Node center_node((aabb.getMaxPoint()[0] + aabb.getMinPoint()[0]) / 2.0,
+			(aabb.getMaxPoint()[1] + aabb.getMinPoint()[1]) / 2.0, 0.0);
+	INFO("translated model (-%f, -%f, -%f).", center_node[0], center_node[1], center_node[2]);
+	std::for_each(face_set_nodes.begin(), face_set_nodes.end(), [&center_node](MeshLib::Node* node)
+	{
+		(*node)[0] -= center_node[0];
+		(*node)[1] -= center_node[1];
+	});
+
+	std::string mesh_name("GocadFaceSetMesh-" + BaseLib::number2str(face_set_number));
+	return new MeshLib::Mesh(mesh_name, face_set_nodes, face_set_elements);
+}
+
+void GocadSGridReader::addFaceSetQuad(MeshLib::GocadNode* face_set_node, std::size_t face_set_number,
+		std::vector<MeshLib::Node*> &face_set_nodes,
+		std::vector<MeshLib::Element*> &face_set_elements) const
+{
+	std::size_t const size(face_set_nodes.size());
+	face_set_nodes.push_back(new MeshLib::Node(*face_set_node));
+	const std::size_t id(face_set_node->getID());
+	std::array<std::size_t, 3> c(_index_calculator.getCoordsForID(id));
+
+	const MeshLib::FaceIndicator dir(face_set_node->getFaceIndicator(face_set_number));
+	switch (dir) {
+	case MeshLib::FaceIndicator::U:
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2] + 1)]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]));
+		break;
+	case MeshLib::FaceIndicator::V:
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2] + 1)]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]));
+		break;
+	case MeshLib::FaceIndicator::W:
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1] + 1, c[2])]));
+		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]));
+		break;
+	default:
+		ERR("Could not create face for node with id %d.", id);
+	}
+	face_set_elements.push_back(new MeshLib::Quad(face_set_nodes.data()+size));
 }
 
 } // end namespace FileIO

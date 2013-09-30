@@ -49,6 +49,7 @@ public:
 	~GocadSGridReader();
 
 	MeshLib::Mesh* getMesh() const;
+	MeshLib::Mesh* getFaceSetMesh(std::size_t face_set_number) const;
 
 	struct GocadProperty
 	{
@@ -97,8 +98,6 @@ public:
 		}
 
 	};
-
-	MeshLib::Mesh* getFaceSetMesh(std::size_t face_set_number) const;
 
 private:
 	typedef boost::dynamic_bitset<> Bitset;
@@ -201,6 +200,10 @@ private:
 			std::vector<MeshLib::Element*> &elements) const;
 	void modifyElement(MeshLib::Element* hex, MeshLib::Node const* node2sub,
 			MeshLib::Node * substitute_node) const;
+
+	void addFaceSetQuad(MeshLib::GocadNode* face_set_node, std::size_t face_set_number,
+			std::vector<MeshLib::Node*> &face_set_nodes,
+			std::vector<MeshLib::Element*> &face_set_elements) const;
 
 	std::string const& _fname;
 	std::string const _path;
