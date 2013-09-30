@@ -436,14 +436,14 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 				ERR("Face set id %d is greater than the number of nodes (%d).", id, _index_calculator._n_nodes);
 			} else {
 				dynamic_cast<MeshLib::GocadNode*>(_nodes[id])->setFaceSet(_n_face_sets+1, face_indicator);
-				std::array<std::size_t,3> coords(_index_calculator.getCoordsForID(id));
-				if (coords[0] >= _index_calculator._x_dim-1)
-					ERR("****** i coord %d to big for id %d.", coords[0], id);
-				if (coords[1] >= _index_calculator._y_dim-1)
-					ERR("****** j coord %d to big for id %d.", coords[1], id);
-				if (coords[2] >= _index_calculator._z_dim-1)
-					ERR("****** k coord %d to big for id %d.", coords[2], id);
-				std::size_t const cell_id( _index_calculator.getCellIdx(coords[0], coords[1], coords[2]));
+				std::array<std::size_t,3> c(_index_calculator.getCoordsForID(id));
+				if (c[0] >= _index_calculator._x_dim-1)
+					ERR("****** i coord %d to big for id %d.", c[0], id);
+				if (c[1] >= _index_calculator._y_dim-1)
+					ERR("****** j coord %d to big for id %d.", c[1], id);
+				if (c[2] >= _index_calculator._z_dim-1)
+					ERR("****** k coord %d to big for id %d.", c[2], id);
+				std::size_t const cell_id( _index_calculator.getCellIdx(c[0], c[1], c[2]));
 				face_set_property._property_data[cell_id] = face_indicator;
 			}
 			face_set_id_cnt++;
