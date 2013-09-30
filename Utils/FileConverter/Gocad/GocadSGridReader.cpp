@@ -333,11 +333,11 @@ MeshLib::Mesh* GocadSGridReader::getMesh() const
 	applySplitInformation(nodes, elements);
 
 
-	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
+	GeoLib::AABB<MeshLib::Node> aabb(nodes.begin(), nodes.end());
 	MeshLib::Node center_node((aabb.getMaxPoint()[0] + aabb.getMinPoint()[0])/2.0,
 			(aabb.getMaxPoint()[1] + aabb.getMinPoint()[1])/2.0, 0.0);
 	INFO("translated model (-%f, -%f, -%f).", center_node[0], center_node[1], center_node[2]);
-	std::for_each(_nodes.begin(), _nodes.end(),
+	std::for_each(nodes.begin(), nodes.end(),
 			[&center_node](MeshLib::Node* node)
 			{
 				(*node)[0] -= center_node[0];
