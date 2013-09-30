@@ -313,6 +313,10 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 
 GocadSGridReader::~GocadSGridReader()
 {
+	for (std::size_t k(0); k<_nodes.size(); k++)
+		delete _nodes[k];
+	for (std::size_t k(0); k<_split_nodes.size(); k++)
+		delete _split_nodes[k];
 }
 
 MeshLib::Mesh* GocadSGridReader::getMesh() const
