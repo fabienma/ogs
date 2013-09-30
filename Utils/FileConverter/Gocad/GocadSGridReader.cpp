@@ -293,22 +293,7 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 	std::vector<Bitset> region_flags = readRegionFlagsBinary();
 	//mapRegionFlagsToCellProperties(region_flags);	// modifies _material_ids.
 
-	createElements();
-
 	readSplitInformation();
-	applySplitInformation();
-
-	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
-	MeshLib::Node center_node((aabb.getMaxPoint()[0] + aabb.getMinPoint()[0])/2.0,
-			(aabb.getMaxPoint()[1] + aabb.getMinPoint()[1])/2.0, 0.0);
-	INFO("translated model (-%f, -%f, -%f).", center_node[0], center_node[1], center_node[2]);
-	std::for_each(_nodes.begin(), _nodes.end(),
-			[&center_node](MeshLib::Node* node)
-			{
-				(*node)[0] -= center_node[0];
-				(*node)[1] -= center_node[1];
-			}
-	);
 
 	GocadProperty face_set_property;
 	face_set_property._property_id = 0;
@@ -330,14 +315,36 @@ GocadSGridReader::~GocadSGridReader()
 {
 }
 
-std::vector<MeshLib::Node*> GocadSGridReader::getNodes() const
+MeshLib::Mesh* GocadSGridReader::getMesh() const
 {
-	return _nodes;
-}
+	std::vector<MeshLib::Node*> nodes;
+	std::transform(_nodes.cbegin(), _nodes.cend(),
+		            std::back_inserter(nodes),
+		            [](MeshLib::Node const*const node) {
+						return new MeshLib::Node(*node);
+		            });
 
-std::vector<MeshLib::Element*> GocadSGridReader::getElements() const
-{
-	return _elements;
+	std::vector<MeshLib::Element*> elements;
+	createElements(nodes, elements);
+	applySplitInformation(nodes, elements);
+
+
+	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
+	MeshLib::Node center_node((aabb.getMaxPoint()[0] + aabb.getMinPoint()[0])/2.0,
+			(aabb.getMaxPoint()[1] + aabb.getMinPoint()[1])/2.0, 0.0);
+	INFO("translated model (-%f, -%f, -%f).", center_node[0], center_node[1], center_node[2]);
+	std::for_each(_nodes.begin(), _nodes.end(),
+			[&center_node](MeshLib::Node* node)
+			{
+				(*node)[0] -= center_node[0];
+				(*node)[1] -= center_node[1];
+			}
+	);
+
+	INFO("Creating mesh from Gocad SGrid.");
+	MeshLib::Mesh *mesh (new MeshLib::Mesh("GocadSGrid", nodes, elements));
+	INFO("Mesh created.");
+	return mesh;
 }
 
 void GocadSGridReader::parseHeader(std::istream &in)
@@ -599,23 +606,24 @@ std::vector<Bitset> GocadSGridReader::readRegionFlagsBinary() const
 	return result;
 }
 
-void GocadSGridReader::createElements()
+void GocadSGridReader::createElements(std::vector<MeshLib::Node*> const& nodes,
+		std::vector<MeshLib::Element*> & elements) const
 {
-	_elements.resize(_index_calculator._n_cells);
+	elements.resize(_index_calculator._n_cells);
 	std::array<MeshLib::Node*, 8> element_nodes;
 	std::size_t cnt(0);
 	for (std::size_t k(0); k < _index_calculator._z_dim-1; k++) {
 		for (std::size_t j(0); j < _index_calculator._y_dim-1; j++) {
 			for (std::size_t i(0); i < _index_calculator._x_dim-1; i++) {
-				element_nodes[0] = _nodes[_index_calculator(i,j,k)];
-				element_nodes[1] = _nodes[_index_calculator(i+1,j,k)];
-				element_nodes[2] = _nodes[_index_calculator(i+1,j+1,k)];
-				element_nodes[3] = _nodes[_index_calculator(i,j+1,k)];
-				element_nodes[4] = _nodes[_index_calculator(i,j,k+1)];
-				element_nodes[5] = _nodes[_index_calculator(i+1,j,k+1)];
-				element_nodes[6] = _nodes[_index_calculator(i+1,j+1,k+1)];
-				element_nodes[7] = _nodes[_index_calculator(i,j+1,k+1)];
-				_elements[cnt] = new MeshLib::Hex(element_nodes, _index_calculator.getCellIdx(i,j,k));
+				element_nodes[0] = nodes[_index_calculator(i,j,k)];
+				element_nodes[1] = nodes[_index_calculator(i+1,j,k)];
+				element_nodes[2] = nodes[_index_calculator(i+1,j+1,k)];
+				element_nodes[3] = nodes[_index_calculator(i,j+1,k)];
+				element_nodes[4] = nodes[_index_calculator(i,j,k+1)];
+				element_nodes[5] = nodes[_index_calculator(i+1,j,k+1)];
+				element_nodes[6] = nodes[_index_calculator(i+1,j+1,k+1)];
+				element_nodes[7] = nodes[_index_calculator(i,j+1,k+1)];
+				elements[cnt] = new MeshLib::Hex(element_nodes, _index_calculator.getCellIdx(i,j,k));
 				cnt++;
 			}
 		}
@@ -662,61 +670,58 @@ void GocadSGridReader::readSplitInformation()
 	}
 }
 
-void GocadSGridReader::applySplitInformation()
+void GocadSGridReader::applySplitInformation(std::vector<MeshLib::Node*> &nodes,
+		std::vector<MeshLib::Element*> &elements) const
 {
 	for (std::size_t k(0); k<_split_nodes.size(); k++) {
-		std::size_t const new_node_pos(_nodes.size());
-		_nodes.push_back(new MeshLib::Node(_split_nodes[k]->getCoords(), new_node_pos));
+		std::size_t const new_node_pos(nodes.size());
+		nodes.push_back(new MeshLib::Node(_split_nodes[k]->getCoords(), new_node_pos));
 
 		// get grid coordinates
 		std::array<std::size_t, 3> const& gc(_split_nodes[k]->getGridCoords());
 		// get affected cells
 		std::array<bool, 8> const& affected_cells(_split_nodes[k]->getAffectedCells());
 		// get mesh node to substitute in elements
-		MeshLib::Node const*const node2sub(_nodes[_index_calculator(gc[0],gc[1],gc[2])]);
+		MeshLib::Node const*const node2sub(nodes[_index_calculator(gc[0],gc[1],gc[2])]);
 
 		if (affected_cells[0]) {
-			modifyElement(gc[0], gc[1], gc[2], node2sub, _nodes[new_node_pos]);
+			const std::size_t idx(_index_calculator.getCellIdx(gc[0], gc[1], gc[2]));
+			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
 		if (affected_cells[1]) {
-			modifyElement(gc[0] - 1, gc[1], gc[2], node2sub, _nodes[new_node_pos]);
+			const std::size_t idx(_index_calculator.getCellIdx(gc[0]-1, gc[1], gc[2]));
+			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
 		if (affected_cells[2]) {
-			modifyElement(gc[0], gc[1]-1, gc[2], node2sub, _nodes[new_node_pos]);
+			const std::size_t idx(_index_calculator.getCellIdx(gc[0], gc[1]-1, gc[2]));
+			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
 		if (affected_cells[3]) {
-			modifyElement(gc[0] - 1, gc[1] - 1, gc[2], node2sub, _nodes[new_node_pos]);
+			const std::size_t idx(_index_calculator.getCellIdx(gc[0]-1, gc[1]-1, gc[2]));
+			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
 		if (affected_cells[4]) {
-			modifyElement(gc[0], gc[1], gc[2]-1, node2sub, _nodes[new_node_pos]);
+			const std::size_t idx(_index_calculator.getCellIdx(gc[0], gc[1], gc[2]-1));
+			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
 		if (affected_cells[5]) {
-			modifyElement(gc[0]-1, gc[1], gc[2]-1, node2sub, _nodes[new_node_pos]);
+			const std::size_t idx(_index_calculator.getCellIdx(gc[0]-1, gc[1], gc[2]-1));
+			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
 		if (affected_cells[6]) {
-			modifyElement(gc[0], gc[1]-1, gc[2]-1, node2sub, _nodes[new_node_pos]);
+			const std::size_t idx(_index_calculator.getCellIdx(gc[0], gc[1]-1, gc[2]-1));
+			modifyElement(elements[idx], node2sub, _nodes[new_node_pos]);
 		}
 		if (affected_cells[7]) {
-			modifyElement(gc[0]-1, gc[1]-1, gc[2]-1, node2sub, _nodes[new_node_pos]);
+			const std::size_t idx(_index_calculator.getCellIdx(gc[0]-1, gc[1]-1, gc[2]-1));
+			modifyElement(elements[idx], node2sub, nodes[new_node_pos]);
 		}
 	}
 }
 
-void GocadSGridReader::modifyElement(std::size_t u, std::size_t v, std::size_t w,
-		MeshLib::Node const* node2sub, MeshLib::Node * substitute_node)
+void GocadSGridReader::modifyElement(MeshLib::Element* hex,
+		MeshLib::Node const* node2sub, MeshLib::Node * substitute_node) const
 {
-	// ensure (u,v,w) is a valid cell
-	if (u >= _index_calculator._x_dim - 1 || v >= _index_calculator._y_dim - 1
-			|| w >= _index_calculator._z_dim - 1) {
-		return;
-	}
-
-	// get the hex in which the node should be substituted
-	const std::size_t idx(_index_calculator.getCellIdx(u,v,w));
-	if (idx == std::numeric_limits<std::size_t>::max())
-		return;
-
-	MeshLib::Element *hex(_elements[idx]);
 	// get the node pointers of the cell
 	MeshLib::Node *const* hex_nodes(hex->getNodes());
 	// search for the position the split node will be set to

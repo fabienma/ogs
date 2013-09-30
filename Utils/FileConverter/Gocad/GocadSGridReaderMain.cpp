@@ -227,15 +227,11 @@ int main(int argc, char* argv[])
 	INFO("Start reading Gocad SGrid.");
 	FileIO::GocadSGridReader reader(sg_file_arg.getValue());
 	INFO("End reading Gocad SGrid.");
-	std::vector<MeshLib::Node*> const& nodes(reader.getNodes());
-	std::vector<MeshLib::Element*> const& elements(reader.getElements());
+	MeshLib::Mesh *mesh(reader.getMesh());
 
-	INFO("Creating mesh.");
-	MeshLib::Mesh mesh("GocadSGrid", nodes, elements);
-	INFO("Mesh created.");
 
 	INFO("Add Gocad properties to mesh.");
-	addGocadPropertiesToMesh(reader, mesh);
+	addGocadPropertiesToMesh(reader, *mesh);
 
 //	INFO("Generating a mesh for every face set.");
 //	generateFaceSetMeshes(reader, BaseLib::extractPath(sg_file_arg.getValue()));
@@ -267,7 +263,7 @@ int main(int argc, char* argv[])
 
 	INFO("Writing mesh in vtu format.");
 	FileIO::BoostVtuInterface vtu;
-	vtu.setMesh(&mesh);
+	vtu.setMesh(mesh);
 	// output file name
 	std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + ".vtu");
 

@@ -48,8 +48,7 @@ public:
 	GocadSGridReader(std::string const& fname);
 	~GocadSGridReader();
 
-	std::vector<MeshLib::Node*> getNodes() const;
-	std::vector<MeshLib::Element*> getElements() const;
+	MeshLib::Mesh* getMesh() const;
 
 	struct GocadProperty
 	{
@@ -183,13 +182,16 @@ private:
 	std::vector<Bitset> readRegionFlagsBinary() const;
 	void readElementPropertiesBinary();
 	void mapRegionFlagsToCellProperties(std::vector<Bitset> const& rf);
-	void createElements();
+
+	void createElements(std::vector<MeshLib::Node*> const& nodes,
+			std::vector<MeshLib::Element*> & elements) const;
 
 	// split handling
 	void readSplitInformation();
-	void applySplitInformation();
-	void modifyElement(std::size_t u, std::size_t v, std::size_t w, MeshLib::Node const* node2sub,
-			MeshLib::Node * substitute_node);
+	void applySplitInformation(std::vector<MeshLib::Node*> &nodes,
+			std::vector<MeshLib::Element*> &elements) const;
+	void modifyElement(MeshLib::Element* hex, MeshLib::Node const* node2sub,
+			MeshLib::Node * substitute_node) const;
 
 	std::string const& _fname;
 	std::string const _path;
@@ -211,8 +213,6 @@ private:
 	std::vector<MeshLib::GocadSplitNode*> _split_nodes;
 	// properties
 	std::vector<GocadProperty> _property_meta_data_vecs;
-	// calculated data
-	std::vector<MeshLib::Element*> _elements;
 }; // end class GocadSGridReader
 
 } // end namespace FileIO
