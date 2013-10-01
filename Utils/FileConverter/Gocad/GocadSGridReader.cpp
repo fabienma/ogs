@@ -783,6 +783,9 @@ MeshLib::Mesh* GocadSGridReader::getFaceSetMesh(std::size_t face_set_number) con
 		}
 	}
 
+	if (face_set_nodes.empty())
+		return nullptr;
+
 	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
 	MeshLib::Node center_node((aabb.getMaxPoint()[0] + aabb.getMinPoint()[0]) / 2.0,
 			(aabb.getMaxPoint()[1] + aabb.getMinPoint()[1]) / 2.0, 0.0);
