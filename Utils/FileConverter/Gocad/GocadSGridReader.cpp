@@ -801,32 +801,34 @@ void GocadSGridReader::addFaceSetQuad(MeshLib::GocadNode* face_set_node, std::si
 		std::vector<MeshLib::Node*> &face_set_nodes,
 		std::vector<MeshLib::Element*> &face_set_elements) const
 {
-	std::size_t const size(face_set_nodes.size());
-	face_set_nodes.push_back(new MeshLib::Node(*face_set_node));
+	std::array<MeshLib::Node*, 4> quad_nodes;
+	quad_nodes[0] = new MeshLib::Node(*face_set_node);
 	const std::size_t id(face_set_node->getID());
 	std::array<std::size_t, 3> c(_index_calculator.getCoordsForID(id));
 
 	const MeshLib::FaceIndicator dir(face_set_node->getFaceIndicator(face_set_number));
 	switch (dir) {
 	case MeshLib::FaceIndicator::U:
-		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]));
-		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2] + 1)]));
-		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]));
+		quad_nodes[1] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]);
+		quad_nodes[2] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2] + 1)]);
+		quad_nodes[3] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]);
 		break;
 	case MeshLib::FaceIndicator::V:
-		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]));
-		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2] + 1)]));
-		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]));
+		quad_nodes[1] = new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]);
+		quad_nodes[2] = new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2] + 1)]);
+		quad_nodes[3] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]);
 		break;
 	case MeshLib::FaceIndicator::W:
-		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]));
-		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1] + 1, c[2])]));
-		face_set_nodes.push_back(new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]));
+		quad_nodes[1] = new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]);
+		quad_nodes[2] = new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1] + 1, c[2])]);
+		quad_nodes[3] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]);
 		break;
 	default:
 		ERR("Could not create face for node with id %d.", id);
 	}
-	face_set_elements.push_back(new MeshLib::Quad(face_set_nodes.data()+size));
+	for (auto it = quad_nodes.cbegin(); it != quad_nodes.cend(); it++)
+		face_set_nodes.push_back(*it);
+	face_set_elements.push_back(new MeshLib::Quad(quad_nodes));
 }
 
 } // end namespace FileIO
