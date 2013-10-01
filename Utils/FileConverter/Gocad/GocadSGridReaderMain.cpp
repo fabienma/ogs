@@ -229,12 +229,11 @@ int main(int argc, char* argv[])
 	INFO("End reading Gocad SGrid.");
 	MeshLib::Mesh *mesh(reader.getMesh());
 
-
 	INFO("Add Gocad properties to mesh.");
 	addGocadPropertiesToMesh(reader, *mesh);
 
-//	INFO("Generating a mesh for every face set.");
-//	generateFaceSetMeshes(reader, BaseLib::extractPath(sg_file_arg.getValue()));
+	INFO("Generating a mesh for every face set.");
+	generateFaceSetMeshes(reader, BaseLib::extractPath(sg_file_arg.getValue()));
 
 //	{
 //		MeshLib::Mesh *surface_mesh(extractSurfaceMesh(mesh));
@@ -268,6 +267,8 @@ int main(int argc, char* argv[])
 	std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + ".vtu");
 
 	vtu.writeToFile(mesh_out_fname);
+
+	delete mesh;
 
 	delete logog;
 	delete custom_format;
