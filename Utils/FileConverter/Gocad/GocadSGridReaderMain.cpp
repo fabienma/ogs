@@ -221,54 +221,68 @@ int main(int argc, char* argv[])
 	// uses this Arg to parse the command line.
 	cmd.add(sg_file_arg);
 
+	TCLAP::ValueArg<bool> mesh_output_arg("", "output-mesh", "output the mesh", false, false,
+			"default false, i.e. do not output the mesh");
+	cmd.add(mesh_output_arg);
+
+	TCLAP::ValueArg<bool> face_set_arg("f", "generate-face-sets", "generate face sets", false, false,
+			"default false, i.e. do not generate face sets");
+	cmd.add(face_set_arg);
+
+	TCLAP::ValueArg<bool> output_properties_arg("p", "output-properties",
+			"write the properties associated with mesh elements to a file", false, false,
+			"default false, i.e. do not write properties");
+	cmd.add(output_properties_arg);
+
 	cmd.parse(argc, argv);
 
 	// read the Gocad SGrid
 	INFO("Start reading Gocad SGrid.");
 	FileIO::GocadSGridReader reader(sg_file_arg.getValue());
 	INFO("End reading Gocad SGrid.");
-	MeshLib::Mesh *mesh(reader.getMesh());
 
-	INFO("Add Gocad properties to mesh.");
-	addGocadPropertiesToMesh(reader, *mesh);
+	if (face_set_arg.getValue()) {
+		INFO("Generating a mesh for every face set.");
+		generateFaceSetMeshes(reader, BaseLib::extractPath(sg_file_arg.getValue()));
+	}
 
-	INFO("Generating a mesh for every face set.");
-	generateFaceSetMeshes(reader, BaseLib::extractPath(sg_file_arg.getValue()));
+	if (output_properties_arg.getValue()) {
+		MeshLib::Mesh *mesh(reader.getMesh());
+		INFO("Add Gocad properties to mesh.");
+		addGocadPropertiesToMesh(reader, *mesh);
+		INFO("Done.");
+		{
+			std::string prop_name("Porosity");
+			std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+							"-" + prop_name + ".txt");
+			writeMeshPropertiesToFile(prop_fname, prop_name, *mesh);
+		}
 
-//	{
-//		MeshLib::Mesh *surface_mesh(extractSurfaceMesh(mesh));
-//		INFO("Writing surface mesh in vtu format.");
-//		FileIO::BoostVtuInterface vtu;
-//		vtu.setMesh(surface_mesh);
-//		// output file name
-//		std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + "_surface.vtu");
-//		vtu.writeToFile(mesh_out_fname);
-//		delete surface_mesh;
-//	}
-//
-//	{
-//		std::string prop_name("Porosity");
-//		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
-//						"-" + prop_name + ".txt");
-//		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
-//	}
-//
-//	{
-//		std::string prop_name("Permeability");
-//		std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
-//						"-" + prop_name + ".txt");
-//		writeMeshPropertiesToFile(prop_fname, prop_name, mesh);
-//	}
+		{
+			std::string prop_name("Permeability");
+			std::string prop_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) +
+							"-" + prop_name + ".txt");
+			writeMeshPropertiesToFile(prop_fname, prop_name, *mesh);
+		}
+		delete mesh;
+	}
 
-	INFO("Writing mesh in vtu format.");
-	FileIO::BoostVtuInterface vtu;
-	vtu.setMesh(mesh);
-	// output file name
-	std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + ".vtu");
+	if (mesh_output_arg.getValue()) {
+		MeshLib::Mesh *mesh(reader.getMesh());
 
-	vtu.writeToFile(mesh_out_fname);
+		INFO("Add Gocad properties to mesh.");
+		addGocadPropertiesToMesh(reader, *mesh);
 
-	delete mesh;
+		INFO("Writing mesh in vtu format.");
+		FileIO::BoostVtuInterface vtu;
+		vtu.setMesh(mesh);
+		// output file name
+		std::string mesh_out_fname(BaseLib::dropFileExtension(sg_file_arg.getValue()) + ".vtu");
+
+		vtu.writeToFile(mesh_out_fname);
+
+		delete mesh;
+	}
 
 	delete logog;
 	delete custom_format;
