@@ -435,7 +435,7 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 			if (id >= _index_calculator._n_nodes) {
 				ERR("Face set id %d is greater than the number of nodes (%d).", id, _index_calculator._n_nodes);
 			} else {
-				dynamic_cast<MeshLib::GocadNode*>(_nodes[id])->setFaceSet(_n_face_sets+1, face_indicator);
+				dynamic_cast<MeshLib::GocadNode*>(_nodes[id])->setFaceSet(_n_face_sets, face_indicator);
 				std::array<std::size_t,3> c(_index_calculator.getCoordsForID(id));
 				if (c[0] >= _index_calculator._x_dim-1)
 					ERR("****** i coord %d to big for id %d.", c[0], id);
