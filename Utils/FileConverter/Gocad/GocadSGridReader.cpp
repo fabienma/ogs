@@ -786,6 +786,14 @@ MeshLib::Mesh* GocadSGridReader::getFaceSetMesh(std::size_t face_set_number) con
 	if (face_set_nodes.empty())
 		return nullptr;
 
+	for (std::size_t k(0); k<_split_nodes.size(); k++) {
+		const std::size_t id(_index_calculator(_split_nodes[k]->getGridCoords()));
+		if (_nodes[id]->isMemberOfFaceSet(face_set_number)) {
+			if (_split_nodes[k]->getAffectedCells()[0])
+				addFaceSetQuad(_nodes[k], face_set_number, face_set_nodes, face_set_elements);
+		}
+	}
+
 	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
 	MeshLib::Node center_node((aabb.getMaxPoint()[0] + aabb.getMinPoint()[0]) / 2.0,
 			(aabb.getMaxPoint()[1] + aabb.getMinPoint()[1]) / 2.0, 0.0);
