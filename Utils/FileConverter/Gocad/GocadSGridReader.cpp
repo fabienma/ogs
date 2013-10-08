@@ -459,6 +459,12 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 	}
 	_n_face_sets++;
 
+	// pre condition: split nodes are read already
+	for (std::size_t k(0); k<_split_nodes.size(); k++) {
+		std::size_t const id (_index_calculator(_split_nodes[k]->getGridCoords()));
+		_split_nodes[k]->transmitFaceIndicators(*_nodes[id]);
+	}
+
 	_property_meta_data_vecs.push_back(face_set_property);
 }
 
@@ -691,8 +697,7 @@ void GocadSGridReader::applySplitInformation(std::vector<MeshLib::Node*> &nodes,
 		// get mesh node to substitute in elements
 		MeshLib::Node const*const node2sub(nodes[_index_calculator(gc[0],gc[1],gc[2])]);
 
-		if (affected_cells[0]
-		                   && gc[0] < _index_calculator._x_dim-1
+		if (affected_cells[0] && gc[0] < _index_calculator._x_dim-1
 		                   && gc[1] < _index_calculator._y_dim-1
 		                   && gc[2] < _index_calculator._z_dim-1) {
 			const std::size_t idx(_index_calculator.getCellIdx(gc[0], gc[1], gc[2]));
@@ -790,10 +795,10 @@ MeshLib::Mesh* GocadSGridReader::getFaceSetMesh(std::size_t face_set_number) con
 		return nullptr;
 
 	for (std::size_t k(0); k<_split_nodes.size(); k++) {
-		const std::size_t id(_index_calculator(_split_nodes[k]->getGridCoords()));
-		if (_nodes[id]->isMemberOfFaceSet(face_set_number)) {
-			if (_split_nodes[k]->getAffectedCells()[0])
-				addFaceSetQuad(_nodes[k], face_set_number, face_set_nodes, face_set_elements);
+		if (_split_nodes[k]->isMemberOfFaceSet(face_set_number)) {
+			if (_split_nodes[k]->getAffectedCells()[0]) {
+				addFaceSetQuad(_split_nodes[k], face_set_number, face_set_nodes, face_set_elements);
+			}
 		}
 	}
 
