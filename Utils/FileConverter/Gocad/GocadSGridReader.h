@@ -225,6 +225,8 @@ private:
 	std::vector<MeshLib::GocadSplitNode*> _split_nodes;
 	// properties
 	std::vector<GocadProperty> _property_meta_data_vecs;
+	/// center of the model
+	MeshLib::Node _center_node;
 }; // end class GocadSGridReader
 
 } // end namespace FileIO

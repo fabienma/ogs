@@ -199,7 +199,8 @@ GocadProperty parseGocadPropertyMetaData(std::string &line, std::istream &in, st
 
 GocadSGridReader::GocadSGridReader(std::string const& fname) :
 		_fname(fname), _path(_fname.substr(0, _fname.find_last_of("/\\") + 1)),
-		_n_face_sets(0), _double_precision_binary(false), _bin_pnts_in_double_precision(false)
+		_n_face_sets(0), _double_precision_binary(false), _bin_pnts_in_double_precision(false),
+		_center_node(0.0, 0.0, 0.0)
 
 {
 	// check if file exists
@@ -295,6 +296,11 @@ GocadSGridReader::GocadSGridReader(std::string const& fname) :
 
 	readSplitInformation();
 
+	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
+	_center_node[0] = (aabb.getMaxPoint()[0] + aabb.getMinPoint()[0])/2.0;
+	_center_node[1] = (aabb.getMaxPoint()[1] + aabb.getMinPoint()[1])/2.0;
+	_center_node[2] = 0.0;
+
 	GocadProperty face_set_property;
 	face_set_property._property_id = 0;
 	face_set_property._property_name = "CellIDs";
@@ -332,16 +338,13 @@ MeshLib::Mesh* GocadSGridReader::getMesh() const
 	createElements(nodes, elements);
 	applySplitInformation(nodes, elements);
 
-
-	GeoLib::AABB<MeshLib::Node> aabb(nodes.begin(), nodes.end());
-	MeshLib::Node center_node((aabb.getMaxPoint()[0] + aabb.getMinPoint()[0])/2.0,
-			(aabb.getMaxPoint()[1] + aabb.getMinPoint()[1])/2.0, 0.0);
-	INFO("translated model (-%f, -%f, -%f).", center_node[0], center_node[1], center_node[2]);
+	MeshLib::Node const& center(_center_node);
+	INFO("translated model (-%f, -%f, -%f).", center[0], center[1], center[2]);
 	std::for_each(nodes.begin(), nodes.end(),
-			[&center_node](MeshLib::Node* node)
+			[&center](MeshLib::Node* node)
 			{
-				(*node)[0] -= center_node[0];
-				(*node)[1] -= center_node[1];
+				(*node)[0] -= center[0];
+				(*node)[1] -= center[1];
 			}
 	);
 
@@ -794,14 +797,12 @@ MeshLib::Mesh* GocadSGridReader::getFaceSetMesh(std::size_t face_set_number) con
 		}
 	}
 
-	GeoLib::AABB<MeshLib::Node> aabb(_nodes.begin(), _nodes.end());
-	MeshLib::Node center_node((aabb.getMaxPoint()[0] + aabb.getMinPoint()[0]) / 2.0,
-			(aabb.getMaxPoint()[1] + aabb.getMinPoint()[1]) / 2.0, 0.0);
-	INFO("translated model (-%f, -%f, -%f).", center_node[0], center_node[1], center_node[2]);
-	std::for_each(face_set_nodes.begin(), face_set_nodes.end(), [&center_node](MeshLib::Node* node)
+	INFO("translated model (-%f, -%f, -%f).", _center_node[0], _center_node[1], _center_node[2]);
+	MeshLib::Node const& center(_center_node);
+	std::for_each(face_set_nodes.begin(), face_set_nodes.end(), [&center](MeshLib::Node* node)
 	{
-		(*node)[0] -= center_node[0];
-		(*node)[1] -= center_node[1];
+		(*node)[0] -= center[0];
+		(*node)[1] -= center[1];
 	});
 
 	std::string mesh_name("GocadFaceSetMesh-" + BaseLib::number2str(face_set_number));
