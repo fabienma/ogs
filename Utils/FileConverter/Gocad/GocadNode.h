@@ -37,8 +37,9 @@ public:
 	{}
 
 	GocadNode(GocadNode const& src) :
-		Node(src.getCoords(), src._id), _face_set_membership(src._face_set_membership),
-		_face_indicators(src._face_indicators)
+		Node(src.getCoords(), src._id),
+		_face_indicators(src._face_indicators),
+		_face_set_membership(src._face_set_membership)
 	{}
 
 	void setFaceSet(std::size_t face_set_number, std::size_t face_indicator)
@@ -96,9 +97,12 @@ public:
 		return it->second;
 	}
 
+protected:
+	friend class GocadSplitNode;
+	std::vector<std::pair<std::size_t, FaceIndicator> > _face_indicators;
+
 private:
 	std::bitset<128> _face_set_membership;
-	std::vector<std::pair<std::size_t, FaceIndicator> > _face_indicators;
 };
 
 class GocadSplitNode : public GocadNode
@@ -114,6 +118,9 @@ public:
 
 	std::array<std::size_t, 3> const& getGridCoords() const { return _grid_coords; }
 	std::array<bool, 8> const& getAffectedCells() const { return _affected_cells; }
+	void transmitFaceIndicators(GocadNode const& gocad_node) {
+		_face_indicators = gocad_node._face_indicators;
+	}
 private:
 	std::array<std::size_t,3> _grid_coords;
 	std::array<bool, 8> _affected_cells;
