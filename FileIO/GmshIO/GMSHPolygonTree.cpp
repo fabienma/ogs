@@ -69,7 +69,8 @@ void GMSHPolygonTree::insertPolyline (GeoLib::PolylineWithSegmentMarker * ply)
 		}
 		_plys.push_back(ply);
 
-		// calculate possible intersection points
+		// calculate possible intersection points between the node polygon
+		// (_node_polygon) and the given polyline ply
 		// pay attention: loop bound is not fix!
 		size_t n_segments (ply->getNumberOfPoints()-1);
 		GeoLib::Point tmp_pnt;
