@@ -59,7 +59,7 @@ bool GMSHPolygonTree::insertStation(GeoLib::Point const* station)
 	}
 }
 
-void GMSHPolygonTree::insertPolyline (GeoLib::PolylineWithSegmentMarker * ply)
+void GMSHPolygonTree::insertPolyline(GeoLib::PolylineWithSegmentMarker * ply)
 {
 	if (!_node_polygon->isPartOfPolylineInPolygon(*ply))
 		return;
@@ -84,7 +84,8 @@ void GMSHPolygonTree::insertPolyline (GeoLib::PolylineWithSegmentMarker * ply)
 
 		std::size_t seg_num(0);
 		GeoLib::Point *intersection_pnt(new GeoLib::Point);
-		while (_node_polygon->getNextIntersectionPointPolygonLine(*(ply->getPoint(k)), *(ply->getPoint(k+1)), intersection_pnt, seg_num)) {
+		while (_node_polygon->getNextIntersectionPointPolygonLine(*(ply->getPoint(k)),
+				*(ply->getPoint(k + 1)), intersection_pnt, seg_num)) {
 			// insert the intersection point to point vector of GEOObjects instance
 			const std::size_t pnt_vec_size(pnt_vec.size());
 			std::size_t pnt_id(pnt_vec.push_back(intersection_pnt));
