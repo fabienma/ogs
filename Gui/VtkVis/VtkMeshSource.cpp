@@ -129,9 +129,6 @@ int VtkMeshSource::RequestData( vtkInformation* request,
 
 	// Generate attribute vector for material groups
 	vtkSmartPointer<vtkIntArray> materialIDs = vtkSmartPointer<vtkIntArray>::New();
-	materialIDs->SetName(_matName);
-	materialIDs->SetNumberOfComponents(1);
-	materialIDs->SetNumberOfTuples(nElems);
 
 	// Generate mesh elements
 	for (unsigned i = 0; i < nElems; ++i)
@@ -179,13 +176,6 @@ int VtkMeshSource::RequestData( vtkInformation* request,
 					MeshElemType2String(elem->getGeomType()).c_str());
 			return 0;
 		}
-
-		materialIDs->InsertValue(i, elem->getValue());
-		vtkIdList* point_ids = vtkIdList::New();
-
-		const unsigned nElemNodes (elem->getNNodes());
-		for (unsigned j = 0; j < nElemNodes; ++j)
-			point_ids->InsertNextId(elem->getNode(j)->getID());
 
 		output->InsertNextCell(type, point_ids);
 	}
