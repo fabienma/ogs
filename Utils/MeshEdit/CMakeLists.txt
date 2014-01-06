@@ -47,6 +47,9 @@ IF(QT4_FOUND)
 		MeshLib
 		BaseLib
 		OgsLib
+		QtDataView
+		VtkVis
+		${VTK_LIBRARIES}
 		${QT_LIBRARIES}
 	)
 
