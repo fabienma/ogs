@@ -30,7 +30,7 @@
 #include "FileTools.h"
 #include "readMeshFromFile.h"
 #include "Legacy/OGSIOVer4.h"
-#include "XmlIO/XmlGmlInterface.h"
+#include "XmlIO/Qt/XmlGmlInterface.h"
 
 // GeoLib
 #include "GEOObjects.h"
