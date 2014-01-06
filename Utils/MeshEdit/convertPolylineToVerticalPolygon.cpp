@@ -32,16 +32,21 @@
 #include "Legacy/OGSIOVer4.h"
 #include "XmlIO/Qt/XmlGmlInterface.h"
 
+#ifdef OGS_BUILD_GUI
+// Gui/DataView
+#include "Gui/DataView/GEOModels.h"
+#else
 // GeoLib
-#include "GEOObjects.h"
+#include "GeoLib/GEOObjects.h"
+#endif
 
 // OGS
 #include "OGS/ProjectData.h"
+#include "OGS/FEMCondition.h"
 
 // MeshLib
 #include "Mesh.h"
 
-#include "FemLib/FEMCondition.h"
 
 // Utils/MeshEdit/
 #include "ExtractMeshNodes.h"
@@ -136,9 +141,12 @@ int main(int argc, char* argv[])
 	MeshLib::Mesh* mesh(FileIO::readMeshFromFile(mesh_arg.getValue()));
 
 	// *** read geometry
-	GeoLib::GEOObjects* geo(new GeoLib::GEOObjects);
 	ProjectData project;
-	project.setGEOObjects(geo);
+#ifdef OGS_BUILD_GUI
+	GEOModels* geo(dynamic_cast<GEOModels*>(project.getGEOObjects()));
+#else
+	GeoLib::GEOObjects* geo(project.getGEOObjects());
+#endif
 	std::string unique_name;
 	std::vector<std::string> error_strings;
 	FileIO::readGLIFileV4(geo_arg.getValue(), geo, unique_name, error_strings);
@@ -149,7 +157,6 @@ int main(int argc, char* argv[])
 	if (!plys) {
 		ERR("Could not get vector of polylines.");
 		delete mesh;
-		delete geo;
 		return -1;
 	}
 
@@ -200,7 +207,7 @@ int main(int argc, char* argv[])
 			sfc_project_name = sfc_names[0];
 
 		std::string schema_name(file_finder.getPath("OpenGeoSysGLI.xsd"));
-		FileIO::XmlGmlInterface xml(&project, schema_name);
+		FileIO::XmlGmlInterface xml(*geo);
 		xml.setNameForExport(sfc_project_name);
 		xml.writeToFile(sfc_out_arg.getValue());
 	}
