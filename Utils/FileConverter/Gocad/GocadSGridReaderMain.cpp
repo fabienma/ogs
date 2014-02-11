@@ -31,7 +31,7 @@
 #include "LogogSimpleFormatter.h"
 
 // FileIO
-#include "RapidXmlIO/BoostVtuInterface.h"
+#include "FileIO/XmlIO/Boost/BoostVtuInterface.h"
 
 // MeshLib
 #include "Mesh.h"
