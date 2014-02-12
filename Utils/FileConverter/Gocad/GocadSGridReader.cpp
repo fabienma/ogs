@@ -336,7 +336,7 @@ MeshLib::Mesh* GocadSGridReader::getMesh() const
 
 	std::vector<MeshLib::Element*> elements;
 	createElements(nodes, elements);
-	applySplitInformation(nodes, elements);
+	// applySplitInformation(nodes, elements);
 
 	MeshLib::Node const& center(_center_node);
 	INFO("translated model (-%f, -%f, -%f).", center[0], center[1], center[2]);
