@@ -81,3 +81,10 @@ TARGET_LINK_LIBRARIES (VTK2OGS
 	FileIO
 	zlib
 )
+
+ADD_EXECUTABLE (ComputeBoundingBox ComputeBoundingBox.cpp)
+SET_TARGET_PROPERTIES(ComputeBoundingBox PROPERTIES FOLDER Utilities)
+TARGET_LINK_LIBRARIES (ComputeBoundingBox
+	GeoLib
+	FileIO
+)
