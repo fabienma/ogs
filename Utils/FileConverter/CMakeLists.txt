@@ -88,3 +88,10 @@ TARGET_LINK_LIBRARIES (ComputeBoundingBox
 	GeoLib
 	FileIO
 )
+
+ADD_EXECUTABLE (ComputeRasterFromPoints ComputeRasterFromPoints.cpp)
+SET_TARGET_PROPERTIES(ComputeRasterFromPoints PROPERTIES FOLDER Utilities)
+TARGET_LINK_LIBRARIES (ComputeRasterFromPoints
+	GeoLib
+	FileIO
+)
