@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 #endif
 	std::string unique_name;
 	std::vector<std::string> error_strings;
-	FileIO::readGLIFileV4(geo_arg.getValue(), geo, unique_name, error_strings);
+	FileIO::Legacy::readGLIFileV4(geo_arg.getValue(), geo, unique_name, error_strings);
 
 	// *** get Polygon
 	const std::vector<GeoLib::Polyline*>* plys(geo->getPolylineVec(unique_name));
