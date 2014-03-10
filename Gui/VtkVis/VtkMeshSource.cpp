@@ -174,12 +174,6 @@ int VtkMeshSource::RequestData( vtkInformation* request,
 			return 0;
 		}
 
-		vtkIdList* point_ids = vtkIdList::New();
-		const unsigned nElemNodes (elem->getNNodes());
-		point_ids->SetNumberOfIds(nElemNodes);
-		for (unsigned j = 0; j < nElemNodes; ++j)
-			point_ids->SetId(j, elem->getNode(j)->getID());
-
 		output->InsertNextCell(type, point_ids);
 	}
 
