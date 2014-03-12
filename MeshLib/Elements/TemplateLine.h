@@ -35,7 +35,11 @@ namespace MeshLib {
  *  0--------1
  * @endcode
  */
-template<unsigned NNODES, CellType CELLLINETYPE>
+template<
+	unsigned NNODES,
+	CellType CELLLINETYPE,
+	typename TRAITS = std::size_t
+>
 class TemplateLine : public Edge
 {
 public:
@@ -52,7 +56,7 @@ public:
 	virtual ~TemplateLine();
 
 	/// Compute the minimum and maximum squared edge length for this element
-	void computeSqrEdgeLengthRange(double &min, double &max) const { min = _length; max = _length; };
+	void computeSqrEdgeLengthRange(double &min, double &max) const { min = this->_length; max = this->_length; };
 
 	/// Get the number of nodes for this element.
 	virtual unsigned getNNodes(bool all = false) const
@@ -85,13 +89,15 @@ public:
 	 */
 	virtual Element* clone() const
 	{
-		return new TemplateLine<NNODES,CELLLINETYPE>(*this);
+		return new TemplateLine<NNODES,CELLLINETYPE,TRAITS>(*this);
 	}
 
 protected:
+	TRAITS t;
+
 	double computeVolume()
 	{
-		return sqrt(MathLib::sqrDist(_nodes[0]->getCoords(), _nodes[1]->getCoords()));
+		return sqrt(MathLib::sqrDist(*(this->_nodes[0]), *(this->_nodes[1])));
 	}
 
 }; /* class */

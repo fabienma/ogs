@@ -14,41 +14,42 @@
 
 namespace MeshLib
 {
-template<unsigned NNODES, CellType CELLLINETYPE>
-TemplateLine<NNODES,CELLLINETYPE>::TemplateLine(std::array<Node*, NNODES> const& nodes,
-                                                unsigned value, std::size_t id)
+template<unsigned NNODES, CellType CELLLINETYPE, typename TRAITS>
+TemplateLine<NNODES,CELLLINETYPE,TRAITS>::TemplateLine(
+	std::array<Node*, NNODES> const& nodes,
+	unsigned value)
 	: Edge(value, id)
 {
-	_nodes = new Node*[NNODES];
-	std::copy(nodes.begin(), nodes.end(), _nodes);
+	this->_nodes = new Node*[NNODES];
+	std::copy(nodes.begin(), nodes.end(), this->_nodes);
 
 	this->_length = this->computeVolume();
 }
 
-template<unsigned NNODES, CellType CELLLINETYPE>
-TemplateLine<NNODES,CELLLINETYPE>::TemplateLine(Node* nodes[NNODES], unsigned value, std::size_t id) :
+template<unsigned NNODES, CellType CELLLINETYPE, typename TRAITS>
+TemplateLine<NNODES,CELLLINETYPE,TRAITS>::TemplateLine(Node* nodes[NNODES], unsigned value) :
 	Edge(value, id)
 {
-	_nodes = nodes;
+	this->_nodes = nodes;
 	this->_length = this->computeVolume();
 }
 
-template <unsigned NNODES, CellType CELLLINETYPE>
-TemplateLine<NNODES,CELLLINETYPE>::TemplateLine(const TemplateLine<NNODES,CELLLINETYPE> &line) :
+template <unsigned NNODES, CellType CELLLINETYPE, typename TRAITS>
+TemplateLine<NNODES,CELLLINETYPE,TRAITS>::TemplateLine(const TemplateLine<NNODES,CELLLINETYPE,TRAITS> &line) :
 	Edge(line.getValue(), line.getID())
 {
-	_nodes = new Node*[NNODES];
+	this->_nodes = new Node*[NNODES];
 	for (unsigned k(0); k<NNODES; k++)
-		_nodes[k] = line._nodes[k];
-	_length = line.getLength();
+		this->_nodes[k] = line._nodes[k];
+	this->_length = line.getLength();
 }
 
-template <unsigned NNODES, CellType CELLLINETYPE>
-TemplateLine<NNODES,CELLLINETYPE>::~TemplateLine()
+template <unsigned NNODES, CellType CELLLINETYPE, typename TRAITS>
+TemplateLine<NNODES,CELLLINETYPE,TRAITS>::~TemplateLine()
 {}
 
-template <unsigned NNODES, CellType CELLLINETYPE>
-ElementErrorCode TemplateLine<NNODES,CELLLINETYPE>::validate() const
+template <unsigned NNODES, CellType CELLLINETYPE, typename TRAITS>
+ElementErrorCode TemplateLine<NNODES,CELLLINETYPE,TRAITS>::validate() const
 { 
 	ElementErrorCode error_code;
 	error_code[ElementErrorFlag::ZeroVolume] = this->hasZeroVolume();
