@@ -17,8 +17,8 @@
 
 namespace MeshLib {
 
-template <unsigned NNODES, CellType CELLTRITYPE>
-TemplateTri<NNODES,CELLTRITYPE>::TemplateTri(Node* nodes[NNODES], unsigned value, std::size_t id) :
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS>
+TemplateTri<NNODES,CELLTRITYPE,TRAITS>::TemplateTri(Node* nodes[NNODES], unsigned value) :
 	Face(value, id)
 {
 	_nodes = nodes;
@@ -27,9 +27,9 @@ TemplateTri<NNODES,CELLTRITYPE>::TemplateTri(Node* nodes[NNODES], unsigned value
 	this->_area = this->computeVolume();
 }
 
-template<unsigned NNODES, CellType CELLTRITYPE>
-TemplateTri<NNODES,CELLTRITYPE>::TemplateTri(std::array<Node*, NNODES> const& nodes,
-                                             unsigned value, std::size_t id)
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS>
+TemplateTri<NNODES,CELLTRITYPE,TRAITS>::TemplateTri(std::array<Node*, NNODES> const& nodes,
+                                             unsigned value)
 	: Face(value, id)
 {
 	_nodes = new Node*[NNODES];
@@ -41,8 +41,9 @@ TemplateTri<NNODES,CELLTRITYPE>::TemplateTri(std::array<Node*, NNODES> const& no
 	this->_area = this->computeVolume();
 }
 
-template <unsigned NNODES, CellType CELLTRITYPE>
-TemplateTri<NNODES,CELLTRITYPE>::TemplateTri(const TemplateTri<NNODES,CELLTRITYPE> &tri) :
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS>
+TemplateTri<NNODES,CELLTRITYPE,TRAITS>::TemplateTri(
+	const TemplateTri<NNODES,CELLTRITYPE,TRAITS> &tri) :
 	Face(tri.getValue(), tri.getID())
 {
 	_nodes = new Node*[NNODES];
@@ -59,12 +60,12 @@ TemplateTri<NNODES,CELLTRITYPE>::TemplateTri(const TemplateTri<NNODES,CELLTRITYP
 	_area = tri.getArea();
 }
 
-template <unsigned NNODES, CellType CELLTRITYPE>
-TemplateTri<NNODES,CELLTRITYPE>::~TemplateTri()
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS>
+TemplateTri<NNODES,CELLTRITYPE,TRAITS>::~TemplateTri()
 {}
 
-template <unsigned NNODES, CellType CELLTRITYPE>
-bool TemplateTri<NNODES,CELLTRITYPE>::isEdge(unsigned idx1, unsigned idx2) const
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS>
+bool TemplateTri<NNODES,CELLTRITYPE,TRAITS>::isEdge(unsigned idx1, unsigned idx2) const
 {
 	for (unsigned i(0); i<3; i++)
 	{
@@ -74,22 +75,22 @@ bool TemplateTri<NNODES,CELLTRITYPE>::isEdge(unsigned idx1, unsigned idx2) const
 	return false;
 }
 
-template <unsigned NNODES, CellType CELLTRITYPE>
-bool TemplateTri<NNODES,CELLTRITYPE>::isPntInside(GeoLib::Point const& pnt, double eps) const
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS>
+bool TemplateTri<NNODES,CELLTRITYPE,TRAITS>::isPntInside(GeoLib::Point const& pnt, double eps) const
 {
 	return GeoLib::isPointInTriangle(pnt, *_nodes[0], *_nodes[1], *_nodes[2], eps);
 }
 
-template <unsigned NNODES, CellType CELLTRITYPE>
-ElementErrorCode TemplateTri<NNODES,CELLTRITYPE>::validate() const 
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS>
+ElementErrorCode TemplateTri<NNODES,CELLTRITYPE,TRAITS>::validate() const
 { 
 	ElementErrorCode error_code;
 	error_code[ElementErrorFlag::ZeroVolume] = this->hasZeroVolume();
 	return error_code;
 }
 
-template <unsigned NNODES, CellType CELLTRITYPE>
-unsigned TemplateTri<NNODES,CELLTRITYPE>::identifyFace(Node* nodes[3]) const
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS>
+unsigned TemplateTri<NNODES,CELLTRITYPE,TRAITS>::identifyFace(Node* nodes[3]) const
 {
 	for (unsigned i=0; i<3; i++)
 	{

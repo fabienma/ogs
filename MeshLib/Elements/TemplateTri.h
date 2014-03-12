@@ -43,7 +43,7 @@ namespace MeshLib {
  *
  * @endcode
  */
-template <unsigned NNODES, CellType CELLTRITYPE>
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS = std::size_t>
 class TemplateTri : public Face
 {
 public:
@@ -108,7 +108,7 @@ public:
 	 */
 	virtual Element* clone() const
 	{
-		return new TemplateTri<NNODES,CELLTRITYPE>(*this);
+		return new TemplateTri<NNODES,CELLTRITYPE,TRAITS>(*this);
 	}
 
 protected:
@@ -119,6 +119,8 @@ protected:
 	}
 
 protected:
+	TRAITS t;
+
 	/// Return a specific edge node.
 	inline Node* getEdgeNode(unsigned edge_id, unsigned node_id) const
 	{
@@ -131,8 +133,8 @@ protected:
 	static const unsigned _edge_nodes[3][2];
 }; /* class */
 
-template <unsigned NNODES, CellType CELLTRITYPE>
-const unsigned TemplateTri<NNODES,CELLTRITYPE>::_edge_nodes[3][2] = {
+template <unsigned NNODES, CellType CELLTRITYPE, typename TRAITS>
+const unsigned TemplateTri<NNODES,CELLTRITYPE,TRAITS>::_edge_nodes[3][2] = {
 		{0, 1}, // Edge 0
 		{1, 2}, // Edge 1
 		{0, 2}  // Edge 2
