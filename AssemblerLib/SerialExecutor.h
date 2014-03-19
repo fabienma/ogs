@@ -40,6 +40,20 @@ struct SerialExecutor
             f(c[i], i);
     }
 
+    template <typename F, typename C1, typename C2>
+    static
+    void
+#if defined(_MSC_VER) && (_MSC_VER >= 1700)
+    execute(F& f, C1 const& c1, C2& c2)
+#else
+    execute(F const& f, C1 const& c1, C2& c2)
+#endif
+    {
+		assert(c1.size() == c2.size());
+
+        for (std::size_t i = 0; i < c1.size(); i++)
+            f(c1[i], i, c2[i]);
+    }
 };
 
 }   // namespace AssemblerLib
