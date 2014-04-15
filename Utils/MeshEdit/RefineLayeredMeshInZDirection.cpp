@@ -31,8 +31,109 @@
 // MeshLib
 #include "Node.h"
 #include "Elements/Element.h"
+#include "Elements/Prism.h"
+#include "Elements/Tet.h"
 #include "Mesh.h"
 #include "MeshEnums.h"
+#include "MeshEditing/DuplicateMeshComponents.h"
+
+/** Split a tet into a tet and a prism */
+void splitElement(MeshLib::Tet const*const original_tet,
+	std::vector<MeshLib::Node*> & nodes,
+	std::vector<MeshLib::Element*> & elements)
+{
+	// deep copy of nodes of original tet
+	for (std::size_t k(0); k<4; k++)
+		nodes.push_back(new MeshLib::Node(*original_tet->getNodes()[k]));
+
+	std::size_t const s(nodes.size());
+	// nodes used for split
+	nodes.push_back(new MeshLib::Node(
+		0.5 * ((*nodes[s-4])[0] + (*nodes[s-1])[0]),
+		0.5 * ((*nodes[s-4])[1] + (*nodes[s-1])[1]),
+		0.5 * ((*nodes[s-4])[2] + (*nodes[s-1])[2])
+	));
+	nodes.push_back(new MeshLib::Node(
+		0.5 * ((*nodes[s-4])[0] + (*nodes[s-2])[0]),
+		0.5 * ((*nodes[s-4])[1] + (*nodes[s-2])[1]),
+		0.5 * ((*nodes[s-4])[2] + (*nodes[s-2])[2])
+	));
+	nodes.push_back(new MeshLib::Node(
+		0.5 * ((*nodes[s-4])[0] + (*nodes[s-3])[0]),
+		0.5 * ((*nodes[s-4])[1] + (*nodes[s-3])[1]),
+		0.5 * ((*nodes[s-4])[2] + (*nodes[s-3])[2])
+	));
+
+	std::array<MeshLib::Node*, 4> nodes_tet =
+		{{nodes[s], nodes[s+1], nodes[s+2], nodes[s-1]}};
+	std::array<MeshLib::Node*, 6> nodes_prism =
+		{{nodes[s-4], nodes[s-3], nodes[s-2], nodes[s], nodes[s+1], nodes[s+2]}};
+
+	elements.push_back(new MeshLib::Prism(nodes_prism, original_tet->getValue()));
+	elements.push_back(new MeshLib::Tet(nodes_tet, original_tet->getValue()));
+}
+
+
+/** Split a prism into two prisms */
+void splitElement(MeshLib::Prism* original_prism,
+	std::vector<MeshLib::Node*> & nodes,
+	std::vector<MeshLib::Element*> & elements)
+{
+	// deep copy of nodes of original prism
+	for (std::size_t k(0); k<6; k++)
+		nodes.push_back(new MeshLib::Node(*original_prism->getNodes()[k]));
+
+	std::size_t const s(nodes.size());
+	// nodes used for split
+	nodes.push_back(new MeshLib::Node(
+		0.5 * ((*nodes[s-6])[0] + (*nodes[s-3])[0]),
+		0.5 * ((*nodes[s-6])[1] + (*nodes[s-3])[1]),
+		0.5 * ((*nodes[s-6])[2] + (*nodes[s-3])[2])
+	));
+	nodes.push_back(new MeshLib::Node(
+		0.5 * ((*nodes[s-5])[0] + (*nodes[s-2])[0]),
+		0.5 * ((*nodes[s-5])[1] + (*nodes[s-2])[1]),
+		0.5 * ((*nodes[s-5])[2] + (*nodes[s-2])[2])
+	));
+	nodes.push_back(new MeshLib::Node(
+		0.5 * ((*nodes[s-4])[0] + (*nodes[s-1])[0]),
+		0.5 * ((*nodes[s-4])[1] + (*nodes[s-1])[1]),
+		0.5 * ((*nodes[s-4])[2] + (*nodes[s-1])[2])
+	));
+
+	std::array<MeshLib::Node*, 6> nodes_prism0 =
+		{{nodes[s-6], nodes[s-5], nodes[s-4], nodes[s], nodes[s+1], nodes[s+2]}};
+	std::array<MeshLib::Node*, 6> nodes_prism1 =
+		{{nodes[s], nodes[s+1], nodes[s+2], nodes[s-3], nodes[s-2], nodes[s-1]}};
+	elements.push_back(new MeshLib::Prism(nodes_prism0, original_prism->getValue()));
+	elements.push_back(new MeshLib::Prism(nodes_prism1, original_prism->getValue()));
+}
+
+MeshLib::Mesh refineMesh(MeshLib::Mesh const& original_mesh)
+{
+	std::vector<MeshLib::Node*> nodes;
+	std::vector<MeshLib::Element*> elements;
+
+	std::vector<MeshLib::Element*> const& original_elements(original_mesh.getElements());
+	std::size_t const n_elements(original_elements.size());
+	for (std::size_t k(0); k<n_elements; k++) {
+		MeshElemType const type(original_elements[k]->getGeomType());
+		switch (type) {
+		case MeshElemType::TETRAHEDRON:
+			splitElement(dynamic_cast<MeshLib::Tet*>(original_elements[k]), nodes, elements);
+			break;
+		case MeshElemType::PRISM:
+			splitElement(dynamic_cast<MeshLib::Prism*>(original_elements[k]), nodes, elements);
+			break;
+		case MeshElemType::HEXAHEDRON:
+		default: {
+			INFO("Element %d of mesh is not a tet, prism or hex.", k);
+		}
+		}
+	}
+
+	return MeshLib::Mesh("RefinedMesh", nodes, elements);
+}
 
 int main(int argc, char *argv[])
 {
@@ -78,6 +179,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	MeshLib::Mesh split_mesh(refineMesh(*original_mesh));
+
 	std::string out_fname(mesh_out_arg.getValue());
 	if (out_fname.empty()) {
 		out_fname = BaseLib::dropFileExtension(mesh_out_arg.getValue());
@@ -85,7 +188,7 @@ int main(int argc, char *argv[])
 	}
 
 	FileIO::BoostVtuInterface mesh_io;
-	mesh_io.setMesh(original_mesh);
+	mesh_io.setMesh(&split_mesh);
 	mesh_io.writeToFile(out_fname);
 
 	delete original_mesh;
