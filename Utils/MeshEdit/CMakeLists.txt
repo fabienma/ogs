@@ -57,3 +57,10 @@ TARGET_LINK_LIBRARIES( MoveMesh
 )
 SET_TARGET_PROPERTIES(MoveMesh PROPERTIES FOLDER Utilities)
 
+ADD_EXECUTABLE( RefineLayeredMeshInZDirection RefineLayeredMeshInZDirection.cpp )
+TARGET_LINK_LIBRARIES( RefineLayeredMeshInZDirection
+	FileIO
+	MeshLib
+)
+SET_TARGET_PROPERTIES(RefineLayeredMeshInZDirection PROPERTIES FOLDER Utilities)
+
