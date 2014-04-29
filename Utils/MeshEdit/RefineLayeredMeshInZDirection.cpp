@@ -146,6 +146,20 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	double tets_vol(0.0);
+	double prisms_vol(0.0);
+
+	for (std::size_t k(0); k<n_elements; k++) {
+		MeshElemType const type(original_elements[k]->getGeomType());
+		if (type == MeshElemType::TETRAHEDRON)
+			tets_vol += original_elements[k]->getContent();
+		if (type == MeshElemType::PRISM)
+			prisms_vol += original_elements[k]->getContent();
+	}
+
+	INFO("volume of tets: %f", tets_vol);
+	INFO("volume of prisms: %f", prisms_vol);
+
 	MeshLib::Mesh split_mesh(refineMesh(*original_mesh));
 
 	std::string out_fname(mesh_out_arg.getValue());
