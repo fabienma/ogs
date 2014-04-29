@@ -10,6 +10,8 @@
  *              http://www.opengeosys.org/LICENSE.txt
  */
 
+#include <algorithm>
+
 // ThirdParty
 #include "tclap/CmdLine.h"
 
@@ -25,6 +27,9 @@
 #include "readMeshFromFile.h"
 #include "XmlIO/Boost/BoostVtuInterface.h"
 
+// MathLib
+#include "MathTools.h"
+
 // GeoLib
 #include "AABB.h"
 
@@ -36,43 +41,6 @@
 #include "Mesh.h"
 #include "MeshEnums.h"
 #include "MeshEditing/DuplicateMeshComponents.h"
-
-/** Split a tet into a tet and a prism */
-void splitElement(MeshLib::Tet const*const original_tet,
-	std::vector<MeshLib::Node*> & nodes,
-	std::vector<MeshLib::Element*> & elements)
-{
-	// deep copy of nodes of original tet
-	for (std::size_t k(0); k<4; k++)
-		nodes.push_back(new MeshLib::Node(*original_tet->getNodes()[k]));
-
-	std::size_t const s(nodes.size());
-	// nodes used for split
-	nodes.push_back(new MeshLib::Node(
-		0.5 * ((*nodes[s-4])[0] + (*nodes[s-1])[0]),
-		0.5 * ((*nodes[s-4])[1] + (*nodes[s-1])[1]),
-		0.5 * ((*nodes[s-4])[2] + (*nodes[s-1])[2])
-	));
-	nodes.push_back(new MeshLib::Node(
-		0.5 * ((*nodes[s-4])[0] + (*nodes[s-2])[0]),
-		0.5 * ((*nodes[s-4])[1] + (*nodes[s-2])[1]),
-		0.5 * ((*nodes[s-4])[2] + (*nodes[s-2])[2])
-	));
-	nodes.push_back(new MeshLib::Node(
-		0.5 * ((*nodes[s-4])[0] + (*nodes[s-3])[0]),
-		0.5 * ((*nodes[s-4])[1] + (*nodes[s-3])[1]),
-		0.5 * ((*nodes[s-4])[2] + (*nodes[s-3])[2])
-	));
-
-	std::array<MeshLib::Node*, 4> nodes_tet =
-		{{nodes[s], nodes[s+1], nodes[s+2], nodes[s-1]}};
-	std::array<MeshLib::Node*, 6> nodes_prism =
-		{{nodes[s-4], nodes[s-3], nodes[s-2], nodes[s], nodes[s+1], nodes[s+2]}};
-
-	elements.push_back(new MeshLib::Prism(nodes_prism, original_tet->getValue()));
-	elements.push_back(new MeshLib::Tet(nodes_tet, original_tet->getValue()));
-}
-
 
 /** Split a prism into two prisms */
 void splitElement(MeshLib::Prism* original_prism,
@@ -120,7 +88,6 @@ MeshLib::Mesh refineMesh(MeshLib::Mesh const& original_mesh)
 		MeshElemType const type(original_elements[k]->getGeomType());
 		switch (type) {
 		case MeshElemType::TETRAHEDRON:
-			splitElement(dynamic_cast<MeshLib::Tet*>(original_elements[k]), nodes, elements);
 			break;
 		case MeshElemType::PRISM:
 			splitElement(dynamic_cast<MeshLib::Prism*>(original_elements[k]), nodes, elements);
