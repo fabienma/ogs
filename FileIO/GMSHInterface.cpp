@@ -373,7 +373,7 @@ void GMSHInterface::writeGMSHInputFile(std::ostream& out)
 		}
 	}
 	std::vector<GeoLib::Polyline*> const* merged_plys(_geo_objs.getPolylineVec(_gmsh_geo_name));
-	DBUG("GMSHInterface::writeGMSHInputFile(): \t ok.");
+	DBUG("GMSHInterface::writeGMSHInputFile(): Obtained data.");
 
 	// *** compute topological hierarchy of polygons
 	if (merged_plys) {
