@@ -1,7 +1,7 @@
 /**
  * \file
  * \author Thomas Fischer
- * \date   Mar 27m 2012
+ * \date   Mar 27 2012
  * \brief  Definition of the GMSHPolygonTree class.
  *
  * \copyright
@@ -31,7 +31,7 @@ namespace GeoLib
     class PolylineWithSegmentMarker;
 }
 
-namespace FileIO 
+namespace FileIO
 {
 namespace GMSH {
 
