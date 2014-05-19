@@ -254,7 +254,8 @@ void GMSHPolygonTree::writeStations(std::size_t & pnt_id_offset, std::size_t sfc
 	const std::size_t n_stations(_stations.size());
 	for (std::size_t k(0); k<n_stations; k++) {
 		out << "Point(" << pnt_id_offset + k << ") = {" << (*(_stations[k]))[0] << "," << (*(_stations[k]))[1] << ", 0.0, ";
-		out << _mesh_density_strategy->getMeshDensityAtPoint(_stations[k]) << "};\n";
+		out << _mesh_density_strategy->getMeshDensityAtStation(_stations[k]) << "}; // Station "
+			<< static_cast<GeoLib::Station const*>(_stations[k])->getName() << " \n";
 		out << "Point { " << pnt_id_offset + k << " } In Surface { " << sfc_number << " };\n";
 	}
 	pnt_id_offset += n_stations;
