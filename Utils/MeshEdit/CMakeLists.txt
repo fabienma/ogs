@@ -57,3 +57,11 @@ TARGET_LINK_LIBRARIES( MoveMesh
 )
 SET_TARGET_PROPERTIES(MoveMesh PROPERTIES FOLDER Utilities)
 
+ADD_EXECUTABLE( CorrectCoordinates CorrectCoordinates.cpp )
+TARGET_LINK_LIBRARIES( CorrectCoordinates
+	BaseLib
+	FileIO
+	MathLib
+	MeshLib
+)
+SET_TARGET_PROPERTIES(CorrectCoordinates PROPERTIES FOLDER Utilities)
