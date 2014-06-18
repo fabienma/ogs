@@ -470,11 +470,11 @@ void BoostVtuInterface::buildPropertyTree()
 	piece_node.add("PointData", "\n\t\t\t");
 	// add node_area array here if necessary!
 
+	ptree &celldata_node = piece_node.add("CellData", "");
 	std::stringstream oss(std::stringstream::out);
 	std::vector<std::string> names(_mesh->getPropertyVecNames(false));
 	for (auto it(names.begin()); it!=names.end(); ++it) {
 		boost::optional<std::vector<unsigned> const&> props(_mesh->getUnsignedPropertyVec(*it));
-		ptree &celldata_node = piece_node.add("CellData", "");
 		celldata_node.put("<xmlattr>.Scalars", it->c_str());
 
 		oss << std::endl << data_array_indent;
@@ -492,7 +492,6 @@ void BoostVtuInterface::buildPropertyTree()
 		boost::optional<std::vector<double> const&> props(_mesh->getDoublePropertyVec(*it));
 
 		if (props) {
-			ptree & celldata_node = piece_node.add("CellData", "");
 			celldata_node.put("<xmlattr>.Scalars", it->c_str());
 
 			oss << std::endl << data_array_indent;
