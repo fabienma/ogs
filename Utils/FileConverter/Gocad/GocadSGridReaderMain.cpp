@@ -37,7 +37,7 @@
 #include "Mesh.h"
 #include "Node.h"
 #include "Elements/Element.h"
-#include "Elements/Edge.h"
+#include "Elements/Line.h"
 #include "MeshSurfaceExtraction.h"
 
 // Utils/FileConverter
