@@ -451,9 +451,8 @@ void BoostVtuInterface::buildPropertyTree()
 	const std::string data_array_indent("\t\t\t\t  ");
 
 	using boost::property_tree::ptree;
-	ptree doc;
 
-	ptree &root_node = doc.put("VTKFile", "");
+	ptree &root_node = _doc.put("VTKFile", "");
 	root_node.put("<xmlattr>.type", "UnstructuredGrid");
 	root_node.put("<xmlattr>.version", "0.1");
 	root_node.put("<xmlattr>.byte_order", "LittleEndian");
