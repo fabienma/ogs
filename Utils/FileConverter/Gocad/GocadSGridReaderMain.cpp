@@ -43,7 +43,36 @@
 // Utils/FileConverter
 #include "GocadSGridReader.h"
 
-void writeFaceSetNodes(MeshLib::Mesh const& mesh, std::size_t face_set_number, std::string const& path)
+void writeFaceSetNodesAsGLI(MeshLib::Mesh const& mesh,
+	std::size_t face_set_number,
+	std::string const& path)
+{
+	std::stringstream ss;
+	ss << "#POINTS\n";
+	std::size_t cnt(0); // count face set nodes
+	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
+		MeshLib::GocadNode* gocad_node(
+			dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(mesh.getNode(k))));
+
+		bool const face_set_member(gocad_node->isMemberOfFaceSet(face_set_number));
+		if (face_set_member) {
+			ss << cnt << " " << (*gocad_node)[0] << " " << (*gocad_node)[1] << " " << (*gocad_node)[2] << "\n";
+			cnt++;
+		}
+	}
+	ss << "#STOP";
+
+	if (cnt > 0) {
+		std::string fname(path + "Surfaces/FaceSetNodes-" + BaseLib::number2str(face_set_number) + ".gli");
+		INFO("Writing nodes of face set to file \"%s\".", fname.c_str());
+		std::ofstream os(fname.c_str());
+		os << ss.str();
+		os.close();
+	}
+}
+
+
+void writeFaceSetNodesAsCSV(MeshLib::Mesh const& mesh, std::size_t face_set_number, std::string const& path)
 {
 	std::stringstream ss;
 	std::size_t cnt(0); // count face set nodes
@@ -99,6 +128,7 @@ void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string c
 		std::string mesh_out_fname(path+"Surfaces/FaceSetMesh-" + BaseLib::number2str(l) + ".vtu");
 		INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 		vtu.writeToFile(mesh_out_fname);
+		writeFaceSetNodesAsGLI(*face_set_mesh, l, path);
 		delete face_set_mesh;
 	}
 }
@@ -214,8 +244,8 @@ int main(int argc, char* argv[])
 
 	// Define a value argument and add it to the command line.
 	// A value arg defines a flag and a type of value that it expects
-	TCLAP::ValueArg<std::string> sg_file_arg("s", "sg", "structured grid file name", true, "",
-			"string");
+	TCLAP::ValueArg<std::string> sg_file_arg("s", "sg",
+		"structured grid file name", true, "", "string");
 
 	// Add the argument sg_file_arg to the CmdLine object. The CmdLine object
 	// uses this Arg to parse the command line.
