@@ -28,6 +28,7 @@
 // BaseLib
 #include "tclap/CmdLine.h"
 #include "FileTools.h"
+#include "quicksort.h"
 #include "LogogSimpleFormatter.h"
 
 // FileIO
@@ -37,11 +38,46 @@
 #include "Mesh.h"
 #include "Node.h"
 #include "Elements/Element.h"
-#include "Elements/Line.h"
+#include "Elements/Quad.h"
 #include "MeshSurfaceExtraction.h"
 
 // Utils/FileConverter
 #include "GocadSGridReader.h"
+
+void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
+	std::size_t face_set_number,
+	std::string const& path)
+{
+	std::vector<MeshLib::Node*> nodes;
+	nodes.resize(mesh.getNNodes());
+	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
+		nodes[k] = new MeshLib::Node(*mesh.getNode(k));
+	}
+
+	std::vector<std::size_t> perm(mesh.getNNodes());
+	std::iota(perm.begin(), perm.end(), 0);
+	BaseLib::Quicksort<MeshLib::Node*>(nodes, 0, nodes.size(), perm);
+
+	std::vector<MeshLib::Element*> elements;
+	// generate quad elements
+	for (std::size_t c(0); c<11; c++) {
+		std::array<MeshLib::Node*,4> quad_nodes;
+		quad_nodes[0] = nodes[c];
+		quad_nodes[1] = nodes[c+1];
+		quad_nodes[2] = nodes[c+13];
+		quad_nodes[3] = nodes[c+12];
+		elements.push_back(new MeshLib::Quad(quad_nodes, c));
+	}
+	MeshLib::Mesh new_mesh(mesh.getName(), nodes, elements);
+
+	FileIO::BoostVtuInterface vtu;
+	vtu.setMesh(&new_mesh);
+	// output file name
+	std::string mesh_out_fname(path+"Surfaces/RegeneratedFaceSetMesh-"
+		+ BaseLib::number2str(face_set_number) + ".vtu");
+	INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
+	vtu.writeToFile(mesh_out_fname);
+}
 
 void writeFaceSetNodesAsGLI(MeshLib::Mesh const& mesh,
 	std::size_t face_set_number,
@@ -49,26 +85,16 @@ void writeFaceSetNodesAsGLI(MeshLib::Mesh const& mesh,
 {
 	std::stringstream ss;
 	ss << "#POINTS\n";
-	std::size_t cnt(0); // count face set nodes
 	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
-		MeshLib::GocadNode* gocad_node(
-			dynamic_cast<MeshLib::GocadNode*>(const_cast<MeshLib::Node*>(mesh.getNode(k))));
-
-		bool const face_set_member(gocad_node->isMemberOfFaceSet(face_set_number));
-		if (face_set_member) {
-			ss << cnt << " " << (*gocad_node)[0] << " " << (*gocad_node)[1] << " " << (*gocad_node)[2] << "\n";
-			cnt++;
-		}
+		ss << k << " " << *mesh.getNode(k) << "\n";
 	}
 	ss << "#STOP";
 
-	if (cnt > 0) {
-		std::string fname(path + "Surfaces/FaceSetNodes-" + BaseLib::number2str(face_set_number) + ".gli");
-		INFO("Writing nodes of face set to file \"%s\".", fname.c_str());
-		std::ofstream os(fname.c_str());
-		os << ss.str();
-		os.close();
-	}
+	std::string fname(path + "Surfaces/FaceSetNodes-" + BaseLib::number2str(face_set_number) + ".gli");
+	INFO("Writing nodes of face set to file \"%s\".", fname.c_str());
+	std::ofstream os(fname.c_str());
+	os << ss.str();
+	os.close();
 }
 
 
@@ -129,6 +155,7 @@ void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string c
 		INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 		vtu.writeToFile(mesh_out_fname);
 		writeFaceSetNodesAsGLI(*face_set_mesh, l, path);
+		regenerateFaceSetMesh(*face_set_mesh, l, path);
 		delete face_set_mesh;
 	}
 }
