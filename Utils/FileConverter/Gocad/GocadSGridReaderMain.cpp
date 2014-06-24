@@ -57,6 +57,15 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 	std::vector<std::size_t> perm(mesh.getNNodes());
 	std::iota(perm.begin(), perm.end(), 0);
 	BaseLib::Quicksort<MeshLib::Node*>(nodes, 0, nodes.size(), perm);
+	std::string sorted_nodes(path+"Surfaces/SortedNodes-" +
+		BaseLib::number2str(face_set_number)+".gli");
+	std::ofstream os(sorted_nodes);
+	os << "#POINTS\n";
+	for (std::size_t k(0); k<mesh.getNNodes(); k++) {
+		os << k << " " << *(nodes[k]) << "\n";
+	}
+	os << "#STOP";
+	os.close();
 
 	std::vector<MeshLib::Element*> elements;
 	// generate quad elements
