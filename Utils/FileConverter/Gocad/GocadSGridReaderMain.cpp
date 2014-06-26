@@ -51,18 +51,17 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 	std::vector<MeshLib::Node*> nodes;
 	nodes.resize(mesh.getNNodes());
 	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
-		nodes[k] = new MeshLib::Node(*mesh.getNode(k));
+		nodes[k] = new MeshLib::GocadNode(*
+			static_cast<MeshLib::GocadNode const*>(mesh.getNode(k)));
 	}
 
-	std::vector<std::size_t> perm(mesh.getNNodes());
-	std::iota(perm.begin(), perm.end(), 0);
-	BaseLib::Quicksort<MeshLib::Node*>(nodes, 0, nodes.size(), perm);
+	std::sort(nodes.begin(), nodes.end());
 	std::string sorted_nodes(path+"Surfaces/SortedNodes-" +
 		BaseLib::number2str(face_set_number)+".gli");
 	std::ofstream os(sorted_nodes);
 	os << "#POINTS\n";
 	for (std::size_t k(0); k<mesh.getNNodes(); k++) {
-		os << k << " " << *(nodes[k]) << "\n";
+		os << k << " " << *(nodes[k]) << "$NAME " << static_cast<MeshLib::GocadNode*>(nodes[k])->getLayerTransitionIndex() << "\n";
 	}
 	os << "#STOP";
 	os.close();
@@ -97,7 +96,7 @@ void writeFaceSetNodesAsGLI(MeshLib::Mesh const& mesh,
 	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
 		MeshLib::GocadNode const& node(
 			*static_cast<MeshLib::GocadNode const*>(mesh.getNode(k)));
-		ss << k << " " << node << " $NAME " << node.getLayerTransitionIndex() << "\n";
+		ss << k << " " << node << "$NAME " << node.getLayerTransitionIndex() << "\n";
 	}
 	ss << "#STOP";
 
