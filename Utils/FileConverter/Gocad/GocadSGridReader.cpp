@@ -36,6 +36,8 @@
 #include "Elements/Hex.h"
 #include "Elements/Quad.h"
 
+#include "GocadNode.h"
+
 namespace FileIO
 {
 
@@ -824,26 +826,26 @@ void GocadSGridReader::addFaceSetQuad(MeshLib::GocadNode* face_set_node, std::si
 		std::vector<MeshLib::Element*> &face_set_elements) const
 {
 	std::array<MeshLib::Node*, 4> quad_nodes;
-	quad_nodes[0] = new MeshLib::Node(*face_set_node);
+	quad_nodes[0] = new MeshLib::GocadNode(*face_set_node);
 	const std::size_t id(face_set_node->getID());
 	std::array<std::size_t, 3> c(_index_calculator.getCoordsForID(id));
 
 	const MeshLib::FaceIndicator dir(face_set_node->getFaceIndicator(face_set_number));
 	switch (dir) {
 	case MeshLib::FaceIndicator::U:
-		quad_nodes[1] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]);
-		quad_nodes[2] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2] + 1)]);
-		quad_nodes[3] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]);
+		quad_nodes[1] = new MeshLib::GocadNode(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]);
+		quad_nodes[2] = new MeshLib::GocadNode(*_nodes[_index_calculator(c[0], c[1] + 1, c[2] + 1)]);
+		quad_nodes[3] = new MeshLib::GocadNode(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]);
 		break;
 	case MeshLib::FaceIndicator::V:
-		quad_nodes[1] = new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]);
-		quad_nodes[2] = new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2] + 1)]);
-		quad_nodes[3] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]);
+		quad_nodes[1] = new MeshLib::GocadNode(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]);
+		quad_nodes[2] = new MeshLib::GocadNode(*_nodes[_index_calculator(c[0] + 1, c[1], c[2] + 1)]);
+		quad_nodes[3] = new MeshLib::GocadNode(*_nodes[_index_calculator(c[0], c[1], c[2] + 1)]);
 		break;
 	case MeshLib::FaceIndicator::W:
-		quad_nodes[1] = new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]);
-		quad_nodes[2] = new MeshLib::Node(*_nodes[_index_calculator(c[0] + 1, c[1] + 1, c[2])]);
-		quad_nodes[3] = new MeshLib::Node(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]);
+		quad_nodes[1] = new MeshLib::GocadNode(*_nodes[_index_calculator(c[0] + 1, c[1], c[2])]);
+		quad_nodes[2] = new MeshLib::GocadNode(*_nodes[_index_calculator(c[0] + 1, c[1] + 1, c[2])]);
+		quad_nodes[3] = new MeshLib::GocadNode(*_nodes[_index_calculator(c[0], c[1] + 1, c[2])]);
 		break;
 	default:
 		ERR("Could not create face for node with id %d.", id);
