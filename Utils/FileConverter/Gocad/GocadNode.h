@@ -32,14 +32,17 @@ enum class FaceIndicator : char
 class GocadNode : public Node
 {
 public:
-	GocadNode(double const*const coords, std::size_t id) :
-		Node(coords, id), _face_set_membership()
+	GocadNode(double const*const coords, std::size_t id,
+	std::size_t layer_transition_idx) :
+		Node(coords, id), _face_set_membership(),
+		_layer_transition_idx(layer_transition_idx)
 	{}
 
 	GocadNode(GocadNode const& src) :
 		Node(src.getCoords(), src._id),
 		_face_indicators(src._face_indicators),
-		_face_set_membership(src._face_set_membership)
+		_face_set_membership(src._face_set_membership),
+		_layer_transition_idx(src._layer_transition_idx)
 	{}
 
 	void setFaceSet(std::size_t face_set_number, std::size_t face_indicator)
@@ -97,12 +100,15 @@ public:
 		return it->second;
 	}
 
+	std::size_t getLayerTransitionIndex() const { return _layer_transition_idx; }
+
 protected:
 	friend class GocadSplitNode;
 	std::vector<std::pair<std::size_t, FaceIndicator> > _face_indicators;
 
 private:
 	std::bitset<128> _face_set_membership;
+	std::size_t _layer_transition_idx;
 };
 
 class GocadSplitNode : public GocadNode
@@ -110,8 +116,9 @@ class GocadSplitNode : public GocadNode
 public:
 	GocadSplitNode(double const*const coords, std::size_t id,
 			std::array<std::size_t,3> const& grid_coords,
-			std::array<bool, 8> affected_cells) :
-		GocadNode(coords, id),
+			std::array<bool, 8> affected_cells,
+			std::size_t layer_transition_idx) :
+		GocadNode(coords, id, layer_transition_idx),
 		_grid_coords(grid_coords) ,
 		_affected_cells(affected_cells)
 	{}

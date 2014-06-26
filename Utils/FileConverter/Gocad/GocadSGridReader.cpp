@@ -505,8 +505,10 @@ void GocadSGridReader::readNodesBinary()
 		} else {
 			coords[k % 3] = BaseLib::swapEndianness(BaseLib::readBinaryValue<float>(in));
 		}
-		if ((k + 1) % 3 == 0)
-			_nodes[k/3] = new MeshLib::GocadNode(coords, k/3);
+		if ((k + 1) % 3 == 0) {
+			const std::size_t layer_transition_idx(_index_calculator.getCoordsForID(k/3)[2]);
+			_nodes[k/3] = new MeshLib::GocadNode(coords, k/3, layer_transition_idx);
+		}
 		k++;
 	}
 	if (k != n * 3 && !in.eof())
@@ -677,8 +679,11 @@ void GocadSGridReader::readSplitInformation()
 			for (std::size_t k(0); k<affected_cells.size(); k++) {
 				ss >> affected_cells[k];
 			}
+			const std::size_t layer_transition_index(
+				_nodes[id]->getLayerTransitionIndex());
 			_split_nodes.push_back(
-					new MeshLib::GocadSplitNode(coords, id, grid_coords, affected_cells));
+				new MeshLib::GocadSplitNode(coords, id, grid_coords,
+					affected_cells, layer_transition_index));
 		}
 	}
 }
