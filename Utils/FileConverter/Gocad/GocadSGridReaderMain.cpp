@@ -55,7 +55,12 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 			static_cast<MeshLib::GocadNode const*>(mesh.getNode(k)));
 	}
 
-	std::sort(nodes.begin(), nodes.end());
+	std::sort(nodes.begin(), nodes.end(),
+		[](MeshLib::Node const*const first, MeshLib::Node const*const second)
+		{
+			return *first <= *second;
+		}
+	);
 	std::string sorted_nodes(path+"Surfaces/SortedNodes-" +
 		BaseLib::number2str(face_set_number)+".gli");
 	std::ofstream os(sorted_nodes);
