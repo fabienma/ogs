@@ -86,7 +86,9 @@ void writeFaceSetNodesAsGLI(MeshLib::Mesh const& mesh,
 	std::stringstream ss;
 	ss << "#POINTS\n";
 	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
-		ss << k << " " << *mesh.getNode(k) << "\n";
+		MeshLib::GocadNode const& node(
+			*static_cast<MeshLib::GocadNode const*>(mesh.getNode(k)));
+		ss << k << " " << node << " $NAME " << node.getLayerTransitionIndex() << "\n";
 	}
 	ss << "#STOP";
 
@@ -155,7 +157,7 @@ void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string c
 		INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 		vtu.writeToFile(mesh_out_fname);
 		writeFaceSetNodesAsGLI(*face_set_mesh, l, path);
-		regenerateFaceSetMesh(*face_set_mesh, l, path);
+//		regenerateFaceSetMesh(*face_set_mesh, l, path);
 		delete face_set_mesh;
 	}
 }
