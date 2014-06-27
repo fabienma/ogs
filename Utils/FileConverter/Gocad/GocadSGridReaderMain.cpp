@@ -59,17 +59,20 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 	perm.resize(mesh.getNNodes());
 	std::iota(perm.begin(), perm.end(), 0);
 	BaseLib::Quicksort<MeshLib::GocadNode*>(gocad_nodes, 0, gocad_nodes.size(), perm);
-//	std::sort(nodes.begin(), nodes.end(),
-//		[](MeshLib::Node const*const first, MeshLib::Node const*const second)
-//		{
-//			return *first <= *second;
-//		}
-//	);
+
+	auto last = std::unique(gocad_nodes.begin(), gocad_nodes.end(),
+		[](MeshLib::GocadNode* n0, MeshLib::GocadNode* n1) {
+			if ((*n0) <= (*n1) && (*n1) <= (*n0))
+				return true;
+		}
+	);
+	std::size_t const n(std::distance(gocad_nodes.begin(), last));
+
 	std::string sorted_nodes_fname(path+"Surfaces/SortedNodes-" +
 		BaseLib::number2str(face_set_number)+".gli");
 	std::ofstream os(sorted_nodes_fname);
 	os << "#POINTS\n";
-	for (std::size_t k(0); k<mesh.getNNodes(); k++) {
+	for (std::size_t k(0); k<n; k++) {
 		os << k << " " << *(gocad_nodes[k]) << "$NAME " << gocad_nodes[k]->getLayerTransitionIndex() << "\n";
 	}
 	os << "#STOP";
