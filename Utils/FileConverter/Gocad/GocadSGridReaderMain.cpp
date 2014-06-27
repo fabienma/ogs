@@ -48,33 +48,34 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 	std::size_t face_set_number,
 	std::string const& path)
 {
-	std::vector<MeshLib::Node*> nodes;
-	nodes.resize(mesh.getNNodes());
+	std::vector<MeshLib::GocadNode*> gocad_nodes;
+	gocad_nodes.resize(mesh.getNNodes());
 	for (std::size_t k(0); k < mesh.getNNodes(); k++) {
-		nodes[k] = new MeshLib::GocadNode(*
+		gocad_nodes[k] = new MeshLib::GocadNode(*
 			static_cast<MeshLib::GocadNode const*>(mesh.getNode(k)));
 	}
 
 	std::vector<std::size_t> perm;
 	perm.resize(mesh.getNNodes());
 	std::iota(perm.begin(), perm.end(), 0);
-	BaseLib::Quicksort<MeshLib::Node*>(nodes, 0, nodes.size(), perm);
+	BaseLib::Quicksort<MeshLib::GocadNode*>(gocad_nodes, 0, gocad_nodes.size(), perm);
 //	std::sort(nodes.begin(), nodes.end(),
 //		[](MeshLib::Node const*const first, MeshLib::Node const*const second)
 //		{
 //			return *first <= *second;
 //		}
 //	);
-	std::string sorted_nodes(path+"Surfaces/SortedNodes-" +
+	std::string sorted_nodes_fname(path+"Surfaces/SortedNodes-" +
 		BaseLib::number2str(face_set_number)+".gli");
-	std::ofstream os(sorted_nodes);
+	std::ofstream os(sorted_nodes_fname);
 	os << "#POINTS\n";
 	for (std::size_t k(0); k<mesh.getNNodes(); k++) {
-		os << k << " " << *(nodes[k]) << "$NAME " << static_cast<MeshLib::GocadNode*>(nodes[k])->getLayerTransitionIndex() << "\n";
+		os << k << " " << *(gocad_nodes[k]) << "$NAME " << gocad_nodes[k]->getLayerTransitionIndex() << "\n";
 	}
 	os << "#STOP";
 	os.close();
 
+/*
 	std::vector<MeshLib::Element*> elements;
 	// generate quad elements
 	for (std::size_t c(0); c<11; c++) {
@@ -94,6 +95,7 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 		+ BaseLib::number2str(face_set_number) + ".vtu");
 	INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 	vtu.writeToFile(mesh_out_fname);
+*/
 }
 
 void writeFaceSetNodesAsGLI(MeshLib::Mesh const& mesh,
