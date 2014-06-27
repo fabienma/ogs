@@ -84,20 +84,23 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 	}
 
 	std::vector<MeshLib::Element*> elements;
+	std::vector<unsigned> region_properties;
 	// generate quad elements
-	std::size_t const n_rows(n/14);
+	std::size_t const n_rows(n/14 - 1);
 
-	for (std::size_t r(0); r<n/14; ++r) {
-		for (std::size_t c(0); c<12; c++) {
+	for (std::size_t r(0); r<n_rows; ++r) {
+		for (std::size_t c(0); c<13; c++) {
 			std::array<MeshLib::Node*,4> quad_nodes;
 			quad_nodes[0] = nodes[14*r+c];
 			quad_nodes[1] = nodes[14*r+c+1];
 			quad_nodes[2] = nodes[14*(r+1)+c+1];
 			quad_nodes[3] = nodes[14*(r+1)+c];
-			elements.push_back(new MeshLib::Quad(quad_nodes, 14*r+c));
+			elements.push_back(new MeshLib::Quad(quad_nodes, c, 14*r+c));
+			region_properties.push_back(c);
 		}
 	}
 	MeshLib::Mesh new_mesh(mesh.getName(), nodes, elements);
+	new_mesh.addPropertyVec("Regions", region_properties);
 
 	FileIO::BoostVtuInterface vtu;
 	vtu.setMesh(&new_mesh);
@@ -107,7 +110,7 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 	INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 	vtu.writeToFile(mesh_out_fname);
 
-	std::for_each(gocad_nodes.begin(), gocad_nodes.end(),
+	std::for_each(gocad_nodes.begin(), last,
 		std::default_delete<MeshLib::GocadNode>());
 }
 
