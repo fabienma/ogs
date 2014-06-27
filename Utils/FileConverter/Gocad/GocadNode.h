@@ -17,6 +17,9 @@
 #include <vector>
 #include <bitset>
 
+// ThirdParty/logog
+#include "logog/include/logog.hpp"
+
 // MeshLib
 #include "Node.h"
 
@@ -110,6 +113,8 @@ private:
 	std::bitset<128> _face_set_membership;
 	std::size_t _layer_transition_idx;
 };
+
+bool operator<=(MeshLib::GocadNode const& n0, MeshLib::GocadNode const& n1);
 
 class GocadSplitNode : public GocadNode
 {

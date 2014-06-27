@@ -10,9 +10,9 @@ INCLUDE_DIRECTORIES(
 )
 
 ## Gocad SGrid to VTK file converter ##
-ADD_EXECUTABLE (GocadSGridReader GocadSGridReaderMain.cpp GocadSGridReader.cpp GocadSGridReader.h)
+ADD_EXECUTABLE (GocadSGridReader GocadSGridReaderMain.cpp GocadSGridReader.cpp GocadSGridReader.h GocadNode.h GocadNode.cpp)
 SET_TARGET_PROPERTIES(GocadSGridReader PROPERTIES FOLDER Utilities)
-TARGET_LINK_LIBRARIES(GocadSGridReader 
+TARGET_LINK_LIBRARIES(GocadSGridReader
 	GeoLib
 	MeshLib
 	FileIO
