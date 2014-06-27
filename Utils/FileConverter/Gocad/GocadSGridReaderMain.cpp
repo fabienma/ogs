@@ -78,16 +78,24 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 	os << "#STOP";
 	os.close();
 
-/*
+	std::vector<MeshLib::Node*> nodes;
+	for (std::size_t k(0); k<n; k++) {
+		nodes.push_back(new MeshLib::Node(*(gocad_nodes[k])));
+	}
+
 	std::vector<MeshLib::Element*> elements;
 	// generate quad elements
-	for (std::size_t c(0); c<11; c++) {
-		std::array<MeshLib::Node*,4> quad_nodes;
-		quad_nodes[0] = nodes[c];
-		quad_nodes[1] = nodes[c+1];
-		quad_nodes[2] = nodes[c+13];
-		quad_nodes[3] = nodes[c+12];
-		elements.push_back(new MeshLib::Quad(quad_nodes, c));
+	std::size_t const n_rows(n/14);
+
+	for (std::size_t r(0); r<n/14; ++r) {
+		for (std::size_t c(0); c<12; c++) {
+			std::array<MeshLib::Node*,4> quad_nodes;
+			quad_nodes[0] = nodes[14*r+c];
+			quad_nodes[1] = nodes[14*r+c+1];
+			quad_nodes[2] = nodes[14*(r+1)+c+1];
+			quad_nodes[3] = nodes[14*(r+1)+c];
+			elements.push_back(new MeshLib::Quad(quad_nodes, 14*r+c));
+		}
 	}
 	MeshLib::Mesh new_mesh(mesh.getName(), nodes, elements);
 
@@ -98,7 +106,9 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 		+ BaseLib::number2str(face_set_number) + ".vtu");
 	INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 	vtu.writeToFile(mesh_out_fname);
-*/
+
+	std::for_each(gocad_nodes.begin(), gocad_nodes.end(),
+		std::default_delete<MeshLib::GocadNode>());
 }
 
 void writeFaceSetNodesAsGLI(MeshLib::Mesh const& mesh,
@@ -172,6 +182,7 @@ void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string c
 		INFO("Face set mesh created. #nodes: %d, #elements: %d", face_set_mesh->getNNodes(),
 				face_set_mesh->getNElements());
 
+/*
 		FileIO::BoostVtuInterface vtu;
 		vtu.setMesh(face_set_mesh);
 		// output file name
@@ -179,6 +190,7 @@ void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string c
 		INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 		vtu.writeToFile(mesh_out_fname);
 		writeFaceSetNodesAsGLI(*face_set_mesh, l, path);
+*/
 		regenerateFaceSetMesh(*face_set_mesh, l, path);
 		delete face_set_mesh;
 	}
