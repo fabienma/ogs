@@ -67,6 +67,20 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 		}
 	);
 	std::size_t const n(std::distance(gocad_nodes.begin(), last));
+	std::size_t const n_cols(n/14 - 1);
+	for (std::size_t k(0); k<n_cols; ++k) {
+		// bubble sort column according to layer_transition_idx
+		for (std::size_t i(k*14); i<(k+1)*14; ++i) {
+			std::size_t i_idx(gocad_nodes[i]->getLayerTransitionIndex());
+			for (std::size_t j(i); j<(k+1)*14; ++j) {
+				if (gocad_nodes[j]->getLayerTransitionIndex() < i_idx) {
+					std::swap(gocad_nodes[i], gocad_nodes[j]);
+					i_idx = gocad_nodes[i]->getLayerTransitionIndex();
+				}
+			}
+		}
+	}
+
 
 	std::string sorted_nodes_fname(path+"Surfaces/SortedNodes-" +
 		BaseLib::number2str(face_set_number)+".gli");
@@ -86,9 +100,7 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 	std::vector<MeshLib::Element*> elements;
 	std::vector<unsigned> region_properties;
 	// generate quad elements
-	std::size_t const n_rows(n/14 - 1);
-
-	for (std::size_t r(0); r<n_rows; ++r) {
+	for (std::size_t r(0); r<n_cols; ++r) {
 		for (std::size_t c(0); c<13; c++) {
 			std::array<MeshLib::Node*,4> quad_nodes;
 			quad_nodes[0] = nodes[14*r+c];
