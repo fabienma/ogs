@@ -286,7 +286,6 @@ std::vector<std::string> Mesh::getPropertyVecNames(bool prop_type_double) const
 {
 	std::vector<std::string> names;
 	if (prop_type_double) {
-		names.resize(_double_prop_vecs.size());
 		std::transform(_double_prop_vecs.begin(), _double_prop_vecs.end(),
 				std::back_inserter(names),
 				[](std::pair<std::string, std::vector<double> > const& p) {
@@ -294,7 +293,6 @@ std::vector<std::string> Mesh::getPropertyVecNames(bool prop_type_double) const
 				}
 		);
 	} else {
-		names.resize(_unsigned_prop_vecs.size());
 		std::transform(_unsigned_prop_vecs.begin(), _unsigned_prop_vecs.end(),
 				std::back_inserter(names),
 				[](std::pair<std::string, std::vector<unsigned> > const&p) {
