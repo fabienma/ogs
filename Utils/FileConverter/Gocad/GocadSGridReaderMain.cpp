@@ -197,7 +197,7 @@ void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string c
 		INFO("Face set mesh created. #nodes: %d, #elements: %d", face_set_mesh->getNNodes(),
 				face_set_mesh->getNElements());
 
-/*
+
 		FileIO::BoostVtuInterface vtu;
 		vtu.setMesh(face_set_mesh);
 		// output file name
@@ -205,7 +205,7 @@ void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string c
 		INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 		vtu.writeToFile(mesh_out_fname);
 		writeFaceSetNodesAsGLI(*face_set_mesh, l, path);
-*/
+
 		regenerateFaceSetMesh(*face_set_mesh, l, path);
 		delete face_set_mesh;
 	}
