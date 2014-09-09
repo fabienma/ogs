@@ -167,8 +167,9 @@ MeshLib::Mesh* GMSHInterface::readGMSHMesh(std::string const& fname)
 	while (line.find("$EndElements") == std::string::npos)
 	{
 		// Node data
-		getline(in, line); //$Nodes Keywords
-		if (line.find("$Nodes") != std::string::npos)
+		while (line.find("$Nodes") == std::string::npos)
+			getline(in,line);
+
 		{
 			std::size_t n_nodes(0);
 			long id;
