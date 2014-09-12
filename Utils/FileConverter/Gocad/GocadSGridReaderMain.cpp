@@ -83,7 +83,7 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 
 
 	std::string sorted_nodes_fname(path+"Surfaces/SortedNodes-" +
-		BaseLib::number2str(face_set_number)+".gli");
+		std::to_string(face_set_number)+".gli");
 	std::ofstream os(sorted_nodes_fname);
 	os << "#POINTS\n";
 	for (std::size_t k(0); k<n; k++) {
@@ -118,7 +118,7 @@ void regenerateFaceSetMesh(MeshLib::Mesh const& mesh,
 	vtu.setMesh(&new_mesh);
 	// output file name
 	std::string mesh_out_fname(path+"Surfaces/RegeneratedFaceSetMesh-"
-		+ BaseLib::number2str(face_set_number) + ".vtu");
+		+ std::to_string(face_set_number) + ".vtu");
 	INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 	vtu.writeToFile(mesh_out_fname);
 
@@ -139,7 +139,7 @@ void writeFaceSetNodesAsGLI(MeshLib::Mesh const& mesh,
 	}
 	ss << "#STOP";
 
-	std::string fname(path + "Surfaces/FaceSetNodes-" + BaseLib::number2str(face_set_number) + ".gli");
+	std::string fname(path + "Surfaces/FaceSetNodes-" + std::to_string(face_set_number) + ".gli");
 	INFO("Writing nodes of face set to file \"%s\".", fname.c_str());
 	std::ofstream os(fname.c_str());
 	os << ss.str();
@@ -178,7 +178,7 @@ void writeFaceSetNodesAsCSV(MeshLib::Mesh const& mesh, std::size_t face_set_numb
 		}
 	}
 	if (cnt > 0) {
-		std::string fname(path + "Surfaces/FaceSetNodes-" + BaseLib::number2str(face_set_number) + ".csv");
+		std::string fname(path + "Surfaces/FaceSetNodes-" + std::to_string(face_set_number) + ".csv");
 		INFO("Writing nodes of face set to file \"%s\".", fname.c_str());
 		std::ofstream os(fname.c_str());
 		os << ss.str();
@@ -201,7 +201,7 @@ void generateFaceSetMeshes(FileIO::GocadSGridReader const& reader, std::string c
 		FileIO::BoostVtuInterface vtu;
 		vtu.setMesh(face_set_mesh);
 		// output file name
-		std::string mesh_out_fname(path+"Surfaces/FaceSetMesh-" + BaseLib::number2str(l) + ".vtu");
+		std::string mesh_out_fname(path+"Surfaces/FaceSetMesh-" + std::to_string(l) + ".vtu");
 		INFO("Writing face set mesh \"%s\" in vtu format.", mesh_out_fname.c_str());
 		vtu.writeToFile(mesh_out_fname);
 		writeFaceSetNodesAsGLI(*face_set_mesh, l, path);

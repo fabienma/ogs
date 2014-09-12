@@ -422,7 +422,7 @@ void GocadSGridReader::parseFaceSet(std::string &line, std::istream &in)
 		throw std::runtime_error("In GocadSGridReader::parseFaceSet() expected FACE_SET keyword not found.");
 	}
 	++it;
-	face_set_property._property_name += BaseLib::number2str(*it);
+	face_set_property._property_name += *it;
 	++it;
 	std::size_t const n_of_face_set_ids(static_cast<std::size_t>(atoi(it->c_str())));
 	std::size_t face_set_id_cnt(0);
@@ -817,7 +817,7 @@ MeshLib::Mesh* GocadSGridReader::getFaceSetMesh(std::size_t face_set_number) con
 		(*node)[1] -= center[1];
 	});
 
-	std::string mesh_name("GocadFaceSetMesh-" + BaseLib::number2str(face_set_number));
+	std::string mesh_name("GocadFaceSetMesh-" + std::to_string(face_set_number));
 	return new MeshLib::Mesh(mesh_name, face_set_nodes, face_set_elements);
 }
 
