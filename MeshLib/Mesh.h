@@ -105,7 +105,7 @@ protected:
 	 * calls setElementsConnectedToNodes to set the new information.
 	 * \attention This needs to be called if node neighbourhoods are reset.
 	 */
-	void resetElementsConnectedToNodes();	
+	void resetElementsConnectedToNodes();
 
 	/// Sets the dimension of the mesh.
 	void setDimension();
