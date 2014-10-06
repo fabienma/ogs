@@ -475,32 +475,26 @@ void BoostVtuInterface::buildPropertyTree()
 	std::stringstream oss(std::stringstream::out);
 	ptree &celldata_node = piece_node.add("CellData", "");
 
-	std::vector<std::string> names(_mesh->getPropertyVecNames(false));
+	std::vector<std::string> names(_mesh->getPropertyVecNames());
 	for (auto it(names.begin()); it!=names.end(); ++it) {
-		boost::optional<std::vector<unsigned> const&> props(_mesh->getUnsignedPropertyVec(*it));
+		boost::optional<std::vector<boost::any> const&> props;
+		_mesh->getPropertyVec(*it, props);
 
 		if (props) {
 			oss << std::endl << data_array_indent;
-			for (unsigned i = 0; i < nElems; i++)
-				oss << (*props)[i] << " ";
-			oss << std::endl << data_array_close;
-			this->addDataArray(celldata_node, it->c_str(), "Int32", oss.str());
-			oss.str(std::string());
-			oss.clear();
-		}
-	}
-
-	// write double properties
-	names = _mesh->getPropertyVecNames(true);
-	for (auto it(names.begin()); it!=names.end(); ++it) {
-		boost::optional<std::vector<double> const&> props(_mesh->getDoublePropertyVec(*it));
-
-		if (props) {
-			oss << std::endl << data_array_indent;
-			for (unsigned i = 0; i < nElems; i++)
-				oss << (*props)[i] << " ";
-			oss << std::endl << data_array_close;
-			this->addDataArray(celldata_node, it->c_str(), "Float64", oss.str());
+			if ((*props)[0].type() == typeid(std::vector<unsigned>)) {
+				for (unsigned i = 0; i < nElems; i++)
+					oss << boost::any_cast<unsigned>((*props)[i]) << " ";
+				oss << std::endl << data_array_close;
+				this->addDataArray(celldata_node, it->c_str(), "Int32", oss.str());
+			} else {
+				if ((*props)[0].type() == typeid(double)) {
+					for (unsigned i = 0; i < nElems; i++)
+						oss << boost::any_cast<double>((*props)[i]) << " ";
+					oss << std::endl << data_array_close;
+					this->addDataArray(celldata_node, it->c_str(), "Float64", oss.str());
+				}
+			}
 			oss.str(std::string());
 			oss.clear();
 		}
