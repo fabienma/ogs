@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <boost/optional.hpp>
+#include <boost/any.hpp>
 
 #include "MeshEnums.h"
 
@@ -103,24 +104,18 @@ public:
 	 * properties are stored in the vector elem_props. The number of entries
 	 * of this vector should be the same as the number of elements for scalar
 	 * values and a multiple of the number of elements for vector or matrix
-	 * properties. This method adds properties that can be expressed deploying
-	 * floating point numbers.
+	 * properties.
 	 * @param prop_name The name of the property, for instance permeability.
 	 * @param elem_props The vector containing the property values.
 	 */
-	void addPropertyVec(std::string const& prop_name, std::vector<double> const& elem_props);
-
-	/**
-	 * Adds for each element a property associated with prop_name. The
-	 * properties are stored in the vector elem_props. The number of entries
-	 * of this vector should be the same as the number of elements for scalar
-	 * values and a multiple of the number of elements for vector or matrix
-	 * properties. This method adds properties that can be expressed deploying
-	 * integers.
-	 * @param prop_name The name of the property, for instance MateriaID.
-	 * @param elem_props The vector containing the property values.
-	 */
-	void addPropertyVec(std::string const& prop_name, std::vector<unsigned> const& elem_props);
+	template <typename T>
+	void addPropertyVec(std::string const& prop_name,
+		std::vector<T> const& elem_props)
+	{
+		_prop_vecs.push_back(
+			std::pair<std::string,std::vector<T>>(prop_name, elem_props)
+		);
+	}
 
 	/**
 	 * Get the vector of properties associated with the name prop_name.
@@ -129,18 +124,22 @@ public:
 	 * @param prop_name The name of the property.
 	 * @return Vector containing the properties.
 	 */
-	boost::optional<std::vector<double> const&>
-	getDoublePropertyVec(std::string const& prop_name) const;
+	template <typename T>
+	void getPropertyVec(std::string const& prop_name,
+		boost::optional<std::vector<T> const&> & prop_vec) const
+	{
+		auto it = _prop_vecs.begin();
+		while (it != _prop_vecs.end() && it->first.compare(prop_name) != 0)
+			++it;
+		if (it == _prop_vecs.end())
+			prop_vec = boost::optional<std::vector<T> const&>();
+		else {
+			if (((it->second)[0]).type() == typeid(T))
+				prop_vec = boost::optional<std::vector<T> const&>(it->second);
+		}
+	}
 
-	/**
-	 * Get the vector of properties associated with the name prop_name.
-	 * If there is not a vector associate with the given name an
-	 * invalid_argument exception is thrown.
-	 * @param prop_name The name of the property.
-	 * @return Vector containing the properties.
-	 */
-	boost::optional<std::vector<unsigned> const&>
-	getUnsignedPropertyVec(std::string const& prop_name) const;
+	void removePropertyVec(std::string const& prop_name);
 
 	/**
 	 * Returns the names of the available properties.
@@ -149,7 +148,7 @@ public:
 	 * all available unsigned property vectors will be returned.
 	 * @return The names of the available properties.
 	 */
-	std::vector<std::string> getPropertyVecNames(bool prop_type_double) const;
+	std::vector<std::string> getPropertyVecNames() const;
 
 protected:
 	/// Set the minimum and maximum length over the edges of the mesh.
@@ -183,8 +182,7 @@ protected:
 	std::vector<Node*> _nodes;
 	std::vector<Element*> _elements;
 
-	std::vector<std::pair<std::string, std::vector<double> > > _double_prop_vecs;
-	std::vector<std::pair<std::string, std::vector<unsigned> > > _unsigned_prop_vecs;
+	std::vector<std::pair<std::string, std::vector<boost::any> > > _prop_vecs;
 }; /* class */
 
 } /* namespace */
