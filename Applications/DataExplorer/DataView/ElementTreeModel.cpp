@@ -51,7 +51,8 @@ void ElementTreeModel::setElement(vtkUnstructuredGridAlgorithm const*const grid,
 
 	const MeshLib::Mesh* mesh = source->GetMesh();
 	const MeshLib::Element* elem = mesh->getElement(elem_index);
-    boost::optional<std::vector<unsigned> const&> mat_ids = mesh->getUnsignedPropertyVec("MaterialIDs");
+    boost::optional<std::vector<boost::any> const&> mat_ids;
+	mesh->getPropertyVec("MaterialIDs", mat_ids);
 
 	QList<QVariant> elemData;
 	elemData << "Element " + QString::number(elem_index) << "" << "" << "";
@@ -65,7 +66,8 @@ void ElementTreeModel::setElement(vtkUnstructuredGridAlgorithm const*const grid,
 
 	if (mat_ids) {
 		QList<QVariant> materialData;
-		materialData << "MaterialID: " << QString::number((*mat_ids)[elem_index]);
+		materialData << "MaterialID: " << QString::number(
+			boost::any_cast<unsigned>((*mat_ids)[elem_index]));
 		TreeItem* matItem = new TreeItem(materialData, elemItem);
 		elemItem->appendChild(matItem);
 	}

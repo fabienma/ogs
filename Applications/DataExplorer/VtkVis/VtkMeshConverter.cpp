@@ -356,7 +356,7 @@ MeshLib::Mesh* VtkMeshConverter::convertUnstructuredGrid(vtkUnstructuredGrid* gr
 	MeshLib::Mesh *mesh(new MeshLib::Mesh("vtkUnstructuredGrid", nodes, elements));
 
 	vtkDataArray* scalars = grid->GetCellData()->GetScalars("MaterialIDs");
-	std::vector<unsigned> material_ids(nElems);
+	std::vector<boost::any> material_ids(nElems);
 	if (scalars) {
 		for (std::size_t i(0); i<nElems; ++i) {
 			material_ids[i] = static_cast<unsigned>(scalars->GetComponent(i,0));
