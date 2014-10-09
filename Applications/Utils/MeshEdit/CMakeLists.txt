@@ -78,7 +78,18 @@ TARGET_LINK_LIBRARIES ( checkMesh
 	FileIO
 	MathLib
 	MeshLib
+
 )
 
 SET_TARGET_PROPERTIES(checkMesh
+	PROPERTIES FOLDER Utilities)
+
+ADD_EXECUTABLE( ExtractSurface ExtractSurface.cpp )
+TARGET_LINK_LIBRARIES( ExtractSurface
+	BaseLib
+	FileIO
+	MathLib
+	MeshLib
+)
+SET_TARGET_PROPERTIES(ExtractSurface
 	PROPERTIES FOLDER Utilities)
