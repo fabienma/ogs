@@ -226,6 +226,13 @@ bool gaussPointInTriangle(MathLib::Point3d const& q,
                           double eps_pnt_out_of_plane,
                           double eps_pnt_out_of_tri)
 {
+	// quick check if search point q is near the edge points of triangle
+	double const eps (std::min(eps_pnt_out_of_plane, eps_pnt_out_of_tri));
+	if (MathLib::sqrDist(q,a) < eps ||
+		MathLib::sqrDist(q,b) < eps ||
+		MathLib::sqrDist(q,c) < eps)
+		return true;
+
 	MathLib::Vector3 const v(a, b);
 	MathLib::Vector3 const w(a, c);
 
