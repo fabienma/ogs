@@ -72,5 +72,22 @@ TEST(GeoLib, IsPointInTriangle)
 	q = GeoLib::Point (0.1, 0.1, 0.1);
 	EXPECT_FALSE(GeoLib::gaussPointInTriangle(q, a, b, c));
 	EXPECT_FALSE(GeoLib::barycentricPointInTriangle(q, a, b, c));
+
+	// the following test case is provided by NB
+	// the floating point number representation of the search point uses
+	// one digit more than the floating point numbers of the triangle
+	// coordinates
+	// mesh node 35
+	GeoLib::Point const search_pnt(0.1305262, 0.9914449, 0);
+	// tri 41
+	GeoLib::Point const t41_p0(0.130526, 0.991445, 0);
+	GeoLib::Point const t41_p1(0.0871557, 0.996195, 0);
+	GeoLib::Point const t41_p2(1.77402, 0.923497, 0);
+	EXPECT_TRUE(GeoLib::gaussPointInTriangle(search_pnt, t41_p0, t41_p1, t41_p2));
+	// tri 43
+	GeoLib::Point const t43_p0(0.173648, 0.984808, 0);
+	GeoLib::Point const t43_p1(0.130526, 0.991445, 0);
+	GeoLib::Point const t43_p2(1.77402, 0.923497, 0);
+	EXPECT_TRUE(GeoLib::gaussPointInTriangle(search_pnt, t43_p0, t43_p1, t43_p2));
 }
 
