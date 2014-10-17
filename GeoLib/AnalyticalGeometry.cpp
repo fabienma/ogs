@@ -31,6 +31,7 @@
 // MathLib
 #include "LinAlg/Solvers/GaussAlgorithm.h"
 #include "MathTools.h"
+#include "MathLib/Vector3.h"
 
 namespace GeoLib
 {
@@ -197,18 +198,25 @@ bool lineSegmentsIntersect(const GeoLib::Polyline* ply,
 	return false;
 }
 
-bool isPointInTriangle(const GeoLib::Point* p, const GeoLib::Point* a, const GeoLib::Point* b,
-                       const GeoLib::Point* c)
+bool isPointInTriangle(const GeoLib::Point* p,
+	const GeoLib::Point* a,
+	const GeoLib::Point* b,
+	const GeoLib::Point* c)
 {
 	return isPointInTriangle(*p, *a, *b, *c);
 }
 
 bool isPointInTriangle(GeoLib::Point const& q,
-                       GeoLib::Point const& a,
-                       GeoLib::Point const& b,
-                       GeoLib::Point const& c,
-                       double eps)
+	GeoLib::Point const& a,
+	GeoLib::Point const& b,
+	GeoLib::Point const& c,
+	double eps)
 {
+	if (MathLib::sqrDist(q,a) < eps
+		|| MathLib::sqrDist(q,b) < eps
+		|| MathLib::sqrDist(q,c) < eps)
+		return true;
+
 	MathLib::Vector3 const v(a, b);
 	MathLib::Vector3 const w(a, c);
 
@@ -225,18 +233,54 @@ bool isPointInTriangle(GeoLib::Point const& q,
 	MathLib::GaussAlgorithm<MathLib::DenseMatrix<double>, double*> gauss(mat);
 	gauss.solve(y);
 
-	const double lower (std::numeric_limits<float>::epsilon());
-	const double upper (1 + lower);
+	const double lower (-eps);
+	const double upper (1 + eps);
 
-	if (-lower <= y[0] && y[0] <= upper && -lower <= y[1] && y[1] <= upper && y[0] + y[1] <=
+	if (lower <= y[0] && y[0] <= upper && lower <= y[1] && y[1] <= upper && y[0] + y[1] <=
 	    upper) {
 		GeoLib::Point const q_projected(
 			a[0] + y[0] * v[0] + y[1] * w[0],
 			a[1] + y[0] * v[1] + y[1] * w[1],
 			a[2] + y[0] * v[2] + y[1] * w[2]
 		);
-		if (MathLib::sqrDist(q, q_projected) < eps)
+		if (MathLib::sqrDist(q, q_projected) < eps) {
+			std::cout << "pnt " << q << " in triangle " << a << "/" << b << "/"
+				<< c << "\n";
+			#ifndef NDEBUG
+			MathLib::Vector3 n(MathLib::crossProduct(v,w));
+			n.normalize();
+			MathLib::Vector3 const u(b,c);
+			GeoLib::Point const p0(
+				(MathLib::Vector3(a) + lower*v + lower*w + eps*n).getCoords()
+			);
+			GeoLib::Point const p1(
+				(MathLib::Vector3(a) + upper*v - lower*u + eps*n).getCoords()
+			);
+			GeoLib::Point const p2(
+				(MathLib::Vector3(a) + upper*w + lower*u + eps*n).getCoords()
+			);
+			GeoLib::Point const p3(
+				(MathLib::Vector3(a) + lower*v + lower*w - eps*n).getCoords()
+			);
+			GeoLib::Point const p4(
+				(MathLib::Vector3(a) + upper*v - lower*u - eps*n).getCoords()
+			);
+			GeoLib::Point const p5(
+				(MathLib::Vector3(a) + upper*w + lower*u - eps*n).getCoords()
+			);
+			std::ofstream os("Prisms.gli");
+			os << "#POINTS\n";
+			os << "0 " << p0 << "\n";
+			os << "1 " << p1 << "\n";
+			os << "2 " << p2 << "\n";
+			os << "3 " << p3 << "\n";
+			os << "4 " << p4 << "\n";
+			os << "5 " << p5 << "\n";
+			os << "#STOP\n";
+			os.close();
+			#endif
 			return true;
+		}
 	}
 
 	return false;
