@@ -97,6 +97,14 @@ public:
 				name.c_str());
 			return;
 		}
+		// check if value type (T) is a pointer
+		if (std::is_pointer(T)) {
+			std::vector<T> const& vec(
+				boost::any_cast<std::vector<T> const&>(it->second)
+			);
+			// delete vec entries
+			...
+		}
 		_properties.erase(it);
 	}
 
