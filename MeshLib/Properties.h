@@ -29,22 +29,43 @@
 
 namespace MeshLib
 {
-// forward declaration
-class Mesh;
 
 /// Properties associated to mesh items (nodes or elements).
 class Properties
 {
 public:
-	explicit Properties(MeshLib::Mesh const& mesh)
-		: _mesh(mesh)
-	{}
+
+	template <typename T>
+	boost::optional<PropertyVector<T> &>
+	newProperty(std::string const& name, MeshItemType mesh_item_type)
+	{
+		PropertyKeyType property_key(name, mesh_item_type);
+		std::map<PropertyKeyType, boost::any>::const_iterator it(
+			_properties.find(property_key)
+		);
+		if (it != _properties.end()) {
+			WARN("A property of the name \"%s\" already assigned to the mesh.",
+				name.c_str());
+			return boost::optional<PropertyVector<T> &>();
+		}
+		auto entry_info(
+			_properties.insert(
+				std::pair<PropertyKeyType, boost::any>(
+					property_key, boost::any(PropertyVector<T>())
+				)
+			)
+		);
+		return boost::optional<PropertyVector<T> &>(
+			boost::any_cast<PropertyVector<T> &>(
+				(entry_info.first)->second)
+			);
+	}
 
 	/// Method to get a vector of property values.
 	template <typename T>
-	boost::optional<PropertyVector<T> *>
+	boost::optional<PropertyVector<T> const&>
 	getProperty(std::string const& name,
-		MeshItemType mesh_item_type) const
+		MeshItemType mesh_item_type)
 	{
 		PropertyKeyType property_key(name, mesh_item_type);
 		std::map<PropertyKeyType, boost::any>::const_iterator it(
@@ -52,13 +73,15 @@ public:
 		);
 		if (it != _properties.end()) {
 			try {
-				return boost::any_cast<PropertyVector<T> *>(it->second);
+				return boost::optional<PropertyVector<T> const&>(
+						boost::any_cast<PropertyVector<T> const&>(it->second)
+					);
 			} catch (boost::bad_any_cast const&) {
 				ERR("A property with the desired data type is not available.");
-				return boost::optional<PropertyVector<T> *>();
+				return boost::optional<PropertyVector<T> const&>();
 			}
 		} else {
-			return boost::optional<PropertyVector<T> *>();
+			return boost::optional<PropertyVector<T> const&>();
 		}
 	}
 
@@ -70,7 +93,7 @@ public:
 	/// separate value for each mesh item.
 	/// The user has to ensure the correct usage of the vector later on.
 	template <typename T>
-	void addProperty(std::string const& name, PropertyVector<T> * property,
+	void addProperty(std::string const& name, PropertyVector<T> & property,
 		MeshItemType mesh_item_type)
 	{
 		PropertyKeyType property_key(name, mesh_item_type);
@@ -82,7 +105,7 @@ public:
 				name.c_str());
 			return;
 		}
-		_properties[property_key] = boost::any(property);
+		_properties[property_key] = boost::any(PropertyVector<T>(property));
 	}
 
 	void removeProperty(std::string const& name,
@@ -119,8 +142,6 @@ private:
 		}
 	};
 
-	/// Mesh object the properties are assigned to.
-	MeshLib::Mesh const& _mesh;
 	/// A mapping from property's name to the stored object of any type.
 	/// See addProperty() and getProperty() documentation.
 	std::map<PropertyKeyType, boost::any> _properties;

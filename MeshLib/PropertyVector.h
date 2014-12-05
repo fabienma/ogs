@@ -1,7 +1,4 @@
 /**
- * \file
- * \brief  Definition of the class Properties that implements a container of
- *         properties.
  *
  * \copyright
  * Copyright (c) 2012-2014, OpenGeoSys Community (http://www.opengeosys.org)
@@ -26,6 +23,10 @@ template <typename PROP_VAL_TYPE>
 class PropertyVector : public std::vector<PROP_VAL_TYPE>
 {
 public:
+	PropertyVector()
+		: std::vector<PROP_VAL_TYPE>()
+	{}
+
 	PropertyVector(std::size_t size)
 		: std::vector<PROP_VAL_TYPE>(size)
 	{}
