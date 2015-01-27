@@ -39,6 +39,17 @@ public:
 };
 std::size_t const MeshLibMeshProperties::mesh_size;
 
+TEST_F(MeshLibMeshProperties, GetPropertyAsDoubleEmpty)
+{
+	ASSERT_TRUE(mesh != nullptr);
+
+	std::string const prop_name("TestProperty");
+	boost::optional<std::vector<double>> p(
+		mesh->getProperties().getPropertyAsDouble(prop_name)
+	);
+	ASSERT_TRUE(!p);
+}
+
 TEST_F(MeshLibMeshProperties, AddDoubleProperties)
 {
 	ASSERT_TRUE(mesh != nullptr);

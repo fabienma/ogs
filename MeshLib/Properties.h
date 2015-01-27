@@ -137,6 +137,21 @@ public:
 			);
 	}
 
+	boost::optional<std::vector<double>>
+	getPropertyAsDouble(std::string const& name) const
+	{
+		PropertyKeyType const property_key(name, MeshItemType::Cell);
+		std::map<PropertyKeyType, boost::any>::const_iterator it(
+			_properties.find(property_key)
+		);
+
+		if (it == _properties.end()) {
+			return boost::optional<std::vector<double>>();
+		}
+
+
+	}
+
 	/// Method to get a vector of property values.
 	template <typename T>
 	boost::optional<PropertyVector<T> const&>
