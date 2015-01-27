@@ -175,7 +175,14 @@ public:
 			return boost::optional<std::vector<double>>();
 		}
 
+		auto types_it =  _types.find(property_key);
+		assert(types_it != _types.end());
 
+		std::type_index p_type_index = types_it->second;
+		if (p_type_index == std::type_index(typeid(double))) {
+			A<double> a;
+			return a(it->second);
+		}
 	}
 
 	/// Method to get a vector of property values.

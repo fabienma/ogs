@@ -50,6 +50,44 @@ TEST_F(MeshLibMeshProperties, GetPropertyAsDoubleEmpty)
 	ASSERT_TRUE(!p);
 }
 
+TEST_F(MeshLibMeshProperties, GetPropertyAsDoubleDouble)
+{
+	ASSERT_TRUE(mesh != nullptr);
+	const std::size_t size(mesh_size*mesh_size*mesh_size);
+
+	std::string const prop_name("TestProperty");
+	boost::optional<MeshLib::PropertyVector<double> &> double_properties(
+		mesh->getProperties().createNewPropertyVector<double>(prop_name,
+			MeshLib::MeshItemType::Cell)
+	);
+	(*double_properties).resize(size);
+	std::iota((*double_properties).begin(), (*double_properties).end(), 1);
+
+	boost::optional<std::vector<double>> p(
+		mesh->getProperties().getPropertyAsDouble(prop_name)
+	);
+
+	ASSERT_FALSE(!p);
+	boost::optional<MeshLib::PropertyVector<double> const&>
+		double_properties_cpy(mesh->getProperties().getProperty<double>(
+			prop_name, MeshLib::MeshItemType::Cell
+		));
+	ASSERT_FALSE(!double_properties_cpy);
+
+	for (std::size_t k(0); k<size; k++) {
+		ASSERT_EQ((*p)[k], (*double_properties_cpy)[k]);
+	}
+
+	mesh->getProperties().removeProperty(prop_name, MeshLib::MeshItemType::Cell);
+	boost::optional<MeshLib::PropertyVector<double> const&>
+		removed_double_properties(mesh->getProperties().getProperty<double>(prop_name,
+			MeshLib::MeshItemType::Cell)
+		);
+
+	ASSERT_TRUE(!removed_double_properties);
+}
+
+
 TEST_F(MeshLibMeshProperties, AddDoubleProperties)
 {
 	ASSERT_TRUE(mesh != nullptr);
