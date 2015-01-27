@@ -183,6 +183,9 @@ public:
 			A<double> a;
 			return a(it->second);
 		}
+//		std::vector<double> result;
+
+//		result = xxx_map[p_type_index](*it);
 	}
 
 	/// Method to get a vector of property values.
