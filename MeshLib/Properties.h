@@ -30,6 +30,27 @@
 namespace MeshLib
 {
 
+//default
+template <typename T>
+struct A
+{
+	boost::optional<std::vector<double>> operator()(boost::any const& any)
+	{
+		boost::optional<std::vector<double>>();
+	}
+};
+
+// double
+template <>
+struct A<double>
+{
+	boost::optional<std::vector<double>> operator()(boost::any const& any)
+	{
+		PropertyVector<double> const& p = boost::any_cast<PropertyVector<double>>(any);
+		return static_cast<std::vector<double>>(p);
+	}
+};
+
 /// @brief Property manager on mesh items.
 /// Class Properties manages scalar, vector or matrix properties. For instance
 /// in groundwater flow porosity is a scalar property and permeabilty can be
