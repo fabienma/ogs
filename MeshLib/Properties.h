@@ -17,6 +17,8 @@
 #include <cstdlib>
 #include <string>
 #include <map>
+#include <typeindex>
+#include <typeinfo>
 
 #include <boost/any.hpp>
 #include <boost/optional.hpp>
@@ -95,6 +97,9 @@ public:
 				)
 			)
 		);
+
+		_types.insert(std::make_pair(property_key, std::type_index(typeid(T))));
+
 		return boost::optional<PropertyVector<T> &>(
 			boost::any_cast<PropertyVector<T> &>((entry_info.first)->second)
 			);
@@ -249,6 +254,8 @@ private:
 			return res < 0;
 		}
 	};
+
+	std::map<PropertyKeyType, std::type_index> _types;
 
 	/// A mapping from property's name to the stored object of any type.
 	/// See addProperty() and getProperty() documentation.
