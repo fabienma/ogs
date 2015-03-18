@@ -97,10 +97,10 @@ private:
 
 	// Revises an element by removing collapsed nodes, using the nodes vector from the result mesh.
 	std::size_t reduceElement(MeshLib::Element const*const element,
-	                   unsigned n_unique_nodes,
-	    			   const std::vector<MeshLib::Node*> &nodes,
-	    			   std::vector<MeshLib::Element*> &elements,
-	    			   unsigned min_elem_dim) const;
+		unsigned n_unique_nodes,
+		const std::vector<MeshLib::Node*> &nodes,
+		std::vector<MeshLib::Element*> &elements,
+		unsigned min_elem_dim) const;
 
 	/// Cleans up all nodes and elements if something went wrong
 	void cleanUp(std::vector<MeshLib::Node*> &nodes, std::vector<MeshLib::Element*> &new_elements) const;
