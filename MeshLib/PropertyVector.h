@@ -50,7 +50,7 @@ public:
 
 	PropertyVectorBase* clone(std::vector<std::size_t> const& exclude_positions) const
 	{
-		PropertyVector<PROP_VAL_TYPE> *t (new PropertyVector<PROP_VAL_TYPE>(_property_name,
+		PropertyVector<PROP_VAL_TYPE> *t(new PropertyVector<PROP_VAL_TYPE>(_property_name,
 			_mesh_item_type, _tuple_size));
 		BaseLib::excludeObjectCopy(*this, exclude_positions, *t);
 		return t;
