@@ -227,6 +227,25 @@ public:
 		return exclude_copy;
 	}
 
+	Properties() {}
+
+	Properties(Properties const& properties)
+		: _properties(properties._properties)
+	{
+		std::vector<std::size_t> exclude_positions;
+		for (auto p : _properties) {
+			PropertyVectorBase *t(p.second->clone(exclude_positions));
+			p.second = t;
+		}
+	}
+
+	~Properties()
+	{
+		for (auto property_vector : _properties) {
+			delete property_vector.second;
+		}
+	}
+
 private:
 	/// A mapping from property's name to the stored object of any type.
 	/// See addProperty() and getProperty() documentation.
