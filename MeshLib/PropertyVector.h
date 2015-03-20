@@ -56,6 +56,11 @@ public:
 		return t;
 	}
 
+	~PropertyVector()
+	{
+		std::cerr << "PV: deleting object at address " << this << "\n";
+	}
+
 protected:
 	/// @brief The constructor taking meta information for the data.
 	/// @param property_name a string describing the property
@@ -105,9 +110,11 @@ class PropertyVector<T*> : public std::vector<T*>,
 {
 friend class Properties;
 public:
+	PropertyVector() { std::cerr << "default: PV*: " << this << "\n"; }
 	/// Destructor ensures the deletion of the heap-constructed objects.
 	~PropertyVector()
 	{
+		std::cerr << "PV*: deleting object at address " << this << "\n";
 		std::for_each(
 			this->begin(), this->end(), std::default_delete<T>()
 		);
@@ -131,14 +138,26 @@ public:
 
 	PropertyVectorBase* clone(std::vector<std::size_t> const& exclude_positions) const
 	{
+		// copy mapping
 		std::vector<std::size_t> item2group_mapping(
 			BaseLib::excludeObjectCopy(_item2group_mapping, exclude_positions)
 		);
-		PropertyVector<T*> *t (new PropertyVector<T*>(this->size()/_tuple_size,
+		// create new PropertyVector with modified mapping
+		PropertyVector<T*> *t(new PropertyVector<T*>(this->size()/_tuple_size,
 			item2group_mapping, _property_name, _mesh_item_type, _tuple_size));
+		// copy pointers to property values
 		for (std::size_t j(0); j<item2group_mapping.size(); j++) {
 			t->operator[](j) = (*static_cast<std::vector<T*> const*>(this))[item2group_mapping[j]];
 		}
+		// reset the pointer to new property values
+		std::cerr << "PV* values: ";
+		for (std::size_t j(0); j<this->size(); j++) {
+			(*t)[j] = new T(*(*t)[j]);
+			std::cerr << *(*t)[j] << " ";
+		}
+		std::cerr << "\n";
+
+		std::cerr << "PV* clone from " << this << ", new object: " << t << "\n";
 		return t;
 	}
 
