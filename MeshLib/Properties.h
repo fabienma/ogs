@@ -227,20 +227,23 @@ public:
 		return exclude_copy;
 	}
 
-	Properties() {}
+	Properties() { std::cerr << "default: Properties object at address " << this << "\n"; }
 
 	Properties(Properties const& properties)
 		: _properties(properties._properties)
 	{
+		std::cerr << "copy: Properties object at address " << this
+			<< ", source: " << &(properties) << std::endl;
 		std::vector<std::size_t> exclude_positions;
-		for (auto p : _properties) {
-			PropertyVectorBase *t(p.second->clone(exclude_positions));
-			p.second = t;
+		for (auto it(_properties.begin()); it != _properties.end(); ++it) {
+			PropertyVectorBase *t(it->second->clone(exclude_positions));
+			it->second = t;
 		}
 	}
 
 	~Properties()
 	{
+		std::cerr << "P: destruct Properties object at address " << this << "\n";
 		for (auto property_vector : _properties) {
 			delete property_vector.second;
 		}
