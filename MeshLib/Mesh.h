@@ -126,7 +126,7 @@ public:
 	MeshLib::Properties const& getProperties() const { return _properties; }
 
 	/// Updates the property vector "MaterialIDs" with the values from the elements
-	void updateMaterialGroups();
+//	void updateMaterialGroups();
 
 protected:
 	/// Set the minimum and maximum length over the edges of the mesh.

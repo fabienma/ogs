@@ -400,6 +400,7 @@ TEST_F(MeshLibProperties, CopyConstructor)
 
 	// create a copy from the original Properties object
 	MeshLib::Properties properties_copy(mesh->getProperties());
+
 	// check if the Properties have a PropertyVector with the correct name
 	ASSERT_TRUE(properties_copy.hasPropertyVector(prop_name));
 	// fetch the PropertyVector from the copy of the Properties object
@@ -411,7 +412,7 @@ TEST_F(MeshLibProperties, CopyConstructor)
 	// check if the values in the PropertyVector of the copy of the Properties
 	// are the same
 	for (std::size_t k(0); k<n_items; k++) {
-		ASSERT_EQ((*group_properties)[k], (*group_properties_cpy)[k]);
+		EXPECT_EQ((*group_properties)[k], (*group_properties_cpy)[k]);
 	}
 
 /*

@@ -153,7 +153,7 @@ public:
 		std::cerr << "PV* values: ";
 		for (std::size_t j(0); j<this->size(); j++) {
 			(*t)[j] = new T(*(*t)[j]);
-			std::cerr << *(*t)[j] << " ";
+			std::cerr << *((*t)[j]) << " ";
 		}
 		std::cerr << "\n";
 

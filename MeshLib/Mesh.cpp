@@ -49,7 +49,7 @@ Mesh::Mesh(const std::string &name,
 
 	this->calcEdgeLengthRange();
 	this->calcNodeDistanceRange();
-	this->updateMaterialGroups();
+//	this->updateMaterialGroups();
 }
 
 Mesh::Mesh(const Mesh &mesh)
@@ -271,6 +271,7 @@ void Mesh::setNodesConnectedByElements()
 	}
 }
 
+/*
 void Mesh::updateMaterialGroups()
 {
 	std::size_t const nElements (_elements.size());
@@ -290,5 +291,6 @@ void Mesh::updateMaterialGroups()
 	for (std::size_t i=0; i<nElements; ++i)
 		(*materials)[i] = _elements[i]->getValue();
 }
+*/
 
 }

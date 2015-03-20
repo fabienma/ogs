@@ -57,6 +57,10 @@ private:
 	/// Updates the vector of marked elements with values from vec.
 	void updateUnion(const std::vector<std::size_t> &vec);
 
+	std::vector<MeshLib::Element*> excludeElementCopy(
+		std::vector<MeshLib::Element*> const& vec_src_eles,
+		std::vector<std::size_t> const& vec_removed) const;
+
 	/// The mesh from which elements should be removed.
 	const MeshLib::Mesh &_mesh;
 	/// The vector of element indices that should be removed.

@@ -47,7 +47,7 @@ MeshLib::Mesh* ElementExtraction::removeMeshElements(const std::string &new_mesh
 	}
 
 	INFO("Removing total %d elements...", _marked_elements.size());
-	std::vector<MeshLib::Element*> tmp_elems = BaseLib::excludeObjectCopy(
+	std::vector<MeshLib::Element*> tmp_elems = excludeElementCopy(
 		_mesh.getElements(),
 		_marked_elements
 	);
@@ -136,6 +136,24 @@ std::size_t ElementExtraction::searchByBoundingBox(const MeshLib::Node &x1, cons
 	}
 	this->updateUnion(matchedIDs);
 	return matchedIDs.size();
+}
+
+std::vector<MeshLib::Element*> ElementExtraction::excludeElementCopy(
+	std::vector<MeshLib::Element*> const& vec_src_eles,
+	std::vector<std::size_t> const& vec_removed) const
+{
+	std::vector<MeshLib::Element*> vec_dest_eles(vec_src_eles.size()-vec_removed.size());
+
+	unsigned cnt (0);
+	for (std::size_t i=0; i<vec_removed[0]; ++i)
+		vec_dest_eles[cnt++] = vec_src_eles[i];
+	for (std::size_t i=1; i<vec_removed.size(); ++i)
+		for (std::size_t j=vec_removed[i-1]+1; j<vec_removed[i]; ++j)
+			vec_dest_eles[cnt++] = vec_src_eles[j];
+	for (std::size_t i=vec_removed.back()+1; i<vec_src_eles.size(); ++i)
+		vec_dest_eles[cnt++] = vec_src_eles[i];
+
+	return vec_dest_eles;
 }
 
 void ElementExtraction::updateUnion(const std::vector<std::size_t> &vec)
