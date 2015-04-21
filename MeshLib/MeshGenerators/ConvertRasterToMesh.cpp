@@ -85,7 +85,6 @@ MeshLib::Mesh* ConvertRasterToMesh::constructMesh(const double* pix_vals, const 
 	for (std::size_t k(0); k<size; ++k) node_idx_map[k] = -1;
 
 	std::vector<MeshLib::Node*> nodes;
-	std::vector<MeshLib::Element*> elements;
 
 	for (size_t i = 0; i < height; i++) {
 		for (size_t j = 0; j < width; j++) {
@@ -102,6 +101,8 @@ MeshLib::Mesh* ConvertRasterToMesh::constructMesh(const double* pix_vals, const 
 	}
 
 	// set mesh elements
+	std::vector<MeshLib::Element*> elements;
+	std::vector<int> mat_ids;
 	for (size_t i = 0; i < _raster.getNRows(); i++) {
 		for (size_t j = 0; j < _raster.getNCols(); j++) {
 			const int index = i * width + j;
@@ -121,9 +122,12 @@ MeshLib::Mesh* ConvertRasterToMesh::constructMesh(const double* pix_vals, const 
 					tri2_nodes[0] = nodes[node_idx_map[index + 1]];
 					tri2_nodes[1] = nodes[node_idx_map[index + width + 1]];
 					tri2_nodes[2] = nodes[node_idx_map[index + width]];
-
-					elements.push_back(new MeshLib::Tri(tri1_nodes, mat)); // upper left triangle
-					elements.push_back(new MeshLib::Tri(tri2_nodes, mat)); // lower right triangle
+					// upper left triangle
+					elements.push_back(new MeshLib::Tri(tri1_nodes));
+					mat_ids.push_back(mat);
+					// lower right triangle
+					elements.push_back(new MeshLib::Tri(tri2_nodes));
+					mat_ids.push_back(mat);
 				}
 				if (_elem_type == MeshElemType::QUAD) {
 					MeshLib::Node** quad_nodes = new MeshLib::Node*[4];
@@ -131,14 +135,29 @@ MeshLib::Mesh* ConvertRasterToMesh::constructMesh(const double* pix_vals, const 
 					quad_nodes[1] = nodes[node_idx_map[index + 1]];
 					quad_nodes[2] = nodes[node_idx_map[index + width + 1]];
 					quad_nodes[3] = nodes[node_idx_map[index + width]];
-					elements.push_back(new MeshLib::Quad(quad_nodes, mat));
+					elements.push_back(new MeshLib::Quad(quad_nodes));
+					mat_ids.push_back(mat);
 				}
 			}
 		}
 	}
 	delete [] node_idx_map;
 
-	return new MeshLib::Mesh("RasterDataMesh", nodes, elements); // the name is only a temp-name, the name given in the dialog is set later
+	// the name is only a temp-name, the name given in the dialog is set later
+	MeshLib::Mesh * mesh(new MeshLib::Mesh("RasterDataMesh", nodes, elements));
+
+	boost::optional<MeshLib::PropertyVector<int> &> opt_pv(
+		mesh->getProperties().createNewPropertyVector<int>(
+			"MaterialIDs", MeshItemType::Cell, 1
+		)
+	);
+	if (!opt_pv) {
+		WARN("Could not set properties");
+		return mesh;
+	}
+	MeshLib::PropertyVector<int> & pv_mat_ids(opt_pv.get());
+	pv_mat_ids.insert(pv_mat_ids.begin(), mat_ids.cbegin(), mat_ids.cend());
+	return mesh;
 }
 
 
