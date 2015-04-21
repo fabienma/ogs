@@ -77,8 +77,8 @@ MeshLib::Mesh* ConvertRasterToMesh::constructMesh(const double* pix_vals, const 
 	const size_t width = _raster.getNCols()+1;
 	size_t node_idx_count(0);
 	const double distance(_raster.getRasterPixelSize());
-	const double x_offset(_raster.getOrigin()[0]); // - distance / 2.0);
-	const double y_offset(_raster.getOrigin()[1]); // - distance / 2.0);
+	const double x_offset(_raster.getOrigin()[0]);
+	const double y_offset(_raster.getOrigin()[1]);
 
 	const size_t size(height*width);
 	int* node_idx_map(new int[size]);
@@ -91,25 +91,13 @@ MeshLib::Mesh* ConvertRasterToMesh::constructMesh(const double* pix_vals, const 
 		for (size_t j = 0; j < width; j++) {
 			const size_t index = i * width + j;
 
-//			bool set_node(true);
-//			bool set_node(false);
-//			if (j == 0 && i == height)
-//				set_node = vis_nodes[index];
-//			else if (j == 0)
-//				set_node = (vis_nodes[index] || vis_nodes[index + height]);
-//			else if (i == width)
-//				set_node = (vis_nodes[index] || vis_nodes[index - 1]);
-//			else set_node = (vis_nodes[index] || vis_nodes[index - 1] || vis_nodes[index + height]
-//							|| vis_nodes[index + height - 1]);
-//			if (set_node) {
-				double zValue = (_intensity_type == UseIntensityAs::ELEVATION) ? pix_vals[index]
-								: _raster.getOrigin()[2];
-				MeshLib::Node* node(new MeshLib::Node(x_offset + (distance * j), y_offset
-								+ (distance * i), zValue));
-				nodes.push_back(node);
-				node_idx_map[index] = node_idx_count;
-				node_idx_count++;
-//			}
+			double zValue = (_intensity_type == UseIntensityAs::ELEVATION) ?
+				pix_vals[index] : _raster.getOrigin()[2];
+			MeshLib::Node* node(new MeshLib::Node(x_offset + (distance * j), y_offset
+							+ (distance * i), zValue));
+			nodes.push_back(node);
+			node_idx_map[index] = node_idx_count;
+			node_idx_count++;
 		}
 	}
 
