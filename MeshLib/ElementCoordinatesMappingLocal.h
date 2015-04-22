@@ -15,7 +15,7 @@
 #include <Eigen/Eigen>
 #endif
 
-#include "MathLib/Point3d.h"
+#include "MathLib/Vector3.h"
 
 #include "MeshLib/Elements/Element.h"
 #include "MeshLib/CoordinateSystem.h"
@@ -37,12 +37,12 @@ public:
      * \param org_coord_system      Original coordinate system
      */
     ElementCoordinatesMappingLocal(const Element* e, const CoordinateSystem &org_coord_system);
-	
+
     /// Destructor
     virtual ~ElementCoordinatesMappingLocal() {}
 
     /// return mapped coordinates of the node
-    virtual const MathLib::Point3d* getMappedPoint(size_t node_id) const
+    virtual const MeshLib::Node* getMappedPoint(size_t node_id) const
     {
         return &_point_vec[node_id];
     }
@@ -52,21 +52,25 @@ public:
 
 private:
     /// translate points to the origin
-    void translate(std::vector<MathLib::Point3d> &point_vec, const MathLib::Point3d origin);
+    void translate(std::vector<MeshLib::Node> &point_vec,
+        const MathLib::Vector3 & displacement);
 
     /// flip points vertically or horizontally
     void flip(const CoordinateSystem &coordinate_system, std::vector<MathLib::Point3d> &vec_pt);
 
     /// rotate points
-    void rotate(const Element &e, const CoordinateSystem &coordinate_system, std::vector<MathLib::Point3d> &vec_pt);
+    void rotate(const Element &e, const CoordinateSystem &coordinate_system,
+        std::vector<MeshLib::Node> &vec_pt);
 
     /// get a rotation matrix to the original coordinates
     /// it computes R in x=R*x' where x is original coordinates and x' is local coordinates
-    void getRotationMatrixToOriginal(const Element &e, const CoordinateSystem &coordinate_system, const std::vector<MathLib::Point3d> &vec_pt, EMatrix &matR2original);
+    void getRotationMatrixToOriginal(const Element &e,
+        const CoordinateSystem &coordinate_system,
+        const std::vector<MeshLib::Node> &vec_pt, EMatrix &matR2original);
 
 private:
-    std::vector<MathLib::Point3d> _point_vec;
-    MathLib::Point3d _pt_translate;
+    std::vector<MeshLib::Node> _point_vec;
+    MathLib::Vector3 _pt_translate;
     EMatrix _matR2original;
 };
 

@@ -24,7 +24,7 @@ ElementCoordinatesMappingLocal::ElementCoordinatesMappingLocal(const Element* e,
 
     // set initial coordinates
     for(size_t i = 0; i < e->getNNodes(); i++)
-        _point_vec.push_back(MathLib::Point3d(e->getNode(i)->getCoords()));
+        _point_vec.push_back(MeshLib::Node(*(e->getNode(i))));
 
     //flip(coordinate_system, _point_vec);
     if (e->getDimension() < coordinate_system.getDimension()) {
@@ -72,15 +72,18 @@ void ElementCoordinatesMappingLocal::flip(const CoordinateSystem &coordinate_sys
     }
 }
 
-void ElementCoordinatesMappingLocal::translate(std::vector<MathLib::Point3d> &vec_pt, const MathLib::Point3d origin)
+void ElementCoordinatesMappingLocal::translate(std::vector<MeshLib::Node> &vec_pt,
+    const MathLib::Vector3 & displacement)
 {
     for (std::size_t i=0; i<vec_pt.size(); ++i) {
-        vec_pt[i] -= origin;
+        vec_pt[i] -= displacement;
     }
-    _pt_translate = origin;
+    _pt_translate = displacement;
 }
 
-void ElementCoordinatesMappingLocal::rotate(const Element &ele, const CoordinateSystem &coordinate_system, std::vector<MathLib::Point3d> &vec_pt)
+void ElementCoordinatesMappingLocal::rotate(const Element &ele,
+    const CoordinateSystem &coordinate_system,
+    std::vector<MeshLib::Node> &vec_pt)
 {
     // compute a rotation matrix
     getRotationMatrixToOriginal(ele, coordinate_system, vec_pt, _matR2original);
@@ -97,7 +100,7 @@ void ElementCoordinatesMappingLocal::rotate(const Element &ele, const Coordinate
             dx[j] = (coords_node_i[j] - coords_node_0[j]);
 
         x_new.head(global_dim) = _matR2original.transpose() * dx;
-        _point_vec[i] = MathLib::Point3d(x_new.data());
+        _point_vec[i] = MeshLib::Node(x_new.data());
     }
 };
 
@@ -105,7 +108,7 @@ void ElementCoordinatesMappingLocal::rotate(const Element &ele, const Coordinate
 void ElementCoordinatesMappingLocal::getRotationMatrixToOriginal(
     const Element &e,
     const CoordinateSystem &coordinate_system,
-    const std::vector<MathLib::Point3d> &vec_pt,
+    const std::vector<MeshLib::Node> &vec_pt,
     EMatrix &matR)
 {
     const std::size_t global_dim = coordinate_system.getDimension();
