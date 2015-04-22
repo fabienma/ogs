@@ -10,7 +10,7 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/Gui/VtkVis
 )
 
-if(TARGET VtkVis)
+if(OGS_BUILD_GUI)
 
 	add_executable(generateStructuredQuadMesh generateStructuredQuadMesh.cpp)
 	set_target_properties(generateStructuredQuadMesh PROPERTIES FOLDER Utils)
@@ -31,7 +31,7 @@ if(TARGET VtkVis)
 		MeshLib
 		FileIO
 		VtkVis
-		zlib
+		InSituLib
 		${CATALYST_LIBRARIES}
 		${QT_LIBRARIES}
 	)
