@@ -58,16 +58,41 @@ bool Mesh2MeshPropertyInterpolation::setPropertiesForMesh(Mesh *dest_mesh, std::
 		return false;
 	}
 
-	interpolatePropertiesForMesh(dest_mesh, dest_properties);
+	interpolatePropertiesForMesh(dest_mesh);
 
 	return true;
 }
 
-void Mesh2MeshPropertyInterpolation::interpolatePropertiesForMesh(Mesh *dest_mesh, std::vector<double>& dest_properties) const
+void Mesh2MeshPropertyInterpolation::interpolatePropertiesForMesh(
+	Mesh *dest_mesh) const
 {
+	// check the existence of PropertyVector in the source mesh
+	boost::optional<MeshLib::PropertyVector<double> const&> opt_src_pv(
+		_src_mesh->getProperties().getPropertyVector<double>(_property_name));
+	if (!opt_src_pv) {
+		WARN("Did not find PropertyVector<double> \"%s\" in source mesh.",
+			_property_name.c_str());
+		return;
+	}
+
 	// carry over property information from source elements to source nodes
 	std::vector<double> interpolated_src_node_properties(_src_mesh->getNNodes());
 	interpolateElementPropertiesToNodeProperties(interpolated_src_node_properties);
+
+	boost::optional<MeshLib::PropertyVector<double> &> opt_pv(
+		dest_mesh->getProperties().getPropertyVector<double>(_property_name));
+	if (!opt_pv) {
+		opt_pv = dest_mesh->getProperties().createNewPropertyVector<double>(
+			_property_name, MeshItemType::Cell, 1);
+		if (!opt_pv) {
+			WARN("Could not get or create a PropertyVector of type double"
+				" using the given name \"%s\".", _property_name.c_str());
+			return;
+		}
+	}
+	MeshLib::PropertyVector<double> & dest_properties(opt_pv.get());
+	if (dest_properties.size() != dest_mesh->getNElements())
+		dest_properties.resize(dest_mesh->getNElements());
 
 	// looping over the destination elements and calculate properties
 	// from interpolated_src_node_properties

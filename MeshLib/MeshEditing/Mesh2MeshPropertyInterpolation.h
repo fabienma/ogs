@@ -57,7 +57,7 @@ private:
 	 * @param dest_mesh
 	 * @param dest_properties
 	 */
-	void interpolatePropertiesForMesh(Mesh *dest_mesh, std::vector<double>& dest_properties) const;
+	void interpolatePropertiesForMesh(Mesh *dest_mesh) const;
 	/**
 	 * Method interpolates the element wise given properties to the nodes of the element
 	 * @param interpolated_node_properties the vector must have the same number of entries as
