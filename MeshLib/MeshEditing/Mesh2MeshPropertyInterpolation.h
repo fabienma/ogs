@@ -36,7 +36,9 @@ public:
 	 * For instance if mesh has \f$n\f$ (pairwise) different property
 	 * indices the vector of properties must have \f$\ge n\f$ entries.
 	 */
-	Mesh2MeshPropertyInterpolation(Mesh const*const source_mesh, std::vector<double> const*const source_properties);
+	Mesh2MeshPropertyInterpolation(Mesh const*const source_mesh,
+		std::string const& property_name,
+		std::vector<double> const*const source_properties);
 	virtual ~Mesh2MeshPropertyInterpolation();
 
 	/**
@@ -65,6 +67,7 @@ private:
 	void interpolateElementPropertiesToNodeProperties(std::vector<double> &interpolated_node_properties) const;
 
 	Mesh const*const _src_mesh;
+	std::string const& _property_name;
 	std::vector<double> const*const _src_properties;
 };
 
