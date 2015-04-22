@@ -37,8 +37,7 @@ public:
 	 * indices the vector of properties must have \f$\ge n\f$ entries.
 	 */
 	Mesh2MeshPropertyInterpolation(Mesh const*const source_mesh,
-		std::string const& property_name,
-		std::vector<double> const*const source_properties);
+		std::string const& property_name);
 	virtual ~Mesh2MeshPropertyInterpolation();
 
 	/**
@@ -68,7 +67,6 @@ private:
 
 	Mesh const*const _src_mesh;
 	std::string const& _property_name;
-	std::vector<double> const*const _src_properties;
 };
 
 } // end namespace MeshLib

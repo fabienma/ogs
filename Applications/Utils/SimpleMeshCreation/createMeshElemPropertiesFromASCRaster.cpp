@@ -193,7 +193,7 @@ int main (int argc, char* argv[])
 
 	// do the interpolation
 	MeshLib::Mesh2MeshPropertyInterpolation mesh_interpolation(src_mesh,
-		"double_properties", &compressed_src_properties);
+		"double_properties");
 	std::vector<double> dest_properties(dest_mesh->getNElements());
 	mesh_interpolation.setPropertiesForMesh(const_cast<MeshLib::Mesh*>(dest_mesh),
 	                                        dest_properties);

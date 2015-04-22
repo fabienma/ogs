@@ -30,11 +30,8 @@
 namespace MeshLib {
 
 Mesh2MeshPropertyInterpolation::Mesh2MeshPropertyInterpolation(
-	Mesh const*const src_mesh,
-	std::string const& property_name,
-	std::vector<double> const*const src_properties)
-	: _src_mesh(src_mesh), _property_name(property_name),
-		_src_properties(src_properties)
+	Mesh const*const src_mesh, std::string const& property_name)
+	: _src_mesh(src_mesh), _property_name(property_name)
 {}
 
 Mesh2MeshPropertyInterpolation::~Mesh2MeshPropertyInterpolation()
@@ -149,18 +146,30 @@ void Mesh2MeshPropertyInterpolation::interpolatePropertiesForMesh(Mesh *dest_mes
 }
 
 void Mesh2MeshPropertyInterpolation::interpolateElementPropertiesToNodeProperties(
-	std::vector<double> &interpolated_node_properties) const
+	std::vector<double> &interpolated_properties) const
 {
 	std::vector<MeshLib::Node*> const& src_nodes(_src_mesh->getNodes());
 	const size_t n_src_nodes(src_nodes.size());
 
+	// fetch the source of property values
+	boost::optional<MeshLib::PropertyVector<double> const&> opt_src_props(
+		_src_mesh->getProperties().getPropertyVector<double>(_property_name)
+	);
+	if (!opt_src_props) {
+		WARN("Did not find PropertyVector<double> \"%s\".",
+			_property_name.c_str());
+		std::fill_n(interpolated_properties.begin(), n_src_nodes, 0.0);
+		return;
+	}
+
+	MeshLib::PropertyVector<double> const& elem_props(opt_src_props.get());
 	for (size_t k(0); k<n_src_nodes; k++) {
 		const size_t n_con_elems (src_nodes[k]->getNElements());
-		interpolated_node_properties[k] = (*_src_properties)[(src_nodes[k]->getElement(0))->getValue()];
+		interpolated_properties[k] = elem_props[(src_nodes[k]->getElement(0))->getID()];
 		for (size_t j(1); j<n_con_elems; j++) {
-			interpolated_node_properties[k] += (*_src_properties)[(src_nodes[k]->getElement(j))->getValue()];
+			interpolated_properties[k] += elem_props[(src_nodes[k]->getElement(j))->getID()];
 		}
-		interpolated_node_properties[k] /= n_con_elems;
+		interpolated_properties[k] /= n_con_elems;
 	}
 }
 
