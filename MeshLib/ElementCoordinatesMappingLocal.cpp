@@ -109,19 +109,14 @@ void ElementCoordinatesMappingLocal::getRotationMatrixToOriginal(
     EMatrix &matR)
 {
     const std::size_t global_dim = coordinate_system.getDimension();
-    double xx[3];
-    double yy[3];
-    double zz[3];
 
     matR = EMatrix::Zero(global_dim, global_dim);
     if (global_dim == e.getDimension()) {
         matR = EMatrix::Identity(global_dim, global_dim);
     } else if (global_dim == 2 && e.getDimension() == 1) {
-        double const* const pnt0(vec_pt[0].getCoords());
-        double const* const pnt1(vec_pt[1].getCoords());
-        xx[0] = pnt1[0] - pnt0[0];
-        xx[1] = pnt1[1] - pnt0[1];
-        MathLib::normalizeVector(xx, 2);
+        MathLib::Vector3 xx(vec_pt[0], vec_pt[1]);
+        xx[2] = 0.0;
+        xx.normalize();
         double cos_theta = xx[0];
         double sin_theta = xx[1];
         matR(0,0) = matR(1,1) = cos_theta;
@@ -129,23 +124,16 @@ void ElementCoordinatesMappingLocal::getRotationMatrixToOriginal(
         matR(1,0) = sin_theta;
     } else if (global_dim == 3 && e.getDimension() == 2) {
         // x"_vec
-        double const* const pnt0(vec_pt[0].getCoords());
-        double const* const pnt1(vec_pt[1].getCoords());
-        xx[0] = pnt1[0] - pnt0[0];
-        xx[1] = pnt1[1] - pnt0[1];
-        xx[2] = pnt1[2] - pnt0[2];
-        MathLib::normalizeVector(xx, 3);
+        MathLib::Vector3 xx(vec_pt[0], vec_pt[1]);
+        xx.normalize();
         // a vector on the plane
-        double const* const pnt2(vec_pt[2].getCoords());
-        yy[0] = pnt2[0] - pnt1[0];
-        yy[1] = pnt2[1] - pnt1[1];
-        yy[2] = pnt2[2] - pnt1[2];
+        MathLib::Vector3 yy(vec_pt[1], vec_pt[2]);
         // z"_vec. off plane
-        MathLib::crossProd(xx, yy, zz);
-        MathLib::normalizeVector(zz, 3);
+        MathLib::Vector3 zz(MathLib::crossProduct(xx, yy));
+        zz.normalize();
         // y"_vec
-        MathLib::crossProd(zz, xx, yy);
-        MathLib::normalizeVector(yy, 3);
+        yy = MathLib::crossProduct(zz, xx);
+        yy.normalize();
 
         for (size_t i=0; i<global_dim; ++i) {
             matR(i, 0) = xx[i];
@@ -154,13 +142,10 @@ void ElementCoordinatesMappingLocal::getRotationMatrixToOriginal(
         }
     } else if (global_dim == 3 && e.getDimension() == 1) {
         // x"_vec
-        double const* const pnt0(vec_pt[0].getCoords());
-        double const* const pnt1(vec_pt[1].getCoords());
-        xx[0] = pnt1[0] - pnt0[0];
-        xx[1] = pnt1[1] - pnt0[1];
-        xx[2] = pnt1[2] - pnt0[2];
-        MathLib::normalizeVector(xx, 3);
+        MathLib::Vector3 xx(vec_pt[0], vec_pt[1]);
+        xx.normalize();
         // an arbitrary vector
+        MathLib::Vector3 yy(vec_pt[0], vec_pt[1]);
         for (size_t i = 0; i < 3; i++)
             yy[i] = 0.0;
 
@@ -179,11 +164,11 @@ void ElementCoordinatesMappingLocal::getRotationMatrixToOriginal(
             }
         }
         // z"_vec
-        MathLib::crossProd(xx, yy, zz);
-        MathLib::normalizeVector(zz, 3);
+        MathLib::Vector3 zz(MathLib::crossProduct(xx, yy));
+        zz.normalize();
         // y"_vec
-        MathLib::crossProd(zz, xx, yy);
-        MathLib::normalizeVector(yy, 3);
+        yy = MathLib::crossProduct(zz, xx);
+        yy.normalize();
 
         for (size_t i=0; i<global_dim; ++i) {
             matR(i, 0) = xx[i];
