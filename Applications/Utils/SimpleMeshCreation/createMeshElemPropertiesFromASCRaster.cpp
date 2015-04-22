@@ -34,8 +34,8 @@
 // GeoLib
 #include "Raster.h"
 
-// Gui/VtkVis
-#include "VtkMeshConverter.h"
+// MeshLib/MeshGenerators
+#include "MeshLib/MeshGenerators/VtkMeshConverter.h"
 
 // MathLib
 #include "MathTools.h"
@@ -46,6 +46,21 @@
 #include "Mesh.h"
 #include "MeshEditing/Mesh2MeshPropertyInterpolation.h"
 #include "MeshEnums.h"
+
+void printStatisticsOfVector(std::vector<double> const& data)
+{
+	std::size_t const size(data.size());
+	const double mean(std::accumulate(data.begin(), data.end(), 0.0) / size);
+	INFO("Mean value: %f.", mean);
+
+	double variance(MathLib::fastpow(data[0] - mean, 2));
+	for (std::size_t k(1); k<size; k++) {
+		variance += MathLib::fastpow(data[k] - mean, 2);
+	}
+
+	variance /= size;
+	INFO("Variance: %f.", variance);
+}
 
 int main (int argc, char* argv[])
 {
@@ -114,7 +129,7 @@ int main (int argc, char* argv[])
 	MeshLib::Mesh* dest_mesh(FileIO::readMeshFromFile(mesh_arg.getValue()));
 
 	// read raster and if required manipulate it
-	GeoLib::Raster* raster(GeoLib::Raster::getRasterFromASCFile(raster_arg.getValue()));
+	GeoLib::Raster* raster(FileIO::AsciiRasterInterface::getRasterFromASCFile(raster_arg.getValue()));
 	if (refinement_arg.getValue() > 1) {
 		raster->refineRaster(refinement_arg.getValue());
 		if (refinement_raster_output_arg.getValue()) {
@@ -123,7 +138,7 @@ int main (int argc, char* argv[])
 			                                      raster_arg.getValue()));
 			new_raster_fname += "-" + std::to_string(raster->getNRows()) + "x" +
 			                    std::to_string(raster->getNCols()) + ".asc";
-			FileIO::AsciiRasterInterface::writeRasterAsASC(raster, new_raster_fname);
+			FileIO::AsciiRasterInterface::writeRasterAsASC(*raster, new_raster_fname);
 		}
 	}
 
@@ -138,18 +153,8 @@ int main (int argc, char* argv[])
 			++raster_it;
 		}
 	}
-
-	{
-		const double mu(std::accumulate(src_properties.begin(), src_properties.end(), 0.0) / size);
-		INFO("Mean value of source: %f.", mu);
-
-		double src_variance(MathLib::fastpow(src_properties[0] - mu, 2));
-		for (std::size_t k(1); k<size; k++) {
-			src_variance += MathLib::fastpow(src_properties[k] - mu, 2);
-		}
-		src_variance /= size;
-		INFO("Variance of source: %f.", src_variance);
-	}
+	INFO("statistic of source data:\n");
+	printStatisticsOfVector(src_properties);
 
 	MeshLib::Mesh* src_mesh(MeshLib::ConvertRasterToMesh(*raster, MeshElemType::QUAD,
 					MeshLib::UseIntensityAs::MATERIAL).execute());
@@ -188,7 +193,7 @@ int main (int argc, char* argv[])
 
 	// do the interpolation
 	MeshLib::Mesh2MeshPropertyInterpolation mesh_interpolation(src_mesh,
-	                                                           &compressed_src_properties);
+		&compressed_src_properties);
 	std::vector<double> dest_properties(dest_mesh->getNElements());
 	mesh_interpolation.setPropertiesForMesh(const_cast<MeshLib::Mesh*>(dest_mesh),
 	                                        dest_properties);
@@ -209,16 +214,8 @@ int main (int argc, char* argv[])
 		property_out.close();
 	}
 
-	{
-		const double mu(std::accumulate(dest_properties.begin(), dest_properties.end(), 0.0) / n_dest_mesh_elements);
-		INFO("Mean value of destination: %f.", mu);
-
-		double sigma_q(MathLib::fastpow(dest_properties[0] - mu, 2));
-		for (std::size_t k(1); k < n_dest_mesh_elements; k++)
-			sigma_q += MathLib::fastpow(dest_properties[k] - mu, 2);
-		sigma_q /= n_dest_mesh_elements;
-		INFO("Variance of destination: %f.", sigma_q);
-	}
+	INFO("statistics of destination data.");
+	printStatisticsOfVector(dest_properties);
 
 	if (! out_mesh_arg.getValue().empty()) {
 		std::vector<std::size_t> dest_perm(n_dest_mesh_elements);
