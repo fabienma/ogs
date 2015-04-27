@@ -4,6 +4,7 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/GeoLib
 	${CMAKE_SOURCE_DIR}/FileIO
 	${CMAKE_SOURCE_DIR}/MathLib
+	${CMAKE_SOURCE_DIR}/MeshLib
 )
 
 if(QT4_FOUND)
@@ -21,3 +22,16 @@ if(QT4_FOUND)
 		COMPONENT Utilities
 	)
 endif() # QT4_FOUND
+
+add_executable(CreateNeumannBCsOnSurface CreateNeumannBCsOnSurface.cpp)
+target_link_libraries(CreateNeumannBCsOnSurface
+	BaseLib
+	FileIO
+	MathLib
+	MeshLib
+	InSituLib
+	${CATALYST_LIBRARIES}
+)
+ADD_CATALYST_DEPENDENCY(CreateNeumannBCsOnSurface)
+set_target_properties(CreateNeumannBCsOnSurface PROPERTIES FOLDER Utilities)
+
