@@ -122,6 +122,16 @@ target_link_libraries(TIN2VTK
 )
 ADD_CATALYST_DEPENDENCY(TIN2VTK)
 
+add_executable(CleanupNeumannBCs CleanupNeumannBCs.cpp)
+set_target_properties(CleanupNeumannBCs PROPERTIES FOLDER Utilities)
+target_link_libraries(CleanupNeumannBCs
+	FileIO
+	GeoLib
+	InSituLib
+	${CATALYST_LIBRARIES}
+)
+ADD_CATALYST_DEPENDENCY(CleanupNeumannBCs)
+
 ####################
 ### Installation ###
 ####################
