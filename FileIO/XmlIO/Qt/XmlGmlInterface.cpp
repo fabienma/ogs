@@ -236,6 +236,9 @@ bool XmlGmlInterface::write()
 		if (!points->empty())
 		{
 			nPoints = points->size();
+
+			clock_t start(clock());
+
 			for (std::size_t i = 0; i < nPoints; i++)
 			{
 				QDomElement pointTag = doc.createElement("point");
@@ -251,6 +254,10 @@ bool XmlGmlInterface::write()
 
 				pointsListTag.appendChild(pointTag);
 			}
+
+			clock_t end(clock());
+			INFO("Writing time: %f s.",
+				static_cast<double>(end-start)/CLOCKS_PER_SEC)
 		}
 		else
 		{
