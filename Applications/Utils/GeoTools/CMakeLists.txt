@@ -21,3 +21,12 @@ if(QT4_FOUND)
 		COMPONENT Utilities
 	)
 endif() # QT4_FOUND
+
+add_executable(TimeAndMemoryMeasurementForGeometries TimeAndMemoryMeasurementForGeometries.cpp)
+target_link_libraries(TimeAndMemoryMeasurementForGeometries
+	BaseLib
+	GeoLib
+	logog
+)
+
+set_target_properties(TimeAndMemoryMeasurementForGeometries PROPERTIES FOLDER Utilities)
