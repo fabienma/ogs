@@ -86,7 +86,7 @@ TEST(GeoLib, GEOObjectsMergePoints)
 	merged_point_vec = geo_objs.getPointVecObj(merged_geometries_name);
 
 	ASSERT_TRUE(merged_point_vec != nullptr);
-	ASSERT_EQ(merged_point_vec->size(), 1024u);
+	ASSERT_EQ(1024u, merged_point_vec->size());
 	merged_point_vec->getNameOfElementByID(0, test_name);
 	ASSERT_EQ(test_name, "PointSet0-0-0-0");
 	merged_point_vec->getNameOfElementByID(511, test_name);
