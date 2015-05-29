@@ -68,7 +68,7 @@ TEST(GeoLib, GEOObjectsMergePoints)
 	GeoLib::PointVec const* merged_point_vec (geo_objs.getPointVecObj(merged_geometries_name));
 
 	ASSERT_TRUE(merged_point_vec != nullptr);
-	ASSERT_EQ(merged_point_vec->size(), 512u);
+	ASSERT_EQ(512u, merged_point_vec->size());
 	std::string test_name;
 	merged_point_vec->getNameOfElementByID(0, test_name);
 	ASSERT_EQ(test_name, "PointSet0-0-0-0");
