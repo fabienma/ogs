@@ -76,7 +76,7 @@ TEST(GeoLib, GEOObjectsMergePoints)
 	ASSERT_EQ(test_name, "PointSet0-7-7-7");
 
 	// *** insert "shifted" set of points
-	shift[0] += 1e-4;
+	shift[0] += 1e-5;
 	names.push_back("ShiftedPointSet");
 	createSetOfTestPointsAndAssociatedNames(geo_objs, names[2], shift);
 
