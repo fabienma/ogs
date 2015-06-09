@@ -26,6 +26,7 @@
 // FileIO
 #include "FileIO/Legacy/OGSIOVer4.h"
 #include "FileIO/readMeshFromFile.h"
+//#include "FileIO/XmlIO/Boost/BoostXmlGmlInterface.h"
 #include "FileIO/VtkIO/VtuInterface.h"
 
 // GeoLib
@@ -105,6 +106,10 @@ int main (int argc, char* argv[])
 	INFO("Convert surface mesh to geometry.");
 	GeoLib::GEOObjects geometries;
 	MeshLib::convertMeshToGeo(*sfc_mesh, geometries);
+//	FileIO::BoostXmlGmlInterface io(geometries);
+//	io.setNameForExport(sfc_mesh->getName());
+//	io.writeToFile("Surface.gml");
+
 	std::vector<std::string> geometry_names;
 	geometries.getGeometryNames(geometry_names);
 	std::string const& geometry_name(geometry_names.back());
