@@ -1,6 +1,7 @@
 add_subdirectory(FileConverter)
 add_subdirectory(GeoTools)
 add_subdirectory(MeshEdit)
+add_subdirectory(ModelPreparation)
 add_subdirectory(SimpleMeshCreation)
 
 if(OGS_BUILD_GUI)
