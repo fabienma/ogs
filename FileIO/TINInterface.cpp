@@ -100,7 +100,7 @@ GeoLib::Surface* TINInterface::readTIN(std::string const& fname,
 		}
 
 		// determine size pnt_vec to insert the correct ids
-		std::size_t const s(pnt_vec.getVector()->size());
+		std::size_t const s(pnt_vec.size());
 
 		std::size_t const pnt_pos_0(pnt_vec.push_back(new GeoLib::Point(p0, s)));
 		std::size_t const pnt_pos_1(pnt_vec.push_back(new GeoLib::Point(p1, s+1)));
@@ -110,6 +110,8 @@ GeoLib::Surface* TINInterface::readTIN(std::string const& fname,
 			pnt_pos_1 != std::numeric_limits<std::size_t>::max() &&
 			pnt_pos_1 != std::numeric_limits<std::size_t>::max()) {
 			sfc->addTriangle(pnt_pos_0, pnt_pos_1, pnt_pos_2);
+		} else {
+			WARN("readTIN(): error computing triangle node ids.");
 		}
 	}
 

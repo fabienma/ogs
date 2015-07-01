@@ -90,13 +90,13 @@ std::size_t PointVec::push_back(Point* pnt)
 {
 	_pnt_id_map.push_back(uniqueInsert(pnt));
 	_id_to_name_map.push_back("");
-	return _pnt_id_map[_pnt_id_map.size() - 1];
+	return _pnt_id_map[_pnt_id_map.size()-1];
 }
 
 void PointVec::push_back(Point* pnt, std::string const*const name)
 {
 	if (name == nullptr) {
-		_pnt_id_map.push_back (uniqueInsert(pnt));
+		_pnt_id_map.push_back(uniqueInsert(pnt));
 		_id_to_name_map.push_back("");
 		return;
 	}

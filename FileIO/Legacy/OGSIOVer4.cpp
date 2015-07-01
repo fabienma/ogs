@@ -352,10 +352,10 @@ std::string readSurface(std::istream &in,
 	if (!name.empty())
 		sfc_names.insert(std::pair<std::string,std::size_t>(name,sfc_vec.size()));
 
-	if (sfc)
+	if (sfc) {
 		// surface create by TIN
 		sfc_vec.push_back (sfc);
-	else
+	} else
     {
         // surface created by polygon
         if (ply_id != std::numeric_limits<std::size_t>::max() && ply_id != ply_vec.size())
