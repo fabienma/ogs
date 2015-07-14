@@ -354,18 +354,6 @@ void computeRotationMatrixToXZ(MathLib::Vector3 const& plane_normal, MathLib::De
 	rot_mat(2, 2) = -sqrt(h0) * h2;
 }
 
-void rotatePoints(MathLib::DenseMatrix<double> const& rot_mat, std::vector<GeoLib::Point*> &pnts)
-{
-	double* tmp (nullptr);
-	const std::size_t n_pnts(pnts.size());
-	for (std::size_t k(0); k < n_pnts; k++) {
-		tmp = rot_mat * pnts[k]->getCoords();
-		for (std::size_t j(0); j < 3; j++)
-			(*(pnts[k]))[j] = tmp[j];
-		delete [] tmp;
-	}
-}
-
 void rotatePointsToXY(std::vector<GeoLib::Point*> &pnts)
 {
 	assert(pnts.size()>2);
