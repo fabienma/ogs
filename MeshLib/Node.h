@@ -74,6 +74,8 @@ public:
 	/// This method automatically also updates the areas/volumes of all connected elements.
 	virtual void updateCoordinates(double x, double y, double z);
 
+	using TemplatePoint<double,3>::operator[];
+
 protected:
 	/**
 	 * Add an element the node is part of.
@@ -97,6 +99,9 @@ protected:
 
 	std::vector<Node*> _connected_nodes;
 	std::vector<Element*> _elements;
+
+private:
+	virtual double& operator[] (std::size_t idx);
 }; /* class */
 
 } /* namespace */

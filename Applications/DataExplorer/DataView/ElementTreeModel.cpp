@@ -82,11 +82,11 @@ void ElementTreeModel::setElement(vtkUnstructuredGridAlgorithm const*const grid,
 	size_t nElemNodes = elem->getNBaseNodes();
 	for (size_t i = 0; i < nElemNodes; i++)
 	{
-		const MeshLib::Node* node = elem->getNode(i);
+		MeshLib::Node const& node = *(elem->getNode(i));
 		QList<QVariant> nodeData;
-		nodeData << "Node " + QString::number(node->getID()) <<
-		QString::number((*node)[0]) << QString::number((*node)[1]) <<
-		QString::number((*node)[2]);
+		nodeData << "Node " + QString::number(node.getID()) <<
+		QString::number((node)[0]) << QString::number((node)[1]) <<
+		QString::number((node)[2]);
 		TreeItem* nodeItem = new TreeItem(nodeData, nodeListItem);
 		nodeListItem->appendChild(nodeItem);
 	}

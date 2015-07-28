@@ -55,7 +55,7 @@ public:
 	 * double sqrNrm2 = point[0] * point[0] + point[1] * point[1] + point[2] + point[2];
 	 * \endcode
 	 */
-	const T& operator[] (std::size_t idx) const
+	virtual const T& operator[] (std::size_t idx) const
 	{
 		assert (idx < DIM);
 		return _x[idx];
@@ -63,7 +63,7 @@ public:
 	/** \brief access operator (see book Effektiv C++ programmieren - subsection 1.3.2 ).
 	 * \sa const T& operator[] (std::size_t idx) const
 	 */
-	T& operator[] (std::size_t idx)
+	virtual T& operator[] (std::size_t idx)
 	{
 		return const_cast<T&> (static_cast<const TemplatePoint&> (*this)[idx]);
 	}

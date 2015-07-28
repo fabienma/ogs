@@ -123,8 +123,10 @@ int VtkMeshSource::RequestData( vtkInformation* request,
 	vtkSmartPointer<vtkPoints> gridPoints = vtkSmartPointer<vtkPoints>::New();
 	gridPoints->SetNumberOfPoints(nPoints);
 	// Generate mesh nodes
-	for (unsigned i = 0; i < nPoints; ++i)
-		gridPoints->SetPoint(i, (*nodes[i])[0], (*nodes[i])[1], (*nodes[i])[2]);
+	for (unsigned i = 0; i < nPoints; ++i) {
+		MeshLib::Node const& node = *nodes[i];
+		gridPoints->SetPoint(i, node[0], node[1], node[2]);
+	}
 
 	// Generate attribute vector for material groups
 	vtkSmartPointer<vtkIntArray> materialIDs = vtkSmartPointer<vtkIntArray>::New();
