@@ -32,6 +32,7 @@
 #include "MeshLib/Node.h"
 #include "MeshLib/Elements/Element.h"
 #include "MeshLib/Mesh.h"
+#include "MeshLib/MeshSurfaceExtraction.h"
 
 void writeGeometry(MeshLib::Mesh const& mesh,
 	std::vector<std::pair<std::size_t,double>> const& id_val_pairs,
