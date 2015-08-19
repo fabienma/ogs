@@ -29,11 +29,13 @@
 #include "FileIO/GmshIO/GMSHFixedMeshDensity.h"
 #include "FileIO/GmshIO/GMSHNoMeshDensity.h"
 
+#include "GeoLib/AnalyticalGeometry.h"
 #include "GeoLib/GEOObjects.h"
 #include "GeoLib/Point.h"
 #include "GeoLib/Polygon.h"
 #include "GeoLib/Polyline.h"
 #include "GeoLib/PolylineWithSegmentMarker.h"
+#include "GeoLib/PolygonWithSegmentMarker.h"
 #include "GeoLib/QuadTree.h"
 
 #include "MeshLib/Elements/Elements.h"
@@ -403,7 +405,12 @@ void GMSHInterface::writeGMSHInputFile(std::ostream& out)
 	for (std::vector<GeoLib::Polyline*>::const_iterator it(merged_plys->begin());
 		it!=merged_plys->end(); it++) {
 		if ((*it)->isClosed()) {
-			_polygon_tree_list.push_back(new GMSH::GMSHPolygonTree(new GeoLib::Polygon(*(*it), true), NULL, _geo_objs, _gmsh_geo_name, _mesh_density_strategy));
+			_polygon_tree_list.push_back(
+				new GMSH::GMSHPolygonTree(
+					new GeoLib::PolygonWithSegmentMarker(*(*it)),
+					nullptr, _geo_objs, _gmsh_geo_name, _mesh_density_strategy
+				)
+			);
 		}
 	}
 	DBUG("GMSHInterface::writeGMSHInputFile(): Compute topological hierarchy - detected %d polygons.", _polygon_tree_list.size());
