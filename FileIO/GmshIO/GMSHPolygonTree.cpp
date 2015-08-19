@@ -14,8 +14,6 @@
 
 #include "GMSHPolygonTree.h"
 
-#include "AnalyticalGeometry.h"
-
 #include "GMSHNoMeshDensity.h"
 #include "GMSHFixedMeshDensity.h"
 #include "GMSHAdaptiveMeshDensity.h"
@@ -41,6 +39,26 @@ GMSHPolygonTree::GMSHPolygonTree(GeoLib::PolygonWithSegmentMarker* polygon,
 
 GMSHPolygonTree::~GMSHPolygonTree()
 {}
+
+void GMSHPolygonTree::markSharedSegments()
+{
+	if (_childs.empty())
+		return;
+
+	if (_parent == nullptr)
+		return;
+
+	for (auto it(_childs.begin()); it != _childs.end(); it++) {
+		std::size_t const n_pnts((*it)->getPolygon()->getNumberOfPoints());
+		for (std::size_t k(1); k<n_pnts; k++) {
+			//GeoLib::containsEdge(Polygon, id0, id1)
+			if (GeoLib::containsEdge(*(_parent->getPolygon()),
+				_node_polygon->getPointID(k-1),
+				_node_polygon->getPointID(k)))
+			static_cast<GeoLib::PolygonWithSegmentMarker*>(_node_polygon)->markSegment(k, true);
+		}
+	}
+}
 
 bool GMSHPolygonTree::insertStation(GeoLib::Point const* station)
 {
