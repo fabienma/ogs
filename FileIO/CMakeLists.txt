@@ -45,6 +45,10 @@ if(OGS_USE_PETSC)
 	set(SOURCES ${SOURCES} ${SOURCES_MPI_IO})
 endif()
 
+# GO2OGS
+GET_SOURCE_FILES(SOURCES_GO2OGS GocadIO)
+set(SOURCES ${SOURCES} ${SOURCES_GO2OGS})
+
 # Create the library
 add_library(FileIO STATIC ${SOURCES})
 

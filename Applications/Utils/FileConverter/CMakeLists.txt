@@ -61,6 +61,16 @@ set_target_properties(TIN2VTK PROPERTIES FOLDER Utilities)
 target_link_libraries(TIN2VTK FileIO)
 ADD_CATALYST_DEPENDENCY(TIN2VTK)
 
+add_executable(GocadSGridReader GocadSGridReaderMain.cpp)
+set_target_properties(GocadSGridReader PROPERTIES FOLDER Utilities)
+target_link_libraries(GocadSGridReader
+	GeoLib
+	MeshLib
+	FileIO
+	${Boost_LIBRARIES}
+)
+ADD_CATALYST_DEPENDENCY(GocadSGridReader)
+
 ####################
 ### Installation ###
 ####################
