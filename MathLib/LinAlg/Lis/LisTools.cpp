@@ -14,6 +14,8 @@
 
 #include "LisTools.h"
 
+#include <cassert>
+
 #include "logog/include/logog.hpp"
 
 #include "LisMatrix.h"
@@ -21,27 +23,53 @@
 
 namespace MathLib
 {
-
-void applyKnownSolution(LisMatrix &A, LisVector &b, const std::vector<std::size_t> &vec_knownX_id,
-		const std::vector<double> &vec_knownX_x, double penalty_scaling)
+static void applyKnownSolution(LisMatrix &eqsA, LisVector &eqsRHS, LIS_INT row,
+                               double val)
 {
-    //Use penalty parameter
-    const double max_diag_coeff = A.getMaxDiagCoeff();
-    const double penalty = max_diag_coeff * penalty_scaling;
-    INFO("-> max. absolute value of diagonal entries = %e", max_diag_coeff);
-    INFO("-> penalty scaling = %e", penalty_scaling);
-    const std::size_t n_bc = vec_knownX_id.size();
-    for (std::size_t i_bc=0; i_bc<n_bc; i_bc++) {
-        const std::size_t rowId = vec_knownX_id[i_bc];
-        const double x = vec_knownX_x[i_bc];
-        //A(k, k) = penalty
-        A.setValue(rowId, rowId, penalty);
-        //b(k) = x*penalty
-        b.set(rowId, x*penalty);
-    }
+	LIS_MATRIX &A = eqsA.getRawMatrix();
+
+	// set all entries of the row of the matrix to zero except the diagonal
+	// entry that is set to one
+	eqsA.setValue(row, row, 1);
+	for (LIS_INT k = 0; k < A->w_row[row - A->is]; ++k)
+	{
+		assert(k < A->w_row[row - A->is]);
+		if (A->w_index[row - A->is][k] != row)
+			A->w_value[row - A->is][k] = 0;
+	}
+
+	// b_i -= A(i,k)*val, i!=k and set the entries of the k-th column of the
+	// matrix to zero except the diagonal entry A(k, k)
+	for (LIS_INT row_i = 0; row_i < A->n; ++row_i)
+	{
+		if (row_i == row)
+			continue;
+		for (LIS_INT k = 0; k < A->w_row[row_i - A->is]; ++k)
+		{
+			LIS_INT column_j = A->w_index[row_i - A->is][k];
+			if (column_j == row)
+			{
+				double const A_i_j = A->w_value[row_i - A->is][k];
+				eqsRHS.add(row_i, -A_i_j * val);
+				A->w_value[row_i - A->is][k] = 0;
+			}
+		}
+	}
+
+	// b_k = val
+	eqsRHS.set(row, val);
 }
 
-} // MathLib
+void applyKnownSolution(LisMatrix &A, LisVector &b,
+                        const std::vector<std::size_t> &vec_knownX_id,
+                        const std::vector<double> &vec_knownX_x,
+                        double penalty_scaling)
+{
+	const std::size_t n_bc = vec_knownX_id.size();
 
+	for (std::size_t i_bc = 0; i_bc < n_bc; i_bc++)
+		applyKnownSolution(A, b, vec_knownX_id[i_bc], vec_knownX_x[i_bc]);
 
+}
 
+}  // MathLib
