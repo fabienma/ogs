@@ -50,21 +50,12 @@ MathLib::CRSMatrix<double, unsigned>* lis2crs(LIS_MATRIX &A)
 		}
 	}
 
-	unsigned const nnz(iA[n]);
-	std::vector<unsigned> jA_vec(jA, jA+iA[n]);
-	std::vector<double> entries_vec(entries, entries+iA[n]);
-
 	for (unsigned r(0); r<n; ++r) {
 		unsigned const beg_idx(iA[r]);
 		unsigned const end_idx(iA[r+1]);
 		// sort the column entries of the row
-		BaseLib::quicksort(jA_vec, beg_idx, end_idx, entries_vec);
+		BaseLib::quicksort(jA, beg_idx, end_idx, entries);
 	}
-
-	for (std::size_t k(0); k<nnz; ++k)
-		jA[k] = jA_vec[k];
-	for (std::size_t k(0); k<nnz; ++k)
-		entries[k] = entries_vec[k];
 
 	return new MathLib::CRSMatrix<double,unsigned>(A->n, iA, jA, entries);
 }
