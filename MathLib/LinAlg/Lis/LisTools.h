@@ -34,8 +34,14 @@ class LisVector;
  * @param penalty_scaling value for scaling some matrix and right hand side
  * entries to enforce some conditions
  */
+/*
 void applyKnownSolution(LisMatrix &A, LisVector &b, const std::vector<std::size_t> &_vec_knownX_id,
 		const std::vector<double> &_vec_knownX_x, double penalty_scaling = 1e+10);
+*/
+
+void applyKnownSolution(LisMatrix &eqsA, LisVector &eqsRHS,
+	const std::vector<std::size_t> &rows,
+	const std::vector<double> &vals);
 
 } // MathLib
 
